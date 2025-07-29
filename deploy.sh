@@ -22,5 +22,5 @@ fi
 npm install
 npm run build 
 
-aws s3 sync --profile ir-dashboard ./dist s3://irsolutions-hr-portal
+aws s3 sync --profile ir-dashboard ./dist s3://hr-portal-website
 aws cloudfront create-invalidation --profile ir-dashboard --distribution-id E33H1EGKAVGN51 --paths "/*"
