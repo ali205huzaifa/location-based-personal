@@ -1,10 +1,14 @@
 "use client";
 
+import { useNavigate } from "react-router-dom";
+
 interface TopbarProps {
   title: string;
 }
 
 const Topbar = ({ title }: TopbarProps) => {
+  const navigate = useNavigate();
+
   return (
     <header className="w-full bg-white p-4 shadow-sm border-b border-gray-300 mt-1">
       <div className="flex items-center justify-between px-2">
@@ -22,7 +26,10 @@ const Topbar = ({ title }: TopbarProps) => {
             />
           </button>
 
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+          <button
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+            onClick={() => navigate("/profile")}
+          >
             <img
               src="/icons/User.svg"
               alt="User Profile"

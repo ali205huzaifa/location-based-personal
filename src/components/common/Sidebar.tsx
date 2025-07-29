@@ -51,9 +51,9 @@ const Sidebar = ({ permissions }: SidebarProps) => {
       permission: "manage_users",
     },
     {
-      label: "Manage interviewers",
+      label: "Interviewers",
       href: "/interviewers",
-      icon: "/icons/manageUser-icon.svg",
+      icon: "/icons/interviewer-icon.svg",
       permission: "Manage_interviewers",
     },
   ];

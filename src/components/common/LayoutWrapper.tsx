@@ -9,14 +9,17 @@ function getTitleFromPath(pathname: string): string {
 
   if (segments.length === 0) return "Dashboard";
 
+  if (pathname.includes("/profile")) return "My Profile";
+  if (pathname.includes("/jobs/create")) return "Create Job";
+
   const isDynamic =
     segments.length > 1 && /^\d+$/.test(segments[segments.length - 1]);
+
+  if (pathname.includes("/jobs/") && isDynamic) return "Jobs";
 
   const base = isDynamic
     ? segments[segments.length - 2]
     : segments[segments.length - 1];
-  if (pathname.includes("/jobs/create")) return "Create Job";
-  if (pathname.includes("/jobs/") && isDynamic) return "Jobs";
 
   return base.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

@@ -10,6 +10,7 @@ import UsersView from "../components/manage-users/UsersView";
 import InterviewerView from "../components/interviewers/InterviewerView";
 import JobDetail from "../components/jobs/JobDetail";
 import ProtectedRoute from "./ProtectedRoutes";
+import ProfileView from "../components/profile/profileView";
 
 const AppRouter: React.FC = () => {
   return (
@@ -18,6 +19,14 @@ const AppRouter: React.FC = () => {
         <Route path="/" element={<LoginPage />} />
 
         <Route element={<MainLayout />}>
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfileView />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

@@ -17,19 +17,23 @@ const LoginPage: React.FC = () => {
     password: string;
   }) => {
     try {
-      const res = await AuthAPI.logIn({
+      const loginRes = await AuthAPI.logIn({
         email: values.username,
         password: values.password,
       });
 
-      const { api_token, user } = res.data;
+      const api_token = loginRes.data.api_token;
 
-      await AuthAPI.verifyToken(api_token);
+      if (!api_token) throw new Error("Token not found");
+
+      const verifyRes = await AuthAPI.verifyToken(api_token);
+      const user = verifyRes.data.data.user;
 
       dispatch(
         setAuthData({
           currentUser: user,
           token: api_token,
+          permissions: user.role.permissions,
         })
       );
 
@@ -40,7 +44,10 @@ const LoginPage: React.FC = () => {
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: err?.response?.data?.message || "Invalid username or password.",
+        text:
+          err?.response?.data?.message ||
+          err.message ||
+          "Invalid username or password.",
         confirmButtonColor: "#000",
       });
     }

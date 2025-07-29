@@ -1,37 +1,58 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 import PermissionsModal from "../permissions/permissionsModal";
+import UsersAPI from "../../api/manage-userApi/UserAPI";
+import type { User } from "../../types/user";
 
-interface User {
-  name: string;
-  email: string;
-  lastUpdated: string;
+interface Props {
+  setUserToEdit: React.Dispatch<React.SetStateAction<User | undefined>>;
+  refreshKey: number;
+  refreshUsers: () => void;
 }
 
-const users: User[] = [
-  {
-    name: "Arslan Rehman",
-    email: "ArslanRehman123@gmail.com",
-    lastUpdated: "12/02/2025",
-  },
-  {
-    name: "Saba Rauf",
-    email: "Saba0215@gmail.com",
-    lastUpdated: "12/02/2025",
-  },
-  {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    lastUpdated: "10/01/2025",
-  },
-  {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    lastUpdated: "05/15/2025",
-  },
-];
+const UserRowDisplay: React.FC<Props> = ({
+  refreshKey,
+  refreshUsers,
+  setUserToEdit,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
 
-const UserRowDisplay: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const handleDelete = async (userId: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await UsersAPI.DeleteUser(userId);
+        Swal.fire("Deleted!", "User has been deleted.", "success");
+        refreshUsers();
+      } catch (err) {
+        Swal.fire("Error", "Failed to delete user.", "error");
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await UsersAPI.getAll();
+        if (res?.data?.isSuccess) {
+          setUsers(res.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, [refreshKey]);
 
   return (
     <div className="relative">
@@ -47,9 +68,9 @@ const UserRowDisplay: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user, i) => (
+            {users.map((user) => (
               <tr
-                key={i}
+                key={user._id}
                 className="border-b border-[#CDCDCD] hover:bg-gray-50 font-Regular text-[16px]"
               >
                 <td className="p-4">{user.name}</td>
@@ -62,9 +83,14 @@ const UserRowDisplay: React.FC = () => {
                     Manage permissions
                   </button>
                 </td>
-                <td className="p-4">{user.lastUpdated}</td>
+                <td className="p-4">
+                  {new Date(user.updatedAt).toLocaleDateString()}
+                </td>
                 <td className="p-4 text-center flex items-center justify-center space-x-3">
-                  <button className="cursor-pointer">
+                  <button
+                    className="cursor-pointer"
+                    onClick={() => setUserToEdit(user)}
+                  >
                     <img
                       src="/icons/edit-icon.svg"
                       alt="Edit"
@@ -73,7 +99,10 @@ const UserRowDisplay: React.FC = () => {
                     />
                   </button>
 
-                  <button className="cursor-pointer">
+                  <button
+                    className="cursor-pointer"
+                    onClick={() => handleDelete(user._id)}
+                  >
                     <img
                       src="/icons/delete-icon.svg"
                       alt="Delete"

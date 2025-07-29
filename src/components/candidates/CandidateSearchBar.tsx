@@ -4,7 +4,7 @@ export default function CandidateSearchBar() {
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="flex items-center gap-20"></div>
 
-        <div className="relative flex-1 ml-44">
+        <div className="relative flex-1">
           {" "}
           <img
             src="/icons/search-icon.svg"
