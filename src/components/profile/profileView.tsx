@@ -9,7 +9,7 @@ export default function ProfileView() {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-10">
       <section>
-        <h2 className="text-2xl font-semibold mb-6">Personal Info</h2>
+        <h2 className="text-2xl font-Regular mb-6">Personal Info</h2>
         <div className="flex items-center space-x-10">
           <div className="relative">
             <img
@@ -30,22 +30,22 @@ export default function ProfileView() {
           <div className="grid grid-cols-3 gap-6 w-full">
             <div>
               <p className="text-sm text-gray-500">Full Name</p>
-              <p className="font-medium">{currentUser.name}</p>
+              <p className="font-Regular">{currentUser.name}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Email Address</p>
-              <p className="font-medium">{currentUser.email}</p>
+              <p className="font-Regular">{currentUser.email}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Phone Number</p>
-              <p className="font-medium">{currentUser.phoneNumber}</p>
+              <p className="font-Regular">{currentUser.phoneNumber}</p>
             </div>
           </div>
         </div>
       </section>
 
       <section className="border-t pt-6">
-        <h2 className="text-2xl font-semibold mb-6">Role & Access</h2>
+        <h2 className="text-2xl font-Regular mb-6">Role & Access</h2>
         <div className="grid grid-cols-4 gap-6">
           <div>
             <p className="text-sm text-gray-500">User Role</p>
@@ -64,12 +64,12 @@ export default function ProfileView() {
             <label className="inline-flex items-center space-x-2">
               <input
                 type="checkbox"
-                checked={currentUser.status === "active"}
+                checked={currentUser?.isActive === true}
                 readOnly
                 className="form-checkbox h-4 w-4 text-teal-600 rounded focus:ring-teal-500"
               />
-              <span className="font-medium capitalize">
-                {currentUser.status}
+              <span className="font-Regular">
+                {currentUser?.isActive ? "Active" : "Inactive"}
               </span>
             </label>
           </div>
@@ -80,20 +80,20 @@ export default function ProfileView() {
         </div>
       </section>
 
-      <section className="border-t pt-6">
-        <h2 className="text-2xl font-semibold mb-6">Security & Credentials</h2>
-        <div className="grid grid-cols-3 gap-6 items-end">
+      <section className="border-t pt-6 w-full">
+        <h2 className="text-2xl font-Regular mb-6">Security & Credentials</h2>
+        <div className="grid grid-cols-8 gap-20 items-end">
           <input
             type="password"
             placeholder="Enter your new Password"
-            className="border rounded-md px-4 py-2 w-full"
+            className="col-span-3 border border-gray-300 rounded-md px-4 py-2 w-full"
           />
           <input
             type="password"
             placeholder="Re-enter your Password"
-            className="border rounded-md px-4 py-2 w-full"
+            className="col-span-3 border border-gray-300 rounded-md px-4 py-2 w-full"
           />
-          <button className="bg-black text-white px-4 py-2 rounded-md w-full">
+          <button className="col-span-2 bg-black text-white py-2 rounded-md w-full">
             Change Password
           </button>
         </div>

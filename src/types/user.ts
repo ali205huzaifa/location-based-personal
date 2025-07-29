@@ -11,12 +11,17 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  phoneNumber?: string;
-  profileImage?: string;
-  role: Role | string;
-  accessLevel?: string;
-  status?: 'active' | 'inactive';
-  lastLogin?: string;
+  role: Role;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface User {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  profileImage?: string;
+  accessLevel: string;
+  isActive: boolean;
+  lastLogin: string;
 }
