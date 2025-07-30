@@ -20,13 +20,6 @@ export default function UsersView() {
           refreshUsers={refreshUsers}
         />
 
-        <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg">
-          <span className="font-Regular text-[20.38px]">
-            Showing all Users{" "}
-            <span className="text-[11.91px]">- 4 Results</span>
-          </span>
-        </div>
-
         <UserRowDisplay
           refreshKey={refreshKey}
           refreshUsers={refreshUsers}

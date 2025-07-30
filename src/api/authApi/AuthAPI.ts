@@ -12,6 +12,10 @@ class AuthAPI {
       },
     });
   }
+
+  static changePassword(data: { currentPassword: string; newPassword: string; confirmNewPassword: string;}) {
+    return axiosClient.patch('/auth/update-password', data);
+  }
 }
 
 export default AuthAPI;

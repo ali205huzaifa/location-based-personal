@@ -1,31 +1,10 @@
-const candidates = [
-  {
-    candidateName: "Arslan Mehmood",
-    jobApplied: "Junior Unity Developer",
-    emailAddress: "arslanmehmood@gmail.com",
-    location: "Gulberg",
-    salary: "15,000 PKR - 30,000 PKR",
-    appliedDate: "12/05/2025",
-  },
-  {
-    candidateName: "Kashif Khan",
-    jobApplied: "UI/UX Intern",
-    emailAddress: "kashifkhan214@gmail.com",
-    location: "Taxila",
-    salary: "15,000 PKR - 30,000 PKR",
-    appliedDate: "12/06/2025",
-  },
-  {
-    candidateName: "Zainab Rehman",
-    jobApplied: "Senior Business Analyst",
-    emailAddress: "zainabrehman@gmail.com",
-    location: "Islamabad",
-    salary: "15,000 PKR - 30,000 PKR",
-    appliedDate: "12/05/2025",
-  },
-];
+import type { Candidate } from "./CandidateView";
 
-export default function CandidateRowDisplay() {
+interface Props {
+  candidates: Candidate[];
+}
+
+export default function CandidateRowDisplay({ candidates }: Props) {
   return (
     <div className="bg-white rounded-b-lg shadow overflow-auto">
       <table className="w-full text-left border-collapse">
@@ -40,14 +19,16 @@ export default function CandidateRowDisplay() {
           </tr>
         </thead>
         <tbody>
-          {candidates.map((candidate, i) => (
+          {candidates.map((c, i) => (
             <tr key={i} className="border-b border-[#CDCDCD] hover:bg-gray-50">
-              <td className="p-4">{candidate.candidateName}</td>
-              <td className="p-4">{candidate.jobApplied}</td>
-              <td className="p-4">{candidate.emailAddress}</td>
-              <td className="p-4">{candidate.location}</td>
-              <td className="p-4">{candidate.salary}</td>
-              <td className="p-4">{candidate.appliedDate}</td>
+              <td className="p-4">{c.fullName}</td>
+              <td className="p-4">{c.jobTitle}</td>
+              <td className="p-4">{c.email}</td>
+              <td className="p-4">{c.location}</td>
+              <td className="p-4">
+                {c.currentSalary} PKR - {c.expectedSalary} PKR
+              </td>
+              <td className="p-4">{c.createdAt}</td>
             </tr>
           ))}
         </tbody>

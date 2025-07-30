@@ -1,57 +1,126 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
+import RoleAPI from "../../api/roleApi/roleAPI";
 
 interface PermissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit?: (data: Record<string, boolean>) => void;
+  role?: {
+    id: string;
+    name: string;
+    permissions: string[];
+  } | null;
+  onSuccess?: () => void;
 }
 
 const PermissionsModal: React.FC<PermissionsModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
+  role,
+  onSuccess,
 }) => {
-  if (!isOpen) return null;
+  const [nameError, setNameError] = useState("");
+  const [permissionsError, setPermissionsError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const [name, setName] = useState("");
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+  const resetForm = () => {
+    setName("");
+    setSelectedPermissions([]);
+    setNameError("");
+    setPermissionsError("");
+  };
 
-    const data: Record<string, boolean> = {};
-    permissionsList.forEach((permission) => {
-      data[permission.name] = formData.get(permission.name) === "on";
-    });
-
-    if (onSubmit) {
-      onSubmit(data);
-    }
-
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
+  useEffect(() => {
+    if (role) {
+      setName(role.name || "");
+      setSelectedPermissions(role.permissions || []);
+    } else {
+      resetForm();
+    }
+  }, [role]);
+
   const permissionsList = [
-    { label: "View Jobs List", name: "viewJobsList" },
-    { label: "Post Job", name: "postJob" },
-    { label: "Edit Job", name: "editJob" },
-    { label: "View Candidate List", name: "viewCandidateList" },
-    { label: "Add Interviewer", name: "addInterviewer" },
-    { label: "Remove Interviewer", name: "removeInterviewer" },
-    { label: "View Archive Jobs List", name: "viewArchiveJobsList" },
-    { label: "Shortlisted Candidates", name: "shortlistedCandidates" },
-    { label: "Interview Scheduled List", name: "interviewScheduledList" },
-    { label: "Interviewed List", name: "interviewedList" },
-    { label: "Selected Candidates List", name: "selectedCandidatesList" },
-    { label: "Send Offer Letter", name: "sendOfferLetter" },
-    { label: "Rejected Candidates", name: "rejectedCandidates" },
+    { label: "Create User", name: "create-user" },
+    { label: "View User", name: "view-user" },
+    { label: "Update User", name: "update-user" },
+    { label: "Delete User", name: "delete-user" },
+    { label: "Create Job", name: "create-job" },
+    { label: "Edit Job", name: "edit-job" },
+    { label: "View Job", name: "view-job" },
+    { label: "Delete Job", name: "delete-job" },
+    { label: "Create Application", name: "create-application" },
+    { label: "Edit Application", name: "edit-application" },
+    { label: "View Application", name: "view-application" },
+    { label: "Delete Application", name: "delete-application" },
   ];
 
+  const handleCheckboxChange = (perm: string) => {
+    setSelectedPermissions((prev) =>
+      prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
+    );
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const payload = {
+      name: name.trim(),
+      permissions: selectedPermissions,
+    };
+
+    setNameError("");
+    setPermissionsError("");
+
+    let hasError = false;
+
+    if (!payload.name) {
+      setNameError("Role name is required.");
+      hasError = true;
+    }
+
+    if (payload.permissions.length === 0) {
+      setPermissionsError("At least one permission must be selected.");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    try {
+      if (role?.id) {
+        await RoleAPI.UpdateRole(role.id, payload);
+        Swal.fire("Success", "Role updated successfully!", "success");
+      } else {
+        await RoleAPI.AddRole(payload.name, payload.permissions);
+        Swal.fire("Success", "Role created successfully!", "success");
+      }
+
+      onSuccess?.();
+      onClose();
+      resetForm();
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message ||
+        "Something went wrong while saving role.";
+      Swal.fire("Error", errorMsg, "error");
+      console.error("Failed to save role", err);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg w-150 p-6 relative max-h-[90vh] overflow-y-auto shadow-xl border border-[#D9D9D9]">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-[350px] p-6 relative max-h-[90vh] overflow-y-auto shadow-xl border border-[#D9D9D9]">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-7 right-3 text-gray-400 hover:text-black"
         >
           <img
@@ -62,28 +131,50 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
           />
         </button>
 
-        <h2 className="text-lg font-medium mb-4 text-center">Permissions</h2>
+        <h2 className="text-lg font-medium mb-4 text-center">
+          {role ? "Update Role" : "Create Role"}
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 mt-6 max-h-64 overflow-y-auto pr-2">
-            {permissionsList.map((permission) => (
-              <label
-                key={permission.name}
-                className="flex items-center space-x-2"
-              >
+          <div>
+            <label className="block text-sm font-medium mb-1">Role Name</label>
+            <input
+              type="text"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="off"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+              placeholder="Enter role name"
+            />
+            {nameError && (
+              <div className="text-red-500 text-sm mt-1">{nameError}</div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 pr-2">
+            {permissionsList.map((perm) => (
+              <label key={perm.name} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  name={permission.name}
+                  name={perm.name}
+                  checked={selectedPermissions.includes(perm.name)}
+                  onChange={() => handleCheckboxChange(perm.name)}
                   className="form-checkbox accent-[#16968F]"
                 />
-                <span className="text-sm">{permission.label}</span>
+                <span className="text-sm">{perm.label}</span>
               </label>
             ))}
+            {permissionsError && (
+              <div className="text-red-500 text-sm mt-1">
+                {permissionsError}
+              </div>
+            )}
           </div>
 
           <button
             type="submit"
-            className="px-6 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md font-Regular"
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md font-Regular"
           >
             Save changes
           </button>

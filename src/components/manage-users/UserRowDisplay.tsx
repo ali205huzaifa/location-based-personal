@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import PermissionsModal from "../permissions/permissionsModal";
 import UsersAPI from "../../api/manage-userApi/UserAPI";
 import type { User } from "../../types/user";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface Props {
   setUserToEdit: React.Dispatch<React.SetStateAction<User | undefined>>;
@@ -15,8 +15,9 @@ const UserRowDisplay: React.FC<Props> = ({
   refreshUsers,
   setUserToEdit,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleDelete = async (userId: string) => {
     const result = await Swal.fire({
@@ -41,13 +42,17 @@ const UserRowDisplay: React.FC<Props> = ({
 
   useEffect(() => {
     const fetchUsers = async () => {
+      setLoading(true);
       try {
         const res = await UsersAPI.getAll();
         if (res?.data?.isSuccess) {
           setUsers(res.data.data);
+          setTotalItems(res.data.totalItems);
         }
       } catch (error) {
         console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -56,71 +61,70 @@ const UserRowDisplay: React.FC<Props> = ({
 
   return (
     <div className="relative">
-      <div className="bg-white rounded-b-lg shadow-lg overflow-auto">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 text-[#8B8B8B] uppercase text-sm">
-            <tr>
-              <th className="p-4 font-medium">Name</th>
-              <th className="p-4 font-medium">Email</th>
-              <th className="p-4 font-medium">Permissions</th>
-              <th className="p-4 font-medium">Last Updated</th>
-              <th className="p-4 font-medium text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr
-                key={user._id}
-                className="border-b border-[#CDCDCD] hover:bg-gray-50 font-Regular text-[16px]"
-              >
-                <td className="p-4">{user.name}</td>
-                <td className="p-4">{user.email}</td>
-                <td className="p-4">
-                  <button
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-xl text-sm font-medium hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200 ease-in-out"
-                    onClick={() => setIsModalOpen(true)}
-                  >
-                    Manage permissions
-                  </button>
-                </td>
-                <td className="p-4">
-                  {new Date(user.updatedAt).toLocaleDateString()}
-                </td>
-                <td className="p-4 text-center flex items-center justify-center space-x-3">
-                  <button
-                    className="cursor-pointer"
-                    onClick={() => setUserToEdit(user)}
-                  >
-                    <img
-                      src="/icons/edit-icon.svg"
-                      alt="Edit"
-                      width={18}
-                      height={18}
-                    />
-                  </button>
-
-                  <button
-                    className="cursor-pointer"
-                    onClick={() => handleDelete(user._id)}
-                  >
-                    <img
-                      src="/icons/delete-icon.svg"
-                      alt="Delete"
-                      width={15}
-                      height={15}
-                    />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg">
+        <span className="font-Regular text-[20.38px]">
+          Showing all Users{" "}
+          <span className="text-[11.91px]">- {totalItems} Results</span>
+        </span>
       </div>
-
-      <PermissionsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          <ClipLoader color="#16968F" size={50} />
+        </div>
+      ) : (
+        <div className="bg-white rounded-b-lg shadow-lg overflow-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 text-[#8B8B8B] uppercase text-sm">
+              <tr>
+                <th className="p-4 font-medium">Name</th>
+                <th className="p-4 font-medium">Email</th>
+                <th className="p-4 font-medium">Roles</th>
+                <th className="p-4 font-medium">Last Updated</th>
+                <th className="p-4 font-medium text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr
+                  key={user._id}
+                  className="border-b border-[#CDCDCD] hover:bg-gray-50 font-Regular text-[16px]"
+                >
+                  <td className="p-4">{user.name}</td>
+                  <td className="p-4">{user.email}</td>
+                  <td className="p-4">{user.role.name}</td>
+                  <td className="p-4">
+                    {new Date(user.updatedAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-4 text-center flex items-center justify-center space-x-3">
+                    <button
+                      className="cursor-pointer"
+                      onClick={() => setUserToEdit(user)}
+                    >
+                      <img
+                        src="/icons/edit-icon.svg"
+                        alt="Edit"
+                        width={18}
+                        height={18}
+                      />
+                    </button>
+                    <button
+                      className="cursor-pointer"
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      <img
+                        src="/icons/delete-icon.svg"
+                        alt="Delete"
+                        width={15}
+                        height={15}
+                      />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

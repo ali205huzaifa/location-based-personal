@@ -11,6 +11,7 @@ import InterviewerView from "../components/interviewers/InterviewerView";
 import JobDetail from "../components/jobs/JobDetail";
 import ProtectedRoute from "./ProtectedRoutes";
 import ProfileView from "../components/profile/profileView";
+import RolesView from "../components/roles/RolesView";
 
 const AppRouter: React.FC = () => {
   return (
@@ -72,6 +73,14 @@ const AppRouter: React.FC = () => {
             element={
               <ProtectedRoute>
                 <InterviewerView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/roles"
+            element={
+              <ProtectedRoute>
+                <RolesView />
               </ProtectedRoute>
             }
           />

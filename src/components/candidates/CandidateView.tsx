@@ -1,21 +1,64 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CandidateRowDisplay from "./CandidateRowDisplay";
 import CandidateGridDisplay from "./CandidateGridDisplay";
-import CandidateSearchBar from "./CandidateSearchBar";
 import CandidateFilters from "./CandidateFilters";
+import Swal from "sweetalert2";
+import { ClipLoader } from "react-spinners";
+import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
+
+export interface Candidate {
+  fullName: string;
+  email: string;
+  location: string;
+  currentSalary: string;
+  expectedSalary: string;
+  createdAt: string;
+  jobTitle: string;
+}
 
 export default function CandidateView() {
   const [view, setView] = useState<"list" | "grid">("list");
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  const fetchCandidates = async () => {
+    setLoading(true);
+    try {
+      const res = await CandidatesAPI.getAll();
+      const transformed = res.data.data.map((app: any) => ({
+        fullName: app.candidateId.fullName,
+        email: app.candidateId.email,
+        location: app.candidateId.currentLocation,
+        currentSalary: app.candidateId.currentSalary,
+        expectedSalary: app.candidateId.expectedSalary,
+        createdAt: new Date(app.createdAt).toLocaleDateString(),
+        jobTitle: app.jobId.title,
+      }));
+
+      setCandidates(transformed);
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to load candidates", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="">
       <div className="px-6">
-        <CandidateSearchBar />
         <CandidateFilters />
 
         <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg mt-4">
           <span className="font-Regular text-[20.38px]">
             Showing all Candidates{" "}
-            <span className="text-[11.91px]">- 3 Results</span>
+            <span className="text-[11.91px]">
+              - {candidates.length} Results
+            </span>
           </span>
 
           <div className="flex items-center gap-4">
@@ -58,7 +101,15 @@ export default function CandidateView() {
           </div>
         </div>
 
-        {view === "list" ? <CandidateRowDisplay /> : <CandidateGridDisplay />}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <ClipLoader size={40} color="#000" />
+          </div>
+        ) : view === "list" ? (
+          <CandidateRowDisplay candidates={candidates} />
+        ) : (
+          <CandidateGridDisplay candidates={candidates} />
+        )}
       </div>
     </div>
   );

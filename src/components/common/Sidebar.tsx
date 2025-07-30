@@ -56,6 +56,12 @@ const Sidebar = ({ permissions }: SidebarProps) => {
       icon: "/icons/interviewer-icon.svg",
       permission: "Manage_interviewers",
     },
+    {
+      label: "Access Roles",
+      href: "/roles",
+      icon: "/icons/roles-icon.svg",
+      permission: "Manage_interviewers",
+    },
   ];
 
   return (
