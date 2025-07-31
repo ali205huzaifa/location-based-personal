@@ -25,6 +25,8 @@ const UserRowDisplay: React.FC<Props> = ({
       text: "This action cannot be undone!",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: "#16968F",
+      cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
     });

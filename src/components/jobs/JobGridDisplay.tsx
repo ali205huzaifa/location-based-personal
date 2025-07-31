@@ -1,59 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import type { Job } from "../../types/user";
 
-const jobs = [
-  {
-    id: "1",
-    postedDate: "10/02/2025",
-    title: "Unity 3d Developer",
-    department: "Game development",
-    type: "Full Time",
-    positions: "02 Positions",
-    workArrangement: "Hybrid",
-    status: "Active",
-  },
-  {
-    id: "2",
-    postedDate: "09/15/2024",
-    title: "React JS Developer",
-    department: "Web development",
-    type: "Part Time",
-    positions: "01 Position",
-    workArrangement: "Remote",
-    status: "Archived",
-  },
-  {
-    id: "3",
-    postedDate: "08/01/2025",
-    title: "Mobile App Developer",
-    department: "Mobile development",
-    type: "Full Time",
-    positions: "03 Positions",
-    workArrangement: "On-site",
-    status: "Active",
-  },
-  {
-    id: "4",
-    postedDate: "07/20/2025",
-    title: "DevOps Engineer",
-    department: "Cloud infrastructure",
-    type: "Full Time",
-    positions: "01 Position",
-    workArrangement: "Hybrid",
-    status: "Active",
-  },
-  {
-    id: "5",
-    postedDate: "06/05/2024",
-    title: "Data Scientist",
-    department: "Data analytics",
-    type: "Full Time",
-    positions: "02 Positions",
-    workArrangement: "Remote",
-    status: "Archived",
-  },
-];
+interface Props {
+  jobs: Job[];
+}
 
-export default function JobGridDisplay() {
+export default function JobGridDisplay({ jobs }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -64,7 +16,9 @@ export default function JobGridDisplay() {
           className="bg-white shadow-md rounded-xl p-5 flex flex-col"
         >
           <div className="flex justify-between items-center mb-2">
-            <p className="text-gray-500 text-sm">Posted : {job.postedDate}</p>
+            <p className="text-gray-500 text-sm">
+              Posted : {job.postedDate || job.posted}
+            </p>
             <span
               className={`text-sm font-medium ${
                 job.status === "Active" ? "text-emerald-600" : "text-red-500"
@@ -74,8 +28,15 @@ export default function JobGridDisplay() {
             </span>
           </div>
 
-          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-1">
+          <h3 className="flex gap-4 text-xl md:text-2xl font-bold text-gray-800 mb-1">
             {job.title}
+            <img
+              src="/icons/edit-icon.svg"
+              alt="Edit Icon"
+              width={20}
+              height={20}
+              className="cursor-pointer"
+            />
           </h3>
 
           <p className="text-blue-700 text-base font-medium mb-4">
@@ -101,7 +62,7 @@ export default function JobGridDisplay() {
                   width={20}
                   height={20}
                 />
-                <span>{job.positions}</span>
+                <span>{job.positions || "N/A"}</span>
               </div>
 
               <div className="flex items-center gap-1">
@@ -111,7 +72,7 @@ export default function JobGridDisplay() {
                   width={20}
                   height={20}
                 />
-                <span>{job.workArrangement}</span>
+                <span>{job.workArrangement || "N/A"}</span>
               </div>
             </div>
 

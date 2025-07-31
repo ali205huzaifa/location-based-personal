@@ -1,31 +1,50 @@
-const interviewer = [
-  {
-    name: "Arslan Rehman",
-    email: "ArslanRehman123@gmail.com",
-    dept: "Dev Ops",
-    lastUpdated: "12/02/2025",
-  },
-  {
-    name: "Saba Rauf",
-    email: "Saba0215@gmail.com",
-    dept: "SQA Engineer",
-    lastUpdated: "12/02/2025",
-  },
-  {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    dept: "web Development",
-    lastUpdated: "10/01/2025",
-  },
-  {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    dept: "Mobile Development",
-    lastUpdated: "05/15/2025",
-  },
-];
+import Swal from "sweetalert2";
+import type { Interviewer } from "../../types/user";
+import InterviewerAPI from "../../api/interviewersApi/InterviewersAPI";
 
-export default function InterviewerRowDisplay() {
+interface Props {
+  data: Interviewer[];
+  onEdit: (interviewer: Interviewer) => void;
+  fetchInterviewers: () => Promise<void>;
+}
+
+export default function InterviewerRowDisplay({
+  data,
+  onEdit,
+  fetchInterviewers,
+}: Props) {
+  const handleDelete = async (id: string) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#16968F",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await InterviewerAPI.DeleteInterviewer(id);
+        await fetchInterviewers();
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Interviewer has been deleted.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } catch (err: any) {
+        Swal.fire({
+          icon: "error",
+          title: "Error deleting interviewer",
+          text: "Something went wrong.",
+        });
+      }
+    }
+  };
+
   return (
     <div className="bg-white rounded-b-lg shadow-lg overflow-auto">
       <table className="w-full text-left border-collapse">
@@ -39,14 +58,16 @@ export default function InterviewerRowDisplay() {
           </tr>
         </thead>
         <tbody>
-          {interviewer.map((interviewer, i) => (
+          {data.map((interviewer: Interviewer, i: number) => (
             <tr key={i} className="border-b border-[#CDCDCD] hover:bg-gray-50">
               <td className="p-4">{interviewer.name}</td>
               <td className="p-4">{interviewer.email}</td>
-              <td className="p-4">{interviewer.dept}</td>
-              <td className="p-4">{interviewer.lastUpdated}</td>
+              <td className="p-4">{interviewer.designation}</td>
+              <td className="p-4">
+                {interviewer.updatedAt?.split("T")[0] ?? "-"}
+              </td>
               <td className="p-4 text-center flex items-center justify-center space-x-3">
-                <button className="cursor-pointer">
+                <button onClick={() => onEdit(interviewer)}>
                   <img
                     src="/icons/edit-icon.svg"
                     alt="Edit"
@@ -54,8 +75,7 @@ export default function InterviewerRowDisplay() {
                     height={18}
                   />
                 </button>
-
-                <button className="cursor-pointer">
+                <button onClick={() => handleDelete(interviewer.id)}>
                   <img
                     src="/icons/delete-icon.svg"
                     alt="Delete"

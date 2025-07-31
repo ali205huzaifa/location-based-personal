@@ -2,12 +2,17 @@ import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import Swal from "sweetalert2";
-import AuthAPI from "../../api/authApi/AuthAPI";
+import UsersAPI from "../../api/manage-userApi/UserAPI";
 
 export default function ProfileView() {
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
 
+  if (!currentUser) return <p>Loading...</p>;
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(
+    currentUser.profileImage || ""
+  );
 
   const [form, setForm] = useState({
     currentPassword: "",
@@ -27,10 +32,69 @@ export default function ProfileView() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      console.log("Selected file:", file);
+    if (!file || !currentUser) return;
+
+    try {
+      const response = await UsersAPI.ImageUrl({
+        name: file.name,
+        fileType: file.type.split("/")[1],
+        type: file.type,
+      });
+
+      const { uploadUrl, fileUrl } = response.data;
+      setProfileImageUrl(fileUrl);
+
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Upload failed",
+        text: "Could not upload image.",
+      });
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (!currentUser) return;
+
+    if (!profileImageUrl) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Profile Image",
+        text: "Please upload a profile image before saving changes.",
+      });
+      return;
+    }
+
+    try {
+      await UsersAPI.UpdateUser(currentUser._id, {
+        name: currentUser.name,
+        email: currentUser.email,
+        role:
+          typeof currentUser.role === "string"
+            ? currentUser.role
+            : currentUser.role.name,
+        profileImage: profileImageUrl,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Profile updated successfully!",
+      });
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text: "Something went wrong.",
+      });
     }
   };
 
@@ -58,7 +122,7 @@ export default function ProfileView() {
     if (!validate()) return;
 
     try {
-      await AuthAPI.changePassword({
+      await UsersAPI.changePassword({
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
         confirmNewPassword: form.confirmNewPassword,
@@ -78,7 +142,7 @@ export default function ProfileView() {
       Swal.fire({
         icon: "error",
         title: "Failed to change password",
-        text: error?.response?.data?.message || "Something went wrong.",
+        text: "Something went wrong.",
       });
     }
   };
@@ -226,7 +290,10 @@ export default function ProfileView() {
       </section>
 
       <div className="flex justify-end mt-6">
-        <button className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-2 rounded-md">
+        <button
+          onClick={handleSaveChanges}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-2 rounded-md"
+        >
           Save changes
         </button>
       </div>

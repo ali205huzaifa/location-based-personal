@@ -2,9 +2,10 @@ import type { Candidate } from "./CandidateView";
 
 interface Props {
   candidates: Candidate[];
+  onView: (candidate: Candidate) => void;
 }
 
-export default function CandidateGridDisplay({ candidates }: Props) {
+export default function CandidateGridDisplay({ candidates, onView }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 p-4 font-sans">
       {candidates.map((candidate, i) => (
@@ -32,7 +33,7 @@ export default function CandidateGridDisplay({ candidates }: Props) {
           </h3>
           <p className="text-blue-700 text-base mb-4">{candidate.jobTitle}</p>
 
-          <div className="flex items-center mt-auto pt-4 border-t border-gray-100">
+          <div className="flex items-center mt-auto pt-4 border-t border-gray-100 justify-between">
             <div className="flex items-center gap-2 text-gray-600 text-sm font-semibold">
               <img
                 src="/icons/salary-icon.svg"
@@ -43,6 +44,16 @@ export default function CandidateGridDisplay({ candidates }: Props) {
               <span>
                 {candidate.currentSalary} PKR - {candidate.expectedSalary} PKR
               </span>
+            </div>
+            <div>
+              <img
+                src="/icons/eyeView-icon.svg"
+                alt="View Icon"
+                width={20}
+                height={20}
+                className="cursor-pointer"
+                onClick={() => onView(candidate)}
+              />
             </div>
           </div>
         </div>

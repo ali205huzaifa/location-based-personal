@@ -54,6 +54,8 @@ const RolesView = () => {
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: "#16968F",
+      cancelButtonColor: "#d33",
     });
 
     if (confirmDelete.isConfirmed) {

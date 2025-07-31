@@ -1,36 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import type { Job } from "../../types/user";
 
-const jobs = [
-  {
-    id: "1",
-    title: "Flutter Developer",
-    department: "App Development",
-    type: "Part Time",
-    experience: "1-3 Years",
-    posted: "12/10/2025",
-    status: "Active",
-  },
-  {
-    id: "2",
-    title: "React js Developer",
-    department: "Backend Development",
-    type: "Full time",
-    experience: "2-4 Years",
-    posted: "23/05/2025",
-    status: "Archived",
-  },
-  {
-    id: "3",
-    title: "UI UX Designer",
-    department: "Designing",
-    type: "Full time",
-    experience: "0-1 Years",
-    posted: "18/06/2025",
-    status: "Active",
-  },
-];
+interface Props {
+  jobs: Job[];
+}
 
-export default function JobRowDisplay() {
+export default function JobRowDisplay({ jobs }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -53,8 +28,8 @@ export default function JobRowDisplay() {
               <td className="p-4">{job.title}</td>
               <td className="p-4">{job.department}</td>
               <td className="p-4">{job.type}</td>
-              <td className="p-4">{job.experience}</td>
-              <td className="p-4">{job.posted}</td>
+              <td className="p-4">{job.experience || "N/A"}</td>
+              <td className="p-4">{job.posted || job.postedDate}</td>
               <td className="p-4">
                 <span
                   className={`font-medium ${
@@ -67,14 +42,23 @@ export default function JobRowDisplay() {
                 </span>
               </td>
               <td className="p-4 text-left">
-                <img
-                  src="/icons/grid-arrow.svg"
-                  alt="Arrow Icon"
-                  width={24}
-                  height={24}
-                  className="inline-block cursor-pointer"
-                  onClick={() => navigate(`/jobs/${job.id}`)}
-                />
+                <div className="flex items-center gap-8">
+                  <img
+                    src="/icons/edit-icon.svg"
+                    alt="Edit Icon"
+                    width={24}
+                    height={24}
+                    className="cursor-pointer"
+                  />
+                  <img
+                    src="/icons/grid-arrow.svg"
+                    alt="Arrow Icon"
+                    width={20}
+                    height={20}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                  />
+                </div>
               </td>
             </tr>
           ))}

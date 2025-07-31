@@ -25,3 +25,24 @@ export interface User {
   isActive: boolean;
   lastLogin: string;
 }
+
+export interface Interviewer {
+  id: string;
+  name: string;
+  email: string;
+  designation: string;
+  updatedAt?: string;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  department: string;
+  type: string;
+  experience?: string;
+  posted?: string;
+  postedDate?: string;
+  status: string;
+  positions?: string;
+  workArrangement?: string;
+}

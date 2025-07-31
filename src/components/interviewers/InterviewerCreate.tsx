@@ -1,6 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import InterviewerAPI from "../../api/interviewersApi/InterviewersAPI";
+import type { Interviewer } from "../../types/user";
+import Swal from "sweetalert2";
 
-export default function InterviewerCreate() {
+interface Props {
+  fetchInterviewers: () => Promise<void>;
+  editData: Interviewer | null;
+  setEditData: React.Dispatch<React.SetStateAction<Interviewer | null>>;
+}
+
+export default function InterviewerCreate({
+  fetchInterviewers,
+  editData,
+  setEditData,
+}: Props) {
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -10,11 +23,29 @@ export default function InterviewerCreate() {
   const [emailError, setEmailError] = useState("");
   const [departmentError, setDepartmentError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (editData) {
+      setName(editData.name);
+      setEmail(editData.email);
+      setDepartment(editData.designation);
+      setShowModal(true);
+    }
+  }, [editData]);
+
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setDepartment("");
+    setNameError("");
+    setEmailError("");
+    setDepartmentError("");
+    setEditData(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let isValid = true;
-
     setNameError("");
     setEmailError("");
     setDepartmentError("");
@@ -39,13 +70,38 @@ export default function InterviewerCreate() {
 
     if (!isValid) return;
 
-    const formData = { name, email, department };
-    console.log("Submitted Data:", formData);
+    const formData = { name, email, designation: department };
 
-    setName("");
-    setEmail("");
-    setDepartment("");
-    setShowModal(false);
+    try {
+      if (editData) {
+        await InterviewerAPI.UpdateInterviewer(editData.id, formData);
+        Swal.fire({
+          icon: "success",
+          title: "Interviewer updated successfully!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        await InterviewerAPI.CreateInterviewer(formData);
+        Swal.fire({
+          icon: "success",
+          title: "Interviewer created successfully!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+
+      await fetchInterviewers();
+      setShowModal(false);
+      resetForm();
+    } catch (err: any) {
+      console.error("API Error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Something went wrong.",
+      });
+    }
   };
 
   return (
@@ -55,9 +111,7 @@ export default function InterviewerCreate() {
           className="flex items-center gap-2 bg-[#16968F] text-white px-6 py-3 rounded-xl hover:bg-emerald-700 cursor-pointer"
           onClick={() => {
             setShowModal(true);
-            setNameError("");
-            setEmailError("");
-            setDepartmentError("");
+            resetForm();
           }}
         >
           <img
@@ -89,7 +143,10 @@ export default function InterviewerCreate() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="relative bg-white w-[90%] max-w-md rounded-xl shadow-lg p-6">
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                resetForm();
+              }}
               className="absolute top-4 right-4 text-gray-500 hover:text-black cursor-pointer"
             >
               <img
@@ -100,7 +157,9 @@ export default function InterviewerCreate() {
               />
             </button>
 
-            <h2 className="text-xl font-semibold mb-6">Add Interviewer</h2>
+            <h2 className="text-xl font-semibold mb-6">
+              {editData ? "Update Interviewer" : "Add Interviewer"}
+            </h2>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
@@ -151,18 +210,16 @@ export default function InterviewerCreate() {
               <div className="flex justify-left gap-6 mt-6">
                 <button
                   type="submit"
-                  className="bg-[#16968F] text-white px-8 py-2 rounded-md hover:bg-emerald-700 cursor-pointer"
+                  className="bg-[#16968F] text-white px-10 py-2 rounded-md hover:bg-emerald-700 cursor-pointer"
                 >
-                  Create
+                  {editData ? "Update" : "Add"}
                 </button>
                 <button
                   type="button"
                   className="border border-gray-300 px-8 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
                   onClick={() => {
                     setShowModal(false);
-                    setNameError("");
-                    setEmailError("");
-                    setDepartmentError("");
+                    resetForm();
                   }}
                 >
                   Cancel
