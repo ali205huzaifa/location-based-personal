@@ -96,10 +96,20 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     try {
       if (role?.id) {
         await RoleAPI.UpdateRole(role.id, payload);
-        Swal.fire("Success", "Role updated successfully!", "success");
+        Swal.fire({
+          title: "Success",
+          text: "Role updated successfully!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
+        });
       } else {
         await RoleAPI.AddRole(payload.name, payload.permissions);
-        Swal.fire("Success", "Role created successfully!", "success");
+        Swal.fire({
+          title: "Success",
+          text: "Role created successfully!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
+        });
       }
 
       onSuccess?.();

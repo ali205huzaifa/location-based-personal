@@ -29,11 +29,10 @@ export default function InterviewerRowDisplay({
         await InterviewerAPI.DeleteInterviewer(id);
         await fetchInterviewers();
         Swal.fire({
-          icon: "success",
           title: "Deleted!",
-          text: "Interviewer has been deleted.",
-          timer: 1500,
-          showConfirmButton: false,
+          text: "Interviewer has been Deleted!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
         });
       } catch (err: any) {
         Swal.fire({
@@ -75,7 +74,7 @@ export default function InterviewerRowDisplay({
                     height={18}
                   />
                 </button>
-                <button onClick={() => handleDelete(interviewer.id)}>
+                <button onClick={() => handleDelete(interviewer._id)}>
                   <img
                     src="/icons/delete-icon.svg"
                     alt="Delete"

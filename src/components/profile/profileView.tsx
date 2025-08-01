@@ -40,7 +40,7 @@ export default function ProfileView() {
       const response = await UsersAPI.ImageUrl({
         name: file.name,
         fileType: file.type.split("/")[1],
-        type: file.type,
+        type: "image",
       });
 
       const { uploadUrl, fileUrl } = response.data;
@@ -82,7 +82,7 @@ export default function ProfileView() {
           typeof currentUser.role === "string"
             ? currentUser.role
             : currentUser.role.name,
-        profileImage: profileImageUrl,
+        profilePicture: profileImageUrl,
       });
 
       Swal.fire({
@@ -221,10 +221,6 @@ export default function ProfileView() {
                 {currentUser?.isActive ? "Active" : "Inactive"}
               </span>
             </label>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Last Login</p>
-            <p className="font-medium">{currentUser.lastLogin}</p>
           </div>
         </div>
       </section>

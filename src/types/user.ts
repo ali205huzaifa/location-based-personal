@@ -27,7 +27,7 @@ export interface User {
 }
 
 export interface Interviewer {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   designation: string;

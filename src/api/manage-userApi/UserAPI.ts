@@ -9,7 +9,7 @@ class UsersAPI {
     return axiosClient.get("/users/", { params });
   }
 
-  static UpdateUser(id: string, data: { name: string; email: string; role: string; profileImage?: string }) {
+  static UpdateUser(id: string, data: { name: string; email: string; role: string; profilePicture?: string }) {
     return axiosClient.patch(`/users/${id}`, data);
   }
 

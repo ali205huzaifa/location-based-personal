@@ -101,15 +101,21 @@ export default function UserCreate({
     try {
       if (userToEdit) {
         await UsersAPI.UpdateUser(userToEdit._id, formData);
-        Swal.fire("Updated!", "User updated successfully.", "success");
+        Swal.fire({
+          title: "Updated!",
+          text: "User updated successfully!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
+        });
       } else {
         formData["password"] = password;
         await UsersAPI.signup(formData);
-        Swal.fire(
-          "User Created",
-          "The user was created successfully!",
-          "success"
-        );
+        Swal.fire({
+          title: "Created!",
+          text: "User created successfully!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
+        });
       }
 
       setUsername("");
@@ -120,11 +126,7 @@ export default function UserCreate({
       onClose?.();
       refreshUsers?.();
     } catch (err: any) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || "Unexpected error",
-        "error"
-      );
+      Swal.fire("Error", "Unexpected error", "error");
     }
   };
 

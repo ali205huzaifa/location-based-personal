@@ -34,7 +34,7 @@ export default function CandidateView() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 10;
+  const limit = 10;
 
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -48,7 +48,7 @@ export default function CandidateView() {
   const fetchCandidates = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await CandidatesAPI.getAll({ page, pageSize });
+      const res = await CandidatesAPI.getAll({ page, limit });
       const transformed = res.data.data.map((app: any) => ({
         fullName: app.candidateId.fullName,
         email: app.candidateId.email,

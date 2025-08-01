@@ -17,16 +17,22 @@ const RolesView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
 
-  const fetchRoles = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+
+  const fetchRoles = async (page = 1) => {
     setIsLoading(true);
     try {
-      const res = await RoleAPI.getAll();
+      const res = await RoleAPI.getAll({ page, limit });
       const formattedRoles = res.data.data.map((role: any) => ({
         id: role._id,
         name: role.name,
         permissions: role.permissions || [],
       }));
       setRoles(formattedRoles);
+      setCurrentPage(page);
+      setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error("Failed to fetch roles:", error);
       Swal.fire("Error", "Failed to load roles", "error");
@@ -36,8 +42,16 @@ const RolesView = () => {
   };
 
   useEffect(() => {
-    fetchRoles();
+    fetchRoles(currentPage);
   }, []);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) fetchRoles(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) fetchRoles(currentPage - 1);
+  };
 
   const handleEdit = (id: string) => {
     const role = roles.find((r) => r.id === id);
@@ -62,9 +76,19 @@ const RolesView = () => {
       try {
         await RoleAPI.DeleteRole(id);
         await fetchRoles();
-        Swal.fire("Deleted!", "Role has been deleted.", "success");
+        Swal.fire({
+          title: "Deleted!",
+          text: "Role has been deleted!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
+        });
       } catch (err) {
-        Swal.fire("Error", "Failed to delete role", "error");
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to delete role",
+          icon: "error",
+          confirmButtonColor: "#16968F",
+        });
       }
     }
   };
@@ -126,6 +150,29 @@ const RolesView = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
+      )}
+      {totalPages >= 1 && (
+        <div className="flex justify-center mt-6 gap-4 items-center">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-sm text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   );

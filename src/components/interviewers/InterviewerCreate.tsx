@@ -74,20 +74,20 @@ export default function InterviewerCreate({
 
     try {
       if (editData) {
-        await InterviewerAPI.UpdateInterviewer(editData.id, formData);
+        await InterviewerAPI.UpdateInterviewer(editData._id, formData);
         Swal.fire({
+          title: "Updated!",
+          text: "Interviewer updated successfully!",
           icon: "success",
-          title: "Interviewer updated successfully!",
-          timer: 1500,
-          showConfirmButton: false,
+          confirmButtonColor: "#16968F",
         });
       } else {
         await InterviewerAPI.CreateInterviewer(formData);
         Swal.fire({
+          title: "Created!",
+          text: "Interviewer created successfully!",
           icon: "success",
-          title: "Interviewer created successfully!",
-          timer: 1500,
-          showConfirmButton: false,
+          confirmButtonColor: "#16968F",
         });
       }
 
