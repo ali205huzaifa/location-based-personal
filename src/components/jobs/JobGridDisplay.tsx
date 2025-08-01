@@ -8,6 +8,11 @@ interface Props {
 export default function JobGridDisplay({ jobs }: Props) {
   const navigate = useNavigate();
 
+  const formatDate = (value?: string) => {
+    if (!value) return "N/A";
+    return new Date(value).toLocaleDateString("en-GB");
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
       {jobs.map((job, i) => (
@@ -17,8 +22,9 @@ export default function JobGridDisplay({ jobs }: Props) {
         >
           <div className="flex justify-between items-center mb-2">
             <p className="text-gray-500 text-sm">
-              Posted : {job.postedDate || job.posted}
+              Posted : {formatDate(job.postedDate || job.posted)}
             </p>
+
             <span
               className={`text-sm font-medium ${
                 job.status === "Active" ? "text-emerald-600" : "text-red-500"
@@ -62,7 +68,7 @@ export default function JobGridDisplay({ jobs }: Props) {
                   width={20}
                   height={20}
                 />
-                <span>{job.positions || "N/A"}</span>
+                <span>{job.positions || "N/A"} Positions</span>
               </div>
 
               <div className="flex items-center gap-1">

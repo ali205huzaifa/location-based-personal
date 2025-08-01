@@ -105,7 +105,7 @@ const Sidebar = ({ permissions }: SidebarProps) => {
                     width={20}
                     height={20}
                   />
-                  <h3 className="font-product font-Regular">{item.label}</h3>
+                  <h3 className="product font-Regular">{item.label}</h3>
                 </Link>
               ))}
           </nav>

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Product Sans', sans-serif;
+  font-family: 'Product Sans', sans-serif !important;
 }
 
 @font-face {
@@ -51,8 +51,10 @@ body {
 .urbanist {
     font-family: 'Urbanist', sans-serif;
   }
-
-
+  
+.product{
+    font-family: 'Product Sans', sans-serif !important;
+}
   input[type="range"] {
   -webkit-appearance: none; 
   background: transparent; 

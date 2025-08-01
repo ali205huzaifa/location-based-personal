@@ -5,6 +5,7 @@ import JobRowDisplay from "./JobRowDisplay";
 import JobGridDisplay from "./JobGridDisplay";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import type { Job } from "../../types/user";
+import ClipLoader from "react-spinners/ClipLoader";
 
 export default function JobsView() {
   const [view, setView] = useState<"list" | "grid">("list");
@@ -22,6 +23,8 @@ export default function JobsView() {
           experience: item.jobId.experienceLevel,
           posted: item.jobId.postingStartDate,
           status: item.jobId.status,
+          positions: item.jobId.totalPositions,
+          workArrangement: item.jobId.workplaceType,
         }));
 
         setJobs(formattedJobs);
@@ -88,7 +91,9 @@ export default function JobsView() {
           <JobGridDisplay jobs={jobs} />
         )
       ) : (
-        <div className="p-4">Loading or no jobs available...</div>
+        <div className="flex justify-center items-center py-10">
+          <ClipLoader size={35} color="#16968F" loading={loading} />
+        </div>
       )}
     </div>
   );
