@@ -3,9 +3,9 @@ import type { Job } from "../../types/user";
 
 interface Props {
   jobs: Job[];
+  onEditJob: (job: Job) => void;
 }
-
-export default function JobGridDisplay({ jobs }: Props) {
+export default function JobGridDisplay({ jobs, onEditJob }: Props) {
   const navigate = useNavigate();
 
   const formatDate = (value?: string) => {
@@ -39,9 +39,10 @@ export default function JobGridDisplay({ jobs }: Props) {
             <img
               src="/icons/edit-icon.svg"
               alt="Edit Icon"
-              width={20}
-              height={20}
+              width={24}
+              height={24}
               className="cursor-pointer"
+              onClick={() => onEditJob(job)}
             />
           </h3>
 

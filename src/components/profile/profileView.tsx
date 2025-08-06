@@ -1,17 +1,19 @@
 import { useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../store";
 import Swal from "sweetalert2";
 import UsersAPI from "../../api/manage-userApi/UserAPI";
+import { setAuthData } from "../../store/Auth";
 
 export default function ProfileView() {
-  const currentUser = useSelector((state: RootState) => state.auth.currentUser);
-
-  if (!currentUser) return <p>Loading...</p>;
+  const dispatch = useDispatch();
+  const { currentUser, token, permissions } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState(
-    currentUser.profileImage || ""
+    currentUser?.profilePicture || ""
   );
 
   const [form, setForm] = useState({
@@ -25,6 +27,8 @@ export default function ProfileView() {
     newPassword: "",
     confirmNewPassword: "",
   });
+
+  if (!currentUser) return <p>Loading...</p>;
 
   const handleEditClick = () => {
     if (fileInputRef.current) {
@@ -43,17 +47,44 @@ export default function ProfileView() {
         type: "image",
       });
 
-      const { uploadUrl, fileUrl } = response.data;
-      setProfileImageUrl(fileUrl);
+      const { signedUrl } = response.data;
 
-      await fetch(uploadUrl, {
+      if (!signedUrl) {
+        throw new Error("Signed URL is missing");
+      }
+
+      console.log("Uploading to:", signedUrl);
+
+      await fetch(signedUrl, {
         method: "PUT",
         headers: {
           "Content-Type": file.type,
         },
         body: file,
       });
+
+      const fileUrl = signedUrl.split("?")[0];
+      setProfileImageUrl(fileUrl);
+
+      await UsersAPI.UpdateProfileImage(currentUser._id, {
+        profilePicture: fileUrl,
+      });
+
+      dispatch(
+        setAuthData({
+          currentUser: { ...currentUser, profilePicture: fileUrl },
+          token: token || "",
+          permissions: permissions || [],
+        })
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Upload Successful",
+        text: "Profile image updated successfully!",
+      });
     } catch (error: any) {
+      console.error("Upload error:", error);
       Swal.fire({
         icon: "error",
         title: "Upload failed",
@@ -75,15 +106,17 @@ export default function ProfileView() {
     }
 
     try {
-      await UsersAPI.UpdateUser(currentUser._id, {
-        name: currentUser.name,
-        email: currentUser.email,
-        role:
-          typeof currentUser.role === "string"
-            ? currentUser.role
-            : currentUser.role.name,
+      await UsersAPI.UpdateProfileImage(currentUser._id, {
         profilePicture: profileImageUrl,
       });
+
+      dispatch(
+        setAuthData({
+          currentUser: { ...currentUser, profilePicture: profileImageUrl },
+          token: token || "",
+          permissions: permissions || [],
+        })
+      );
 
       Swal.fire({
         icon: "success",
@@ -147,8 +180,6 @@ export default function ProfileView() {
     }
   };
 
-  if (!currentUser) return <p>Loading...</p>;
-
   return (
     <div className="max-w-7xl p-6 space-y-10">
       <section>
@@ -158,7 +189,7 @@ export default function ProfileView() {
             <div className="flex w-[250px] items-center gap-4 mt-2">
               <p className="text-sm text-gray-500">Profile Picture</p>
               <img
-                src={currentUser.profileImage || "/profile.jpg"}
+                src={profileImageUrl || "/profile.jpg"}
                 alt="Profile"
                 className="w-24 h-24 rounded-md object-cover"
               />

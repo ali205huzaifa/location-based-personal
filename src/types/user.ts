@@ -20,7 +20,7 @@ export interface User {
   fullName: string;
   email: string;
   phoneNumber: string;
-  profileImage?: string;
+  profilePicture?: string;
   accessLevel: string;
   isActive: boolean;
   lastLogin: string;
@@ -46,3 +46,24 @@ export interface Job {
   positions?: string;
   workArrangement?: string;
 }
+
+export type JobPayloadType = {
+  title: string;
+  description: string;
+  location: string;
+  department: string;
+  experienceLevel: string;
+  employmentType: string;
+  salaryRange: string;
+  skills: string[];
+  postingStartDate: string;
+  postingEndDate: string;
+  [key: string]: any;
+};
+
+export type ApplicationQuestion = {
+  label: string;
+  fieldType: "TEXT" | "DROPDOWN";
+  isRequired?: boolean;
+  options?: string[];
+};

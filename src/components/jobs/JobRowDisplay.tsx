@@ -3,9 +3,10 @@ import type { Job } from "../../types/user";
 
 interface Props {
   jobs: Job[];
+  onEditJob: (job: Job) => void;
 }
 
-export default function JobRowDisplay({ jobs }: Props) {
+export default function JobRowDisplay({ jobs, onEditJob }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -59,7 +60,9 @@ export default function JobRowDisplay({ jobs }: Props) {
                       width={24}
                       height={24}
                       className="cursor-pointer"
+                      onClick={() => onEditJob(job)}
                     />
+
                     <img
                       src="/icons/grid-arrow.svg"
                       alt="Arrow Icon"

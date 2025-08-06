@@ -5,51 +5,56 @@ import { format } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-export default function CandidateFilters() {
-  const [jobType, setJobType] = useState("All Jobs");
-  const [location, setLocation] = useState("By Location");
-  const [gender, setGender] = useState("Male");
+interface CandidateFiltersProps {
+  searchQuery: string;
+  setSearchQuery: (val: string) => void;
 
-  const getStartAndEndOfCurrentMonth = () => {
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { startDate, endDate };
-  };
+  jobType: string;
+  setJobType: (val: string) => void;
 
-  const initialDates = getStartAndEndOfCurrentMonth();
+  candidateLocation: string;
+  setCandidateLocation: (val: string) => void;
 
-  const [dateRange, setDateRange] = useState([
-    {
-      startDate: initialDates.startDate,
-      endDate: initialDates.endDate,
-      key: "selection",
-    },
-  ]);
+  candidateGender: string;
+  setCandidateGender: (val: string) => void;
 
+  currentSalary: number;
+  expectedSalary: number;
+  setCurrentSalary: (val: number) => void;
+  setExpectedSalary: (val: number) => void;
+
+  startDate: Date;
+  endDate: Date;
+  setStartDate: (val: Date) => void;
+  setEndDate: (val: Date) => void;
+
+  onReset: () => void;
+}
+
+export default function CandidateFilters({
+  searchQuery,
+  setSearchQuery,
+  jobType,
+  setJobType,
+  candidateLocation,
+  setCandidateLocation,
+  candidateGender,
+  setCandidateGender,
+  currentSalary,
+  expectedSalary,
+  setCurrentSalary,
+  setExpectedSalary,
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+  onReset,
+}: CandidateFiltersProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
 
   const salaryMin = 0;
   const salaryMax = 200000;
-  const [minSalary, setMinSalary] = useState(20000);
-  const [maxSalary, setMaxSalary] = useState(130000);
-
-  const handleReset = () => {
-    const { startDate, endDate } = getStartAndEndOfCurrentMonth();
-    setDateRange([
-      {
-        startDate,
-        endDate,
-        key: "selection",
-      },
-    ]);
-    setJobType("All Jobs");
-    setLocation("By Location");
-    setGender("Male");
-    setMinSalary(20000);
-    setMaxSalary(130000);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,27 +73,26 @@ export default function CandidateFilters() {
     <>
       <div className="bg-white mt-4 relative">
         <div className="flex flex-wrap items-center gap-4 mb-4">
-          <div className="flex items-center gap-20"></div>
-
           <div className="relative flex-1">
-            {" "}
             <img
               src="/icons/search-icon.svg"
               alt="Search Icon"
               width={20}
               height={20}
               className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"
-            />{" "}
+            />
             <input
               type="text"
-              placeholder="start typing to search Candidates"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Start typing to search Candidates By their Name"
               className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
-            />{" "}
+            />
           </div>
         </div>
       </div>
 
-      <div className="relative bg-white border border-gray-200 px-4 py-3 rounded-xl flex items-center flex-wrap md:gap-2 lg:gap-2 xl:gap-10 mt-6">
+      <div className="relative bg-white border border-gray-200 px-4 py-3 rounded-xl flex items-center flex-wrap md:gap-2 lg:gap-2 xl:gap-4 mt-6">
         <div className="relative" ref={datePickerRef}>
           <div
             className="flex items-center gap-2 text-sm cursor-pointer"
@@ -101,21 +105,26 @@ export default function CandidateFilters() {
               height={16}
             />
             <span>
-              {format(dateRange[0].startDate, "dd MMM")} -{" "}
-              {format(dateRange[0].endDate, "dd MMM")}
+              {format(startDate, "dd MMM")} - {format(endDate, "dd MMM")}
             </span>
           </div>
 
           {showDatePicker && (
             <div className="absolute z-50 mt-2">
               <DateRange
-                editableDateInputs={true}
-                onChange={(item: { selection: (typeof dateRange)[0] }) =>
-                  setDateRange([item.selection])
-                }
-                moveRangeOnFirstSelection={false}
-                ranges={dateRange}
-                rangeColors={["#16968F"]}
+                ranges={[
+                  {
+                    startDate,
+                    endDate,
+                    key: "selection",
+                  },
+                ]}
+                onChange={(item: {
+                  selection: { startDate: Date; endDate: Date };
+                }) => {
+                  setStartDate(item.selection.startDate);
+                  setEndDate(item.selection.endDate);
+                }}
               />
             </div>
           )}
@@ -127,14 +136,14 @@ export default function CandidateFilters() {
           className="text-sm bg-transparent border-none outline-none cursor-pointer"
         >
           <option>All Jobs</option>
-          <option>Full Time</option>
-          <option>Part Time</option>
-          <option>Contract</option>
+          <option value="FULL_TIME">Full Time</option>
+          <option value="PART_TIME">Part Time</option>
+          <option value="CONTRACT-BASED">Contract</option>
         </select>
 
         <select
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          value={candidateLocation}
+          onChange={(e) => setCandidateLocation(e.target.value)}
           className="text-sm bg-transparent border-none outline-none cursor-pointer"
         >
           <option>By Location</option>
@@ -144,60 +153,70 @@ export default function CandidateFilters() {
         </select>
 
         <select
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
+          value={candidateGender}
+          onChange={(e) => setCandidateGender(e.target.value)}
           className="text-sm bg-transparent border-none outline-none cursor-pointer"
         >
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
+          <option>By Gender</option>
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+          <option value="OTHER">Other</option>
         </select>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           <span className="text-sm whitespace-nowrap">Current Salary</span>
 
-          <div className="relative w-[250px] sm:w-[300px] h-6 mt-2">
+          <div className="relative w-[250px] sm:w-[300px] mt-2">
+            <div className="flex justify-between text-sm text-gray-700 mb-1 px-1">
+              <span>{currentSalary.toLocaleString()}</span>
+              <span>{expectedSalary.toLocaleString()}</span>
+            </div>
+
             <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded" />
 
             <div
               className="absolute top-1/2 transform -translate-y-1/2 h-1 bg-teal-600 rounded"
               style={{
                 left: `${
-                  ((minSalary - salaryMin) / (salaryMax - salaryMin)) * 100
+                  ((currentSalary - salaryMin) / (salaryMax - salaryMin)) * 100
                 }%`,
                 width: `${
-                  ((maxSalary - minSalary) / (salaryMax - salaryMin)) * 100
+                  ((expectedSalary - currentSalary) / (salaryMax - salaryMin)) *
+                  100
                 }%`,
               }}
             />
 
             <input
               type="range"
+              step={1000}
               min={salaryMin}
               max={salaryMax}
-              step={1000}
-              value={minSalary}
+              value={currentSalary}
               onChange={(e) =>
-                setMinSalary(Math.min(Number(e.target.value), maxSalary - 1000))
+                setCurrentSalary(
+                  Math.min(Number(e.target.value), expectedSalary - 1000)
+                )
               }
-              className="absolute w-full h-1 bg-transparent appearance-none"
+              className="absolute w-full pointer-events-auto z-10"
             />
-
             <input
               type="range"
+              step={1000}
               min={salaryMin}
               max={salaryMax}
-              step={1000}
-              value={maxSalary}
+              value={expectedSalary}
               onChange={(e) =>
-                setMaxSalary(Math.max(Number(e.target.value), minSalary + 1000))
+                setExpectedSalary(
+                  Math.max(Number(e.target.value), currentSalary + 1000)
+                )
               }
-              className="absolute w-full h-1 bg-transparent appearance-none"
+              className="absolute w-full pointer-events-auto z-10"
             />
 
-            <div className="flex justify-between text-xs text-teal-600 mt-4">
-              <span>{minSalary.toLocaleString()}</span>
-              <span>{maxSalary.toLocaleString()}</span>
+            <div className="flex justify-between text-xs text-teal-600 mt-8">
+              <span>{salaryMin.toLocaleString()}</span>
+              <span>{salaryMax.toLocaleString()}</span>
             </div>
           </div>
 
@@ -205,7 +224,7 @@ export default function CandidateFilters() {
         </div>
 
         <button
-          onClick={handleReset}
+          onClick={onReset}
           className="font-Regular ml-auto items-center gap-2 bg-[#16968F] text-white px-4 py-2 rounded-xl hover:bg-emerald-700 cursor-pointer"
         >
           Reset Filter

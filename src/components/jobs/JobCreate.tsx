@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import ImageResize from "quill-image-resize-module-react";
+import JobsAPI from "../../api/jobsApi/JobsAPI";
+import Swal from "sweetalert2";
+import type { JobPayloadType } from "../../types/user";
 
 Quill.register("modules/imageResize", ImageResize);
 
@@ -23,10 +26,20 @@ type JobFormErrors = {
   jobStatus?: string;
 };
 
-export default function JobCreate() {
+type JobCreateProps = {
+  showModal: boolean;
+  setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
+  jobToEdit?: JobPayloadType | null;
+  isEdit?: boolean;
+};
+
+export default function JobCreate({
+  showModal,
+  setShowModal,
+  jobToEdit,
+}: JobCreateProps) {
   const [errors, setErrors] = useState<JobFormErrors>({});
   const [designation, setDesignation] = useState("");
-  const [showModal, setShowModal] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [questions, setQuestions] = useState<string[]>([]);
@@ -36,6 +49,9 @@ export default function JobCreate() {
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
 
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
   const [level, setLevel] = useState("");
   const [department, setDepartment] = useState("");
   const [openings, setOpenings] = useState("");
@@ -44,6 +60,22 @@ export default function JobCreate() {
   const [workplace, setWorkplace] = useState("");
   const [location, setLocation] = useState("");
   const [jobStatus, setJobStatus] = useState("");
+
+  const [predefinedQuestions, setPredefinedQuestions] = useState({
+    currentSalary: false,
+    expectedSalary: false,
+    noticePeriod: false,
+    reasonForSwitching: false,
+  });
+
+  useEffect(() => {
+    const now = new Date();
+    const oneMonthLater = new Date();
+    oneMonthLater.setMonth(now.getMonth() + 1);
+
+    setStartDate(now.toISOString().split("T")[0]);
+    setEndDate(oneMonthLater.toISOString().split("T")[0]);
+  }, []);
 
   const validateForm = () => {
     const newErrors: JobFormErrors = {};
@@ -63,6 +95,10 @@ export default function JobCreate() {
     if (!jobStatus) newErrors.jobStatus = "Please select Job Status";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const resetForm = () => {
+    setErrors({});
   };
 
   const addQuestion = () => {
@@ -98,6 +134,128 @@ export default function JobCreate() {
     setEditIndex(index);
     setShowQuestionModal(true);
   };
+
+  const isEdit = !!jobToEdit;
+
+  const handleSubmit = () => {
+    if (!validateForm()) return;
+
+    const payload = {
+      title: designation,
+      description: jobDescription,
+      department,
+      totalPositions: Number(openings),
+      workplaceType: workplace,
+      postingStartDate: new Date(startDate).toISOString(),
+      postingEndDate: new Date(endDate).toISOString(),
+      requiredSkills: skills,
+      experienceLevel: level,
+      jobType,
+      location,
+      status: jobStatus,
+      gender: selectedGender?.toUpperCase(),
+      applicationQuestions: [
+        ...Object.entries(predefinedQuestions)
+          .filter(([_, val]) => val)
+          .map(([key]) => ({
+            label:
+              key === "currentSalary"
+                ? "Current Salary"
+                : key === "expectedSalary"
+                ? "Expected Salary"
+                : key === "noticePeriod"
+                ? "Notice Period"
+                : "Reason for switching",
+            fieldType: "TEXT",
+            isRequired: true,
+          })),
+        ...questions.map((q) => ({
+          label: q,
+          fieldType: "TEXT",
+          isRequired: true,
+        })),
+      ],
+    };
+
+    const apiCall = isEdit
+      ? JobsAPI.UpdateJobById(jobToEdit.id, payload)
+      : JobsAPI.AddJob(payload);
+
+    apiCall
+      .then(() => {
+        Swal.fire(
+          "Success!",
+          isEdit ? "Job updated!" : "Job posted!",
+          "success"
+        );
+        setShowModal(false);
+        resetForm();
+      })
+      .catch((err) => {
+        console.error(err);
+        Swal.fire("Error", "Something went wrong", "error");
+      });
+  };
+
+  const getTodayDate = () => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  const getNextMonthDate = () => {
+    const today = new Date();
+    today.setMonth(today.getMonth() + 1);
+    return today.toISOString().split("T")[0];
+  };
+
+  useEffect(() => {
+    if (isEdit && jobToEdit) {
+      setDesignation(jobToEdit.title || "");
+      setLevel(jobToEdit.experienceLevel || "");
+      setJobDescription(jobToEdit.description || "");
+      setSkills(jobToEdit.requiredSkills || []);
+      setDepartment(jobToEdit.department || "");
+      setOpenings(jobToEdit.totalPositions?.toString() || "1");
+      setSelectedGender(jobToEdit.gender?.toLowerCase() || "");
+      setJobType(jobToEdit.jobType || "");
+      setExperience(jobToEdit.experience || "");
+      setWorkplace(jobToEdit.workplaceType || "");
+      setLocation(jobToEdit.location || "");
+      setJobStatus(jobToEdit.status || "Active");
+      setStartDate(jobToEdit.postingStartDate?.split("T")[0] || getTodayDate());
+      setEndDate(jobToEdit.postingEndDate?.split("T")[0] || getNextMonthDate());
+
+      setQuestions(
+        (jobToEdit.applicationQuestions || [])
+          .filter(
+            (q: { label: string }) =>
+              ![
+                "Current Salary",
+                "Expected Salary",
+                "Notice Period",
+                "Reason for switching",
+              ].includes(q.label)
+          )
+          .map((q: { label: string }) => q.label)
+      );
+
+      const predefs = {
+        currentSalary: false,
+        expectedSalary: false,
+        noticePeriod: false,
+        reasonForSwitching: false,
+      };
+
+      (jobToEdit.applicationQuestions || []).forEach((q: { label: string }) => {
+        if (q.label === "Current Salary") predefs.currentSalary = true;
+        if (q.label === "Expected Salary") predefs.expectedSalary = true;
+        if (q.label === "Notice Period") predefs.noticePeriod = true;
+        if (q.label === "Reason for switching")
+          predefs.reasonForSwitching = true;
+      });
+
+      setPredefinedQuestions(predefs);
+    }
+  }, [isEdit, jobToEdit]);
 
   const quillModules = {
     toolbar: [
@@ -144,46 +302,14 @@ export default function JobCreate() {
 
   return (
     <div className="bg-white mt-4 relative">
-      <div className="flex flex-wrap items-center gap-4 mb-4">
-        <button
-          className="font-Regular flex items-center gap-2 bg-[#16968F] text-white px-6 py-3 rounded-xl hover:bg-emerald-700 cursor-pointer"
-          onClick={() => setShowModal(true)}
-        >
-          <img
-            src="/icons/jobs-icon.svg"
-            alt="Jobs Icon"
-            width={20}
-            height={20}
-          />
-          Post a Job
-        </button>
-
-        <div className="relative flex-1">
-          {" "}
-          <img
-            src="/icons/search-icon.svg"
-            alt="Search Icon"
-            width={20}
-            height={20}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"
-          />{" "}
-          <input
-            type="text"
-            placeholder="start typing to search jobs"
-            className="font-Regular w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
-          />{" "}
-        </div>
-
-        <button className="font-Regular border border-[#000000] px-6 py-3 rounded-xl cursor-pointer">
-          Archived Jobs
-        </button>
-      </div>
-
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center ">
           <div className="relative bg-[#FFFFFF] w-[90%] max-w-6xl h-[80vh] rounded-xl shadow-xl border border-[#D9D9D9] overflow-y-auto p-6">
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                resetForm();
+                setShowModal(false);
+              }}
               className="absolute top-4 right-6 text-2xl font-bold text-gray-500 hover:text-black cursor-pointer"
             >
               <img
@@ -195,7 +321,7 @@ export default function JobCreate() {
             </button>
 
             <h2 className="text-2xl font-semibold mb-6 border-b border-gray-400">
-              New Job
+              {isEdit ? "Edit Job" : "New Job"}
             </h2>
 
             <div className="grid grid-cols-2 gap-8">
@@ -203,21 +329,30 @@ export default function JobCreate() {
                 <label className="block mb-4 text-[16px]">Job title</label>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <select
-                    className="border border-gray-300 rounded-md px-4 py-4 w-full"
+                    className="border border-gray-300 rounded-md px-4 py-4 w-full custom-select"
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
                   >
                     <option value="">Select Designation</option>
                     <option value="Flutter Developer">Flutter Developer</option>
+                    <option value="MERN Stack Developer">
+                      MERN Stack Developer
+                    </option>
+                    <option value="Frontend Developer">
+                      Frontend Developer
+                    </option>
+                    <option value="Backend Developer">Backend Developer</option>
                   </select>
 
                   <select
-                    className="border border-gray-300 rounded-md px-4 py-4 w-full"
+                    className="border border-gray-300 rounded-md px-4 py-4 w-full custom-select"
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
                   >
                     <option value="">Select Level</option>
-                    <option value="Senior Level">Senior Level</option>
+                    <option value="Entry">Entry Level</option>
+                    <option value="Mid">Mid Level</option>
+                    <option value="Senior">Senior Level</option>
                   </select>
                   {errors.designation && (
                     <p className="text-red-500 text-sm mt-1">
@@ -367,17 +502,43 @@ export default function JobCreate() {
                 </div>
               </div>
 
+              <input
+                type="hidden"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+
+              <input
+                type="hidden"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+
               <div>
                 <div className="mb-8">
                   <label className="block mb-6">Job Department</label>
                   <select
-                    className="w-full border border-gray-300 rounded-md px-4 py-4"
+                    className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                   >
                     <option value="">Select Department</option>
-                    <option value="App Development">App Development</option>
+                    <option value="MOBILE_APP_DEVELOPMENT">
+                      Mobile Development
+                    </option>
+                    <option value="HUMAN_RESOURCE">Human Resource</option>
+                    <option value="WEB_DEVELOPMENT">Web Development</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="ARTIFICIAL_INTELLIGENCE">
+                      Artificial Intelligence
+                    </option>
+                    <option value="BUSINESS_DEVELOPMENT">
+                      Business Development
+                    </option>
+                    <option value="UI/UX">UI/UX</option>
+                    <option value="GAME_DEVELOPMENT">Game Development</option>
                   </select>
+
                   {errors.department && (
                     <p className="text-red-500 text-sm mt-1">
                       {errors.department}
@@ -389,12 +550,16 @@ export default function JobCreate() {
                   <div>
                     <label className="block mb-6">No. of Positions</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4"
+                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={openings}
                       onChange={(e) => setOpenings(e.target.value)}
                     >
                       <option value="">Select Job Openings</option>
-                      <option value="2-4">2-4</option>
+                      <option value="2">1-2</option>
+                      <option value="4">2-4</option>
+                      <option value="6">5-6</option>
+                      <option value="8">6-8</option>
+                      <option value="10">8-10</option>
                     </select>
 
                     {errors.openings && (
@@ -434,12 +599,14 @@ export default function JobCreate() {
                   <div>
                     <label className="block mb-6">Job Type</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4"
-                      value={department}
+                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
+                      value={jobType}
                       onChange={(e) => setJobType(e.target.value)}
                     >
                       <option>Select Job Type</option>
-                      <option>Full Time</option>
+                      <option value="FULL_TIME">Full Time</option>
+                      <option value="PART_TIME">Part Time</option>
+                      <option value="CONTRACT_BASED">Contract Based</option>
                     </select>
                     {errors.jobType && (
                       <p className="text-red-500 text-sm mt-1">
@@ -450,12 +617,17 @@ export default function JobCreate() {
                   <div>
                     <label className="block mb-6">Experience Level</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4"
-                      value={department}
+                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
+                      value={experience}
                       onChange={(e) => setExperience(e.target.value)}
                     >
                       <option>Select Experience</option>
-                      <option>1-3 years</option>
+                      <option value="0">No Previous Experience</option>
+                      <option value="1">0-1 years</option>
+                      <option value="2">1-2 years</option>
+                      <option value="3">2-3 years</option>
+                      <option value="4">3-4 years</option>
+                      <option value="5">4-5 years</option>
                     </select>
                     {errors.experience && (
                       <p className="text-red-500 text-sm mt-1">
@@ -469,12 +641,14 @@ export default function JobCreate() {
                   <div>
                     <label className="block mb-6">Workplace Type</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4"
-                      value={department}
+                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
+                      value={workplace}
                       onChange={(e) => setWorkplace(e.target.value)}
                     >
                       <option>Select Job Workplace</option>
-                      <option>Remote</option>
+                      <option value="REMOTE">Remote</option>
+                      <option value="HYBRID">Hybrid</option>
+                      <option value="ON_SITE">On-Site</option>
                     </select>
                     {errors.workplace && (
                       <p className="text-red-500 text-sm mt-1">
@@ -485,12 +659,12 @@ export default function JobCreate() {
                   <div>
                     <label className="block mb-6">Job Location</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4"
-                      value={department}
+                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
+                      value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     >
                       <option>Select location</option>
-                      <option>Islamabad</option>
+                      <option value="Islamabad">Islamabad</option>
                     </select>
                     {errors.location && (
                       <p className="text-red-500 text-sm mt-1">
@@ -508,8 +682,8 @@ export default function JobCreate() {
                         <input
                           type="radio"
                           name="status"
-                          value="Active"
-                          checked={jobStatus === "Active"}
+                          value={status}
+                          checked={jobStatus === status}
                           onChange={(e) => setJobStatus(e.target.value)}
                           className="accent-[#16968F]"
                         />
@@ -526,12 +700,9 @@ export default function JobCreate() {
 
                 <div className="flex justify-end mt-10">
                   <button
+                    type="button"
                     className="flex items-center justify-center bg-[#16968F] gap-2 text-white w-full py-3 rounded-md hover:bg-emerald-700 mr-6 cursor-pointer"
-                    onClick={() => {
-                      if (validateForm()) {
-                        setShowModal(false);
-                      }
-                    }}
+                    onClick={handleSubmit}
                   >
                     <img
                       src="/icons/jobs-icon.svg"
@@ -539,7 +710,7 @@ export default function JobCreate() {
                       width={20}
                       height={20}
                     />
-                    Post Job
+                    {jobToEdit ? "Update Job" : "Post Job"}
                   </button>
                 </div>
               </div>

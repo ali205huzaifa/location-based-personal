@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import RoleAPI from "../../api/roleApi/roleAPI";
 import UsersAPI from "../../api/manage-userApi/UserAPI";
+import type { User } from "../../types/user";
 
 interface UserCreateProps {
   userToEdit?: {
@@ -13,14 +14,19 @@ interface UserCreateProps {
       name: string;
     };
   };
+  setUserToEdit: React.Dispatch<React.SetStateAction<User | undefined>>;
   onClose?: () => void;
   refreshUsers?: () => void;
+  searchQuery: string;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function UserCreate({
   userToEdit,
   onClose,
   refreshUsers,
+  searchQuery,
+  setSearchQuery,
 }: UserCreateProps) {
   const [showModal, setShowModal] = useState(false);
   const [username, setUsername] = useState("");
@@ -167,7 +173,9 @@ export default function UserCreate({
           />
           <input
             type="text"
-            placeholder="start typing to search Users"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Start typing to search Users By Name"
             className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
           />
         </div>
@@ -228,7 +236,7 @@ export default function UserCreate({
                 <select
                   className={`w-full border ${
                     roleError ? "border-red-500" : "border-gray-300"
-                  } rounded-md px-4 py-3`}
+                  } rounded-md px-4 py-3 custom-select`}
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                 >
@@ -239,6 +247,7 @@ export default function UserCreate({
                     </option>
                   ))}
                 </select>
+
                 {roleError && (
                   <p className="text-red-600 text-sm mt-1">{roleError}</p>
                 )}

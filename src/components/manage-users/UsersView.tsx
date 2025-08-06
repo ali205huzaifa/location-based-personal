@@ -6,6 +6,7 @@ import type { User } from "../../types/user";
 export default function UsersView() {
   const [userToEdit, setUserToEdit] = useState<User | undefined>(undefined);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const refreshUsers = () => {
     setRefreshKey((prev) => prev + 1);
@@ -16,14 +17,17 @@ export default function UsersView() {
       <div className="px-6">
         <UserCreate
           userToEdit={userToEdit}
-          onClose={() => setUserToEdit(undefined)}
+          setUserToEdit={setUserToEdit}
           refreshUsers={refreshUsers}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
 
         <UserRowDisplay
           refreshKey={refreshKey}
           refreshUsers={refreshUsers}
           setUserToEdit={setUserToEdit}
+          searchQuery={searchQuery}
         />
       </div>
     </div>

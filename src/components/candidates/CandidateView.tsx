@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import CandidateRowDisplay from "./CandidateRowDisplay";
 import CandidateGridDisplay from "./CandidateGridDisplay";
 import CandidateFilters from "./CandidateFilters";
@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { ClipLoader } from "react-spinners";
 import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
 import CandidateDetailModal from "./CandidateDetailModal";
+import debounce from "lodash/debounce";
 
 export interface Candidate {
   fullName: string;
@@ -23,6 +24,59 @@ export interface Candidate {
   applicationQuestions: string;
 }
 
+function buildCandidateFilters({
+  searchQuery,
+  jobType,
+  candidateLocation,
+  candidateGender,
+  currentSalary,
+  expectedSalary,
+  startDate,
+  endDate,
+}: {
+  searchQuery: string;
+  jobType: string;
+  candidateLocation: string;
+  candidateGender: string;
+  currentSalary: number;
+  expectedSalary: number;
+  startDate: Date;
+  endDate: Date;
+}) {
+  const filters: Record<string, any> = {};
+
+  if (searchQuery.trim()) filters.searchQuery = searchQuery;
+  if (jobType !== "All Jobs") filters.jobType = jobType;
+  if (candidateLocation !== "By Location")
+    filters.candidateLocation = candidateLocation;
+  if (candidateGender !== "gender") filters.candidateGender = candidateGender;
+  if (currentSalary !== 0) filters["currentSalary[gte]"] = currentSalary;
+  if (expectedSalary !== 200000)
+    filters["expectedSalary[lte]"] = expectedSalary;
+
+  const defaultStart = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1
+  );
+  const defaultEnd = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0
+  );
+
+  const isCustomDateRange =
+    startDate.getTime() !== defaultStart.getTime() ||
+    endDate.getTime() !== defaultEnd.getTime();
+
+  if (isCustomDateRange) {
+    filters.startDate = startDate.toISOString();
+    filters.endDate = endDate.toISOString();
+  }
+
+  return filters;
+}
+
 export default function CandidateView() {
   const [view, setView] = useState<"list" | "grid">("list");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -32,6 +86,26 @@ export default function CandidateView() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [jobType, setJobType] = useState("All Jobs");
+  const [candidateLocation, setCandidateLocation] = useState("By Location");
+  const [candidateGender, setCandidateGender] = useState("gender");
+
+  const [startDate, setStartDate] = useState(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
+  const [endDate, setEndDate] = useState(
+    new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+  );
+
+  const [currentSalary, setCurrentSalary] = useState(0);
+  const [expectedSalary, setExpectedSalary] = useState(200000);
+
+  const [currentSalaryInput, setCurrentSalaryInput] = useState(0);
+  const [expectedSalaryInput, setExpectedSalaryInput] = useState(200000);
+
+  const [filtersTouched, setFiltersTouched] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
@@ -41,28 +115,43 @@ export default function CandidateView() {
     setIsModalOpen(true);
   };
 
-  useEffect(() => {
-    fetchCandidates(currentPage);
-  }, [currentPage]);
-
-  const fetchCandidates = async (page = 1) => {
+  const fetchCandidates = async (page = 1, query = "") => {
     setLoading(true);
     try {
-      const res = await CandidatesAPI.getAll({ page, limit });
+      const filters = filtersTouched
+        ? buildCandidateFilters({
+            searchQuery,
+            jobType,
+            candidateLocation,
+            candidateGender,
+            currentSalary,
+            expectedSalary,
+            startDate,
+            endDate,
+          })
+        : {};
+
+      const res = await CandidatesAPI.getAll({
+        page,
+        limit,
+        candidateName: query,
+        ...filters,
+      });
+
       const transformed = res.data.data.map((app: any) => ({
-        fullName: app.candidateId.fullName,
-        email: app.candidateId.email,
-        location: app.candidateId.currentLocation,
-        currentSalary: app.candidateId.currentSalary,
-        expectedSalary: app.candidateId.expectedSalary,
+        fullName: app.candidate.fullName,
+        email: app.candidate.email,
+        location: app.candidate.currentLocation,
+        currentSalary: app.candidate.currentSalary,
+        expectedSalary: app.candidate.expectedSalary,
         createdAt: new Date(app.createdAt).toLocaleDateString(),
-        jobTitle: app.jobId.title,
-        phoneNumber: app.candidateId.phoneNumber,
-        linkedinProfile: app.candidateId.linkedinProfile,
-        cvUrl: app.candidateId.cvUrl,
-        portfolio: app.candidateId.portfolio,
-        noticePeriod: app.candidateId.noticePeriod,
-        applicationQuestions: app.jobId.applicationQuestions,
+        jobTitle: app.job.title,
+        phoneNumber: app.candidate.phoneNumber,
+        linkedinProfile: app.candidate.linkedinProfile,
+        cvUrl: app.candidate.cvUrl,
+        portfolio: app.candidate.portfolio,
+        noticePeriod: app.candidate.noticePeriod,
+        applicationQuestions: app.job.applicationQuestions,
       }));
 
       setCandidates(transformed);
@@ -76,10 +165,143 @@ export default function CandidateView() {
     }
   };
 
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        fetchCandidates(1, query);
+      }, 1000),
+    []
+  );
+
+  useEffect(() => {
+    debouncedFetch(searchQuery);
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [searchQuery]);
+
+  const debouncedSetCurrentSalary = useMemo(
+    () =>
+      debounce((val: number) => {
+        setCurrentSalary(val);
+        setFiltersTouched(true);
+      }, 1000),
+    []
+  );
+
+  const debouncedSetExpectedSalary = useMemo(
+    () =>
+      debounce((val: number) => {
+        setExpectedSalary(val);
+        setFiltersTouched(true);
+      }, 1000),
+    []
+  );
+
+  const debouncedSetStartDate = useMemo(
+    () =>
+      debounce((val: Date) => {
+        setStartDate(val);
+        setFiltersTouched(true);
+      }, 1000),
+    []
+  );
+
+  const debouncedSetEndDate = useMemo(
+    () =>
+      debounce((val: Date) => {
+        setEndDate(val);
+        setFiltersTouched(true);
+      }, 1000),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedFetch.cancel();
+      debouncedSetCurrentSalary.cancel();
+      debouncedSetExpectedSalary.cancel();
+      debouncedSetStartDate.cancel();
+      debouncedSetEndDate.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    const page = filtersTouched ? 1 : currentPage;
+    fetchCandidates(page, searchQuery);
+  }, [
+    currentPage,
+    searchQuery,
+    filtersTouched,
+    jobType,
+    candidateLocation,
+    candidateGender,
+    currentSalary,
+    expectedSalary,
+    startDate,
+    endDate,
+  ]);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) fetchCandidates(currentPage + 1, searchQuery);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) fetchCandidates(currentPage - 1, searchQuery);
+  };
   return (
     <div className="">
       <div className="px-6">
-        <CandidateFilters />
+        <CandidateFilters
+          searchQuery={searchQuery}
+          setSearchQuery={(val) => {
+            setSearchQuery(val);
+            setFiltersTouched(true);
+          }}
+          jobType={jobType}
+          setJobType={(val) => {
+            setJobType(val);
+            setFiltersTouched(true);
+          }}
+          candidateLocation={candidateLocation}
+          setCandidateLocation={(val) => {
+            setCandidateLocation(val);
+            setFiltersTouched(true);
+          }}
+          candidateGender={candidateGender}
+          setCandidateGender={(val) => {
+            setCandidateGender(val);
+            setFiltersTouched(true);
+          }}
+          currentSalary={currentSalaryInput}
+          expectedSalary={expectedSalaryInput}
+          setCurrentSalary={(val) => {
+            setCurrentSalaryInput(val);
+            debouncedSetCurrentSalary(val);
+          }}
+          setExpectedSalary={(val) => {
+            setExpectedSalaryInput(val);
+            debouncedSetExpectedSalary(val);
+          }}
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={debouncedSetStartDate}
+          setEndDate={debouncedSetEndDate}
+          onReset={() => {
+            setFiltersTouched(false);
+            setJobType("All Jobs");
+            setCandidateLocation("By Location");
+            setCandidateGender("gender");
+            setCurrentSalary(0);
+            setExpectedSalary(200000);
+            setStartDate(
+              new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+            );
+            setEndDate(
+              new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+            );
+          }}
+        />
 
         <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg mt-4">
           <span className="font-Regular text-[20.38px]">
@@ -151,24 +373,24 @@ export default function CandidateView() {
           />
         )}
 
-        {!loading && (
-          <div className="flex justify-center items-center mt-6 space-x-4">
+        {totalPages >= 1 && (
+          <div className="flex justify-center mt-6 gap-4 items-center">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={handlePrevPage}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+              className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
             >
-              Prev
+              Previous
             </button>
 
-            <span className="text-gray-600">
+            <span className="text-sm text-gray-700">
               Page {currentPage} of {totalPages}
             </span>
 
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+              className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
             >
               Next
             </button>

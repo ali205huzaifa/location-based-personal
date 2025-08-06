@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import RolesCreate from "./RolesCreate";
 import RoleAPI from "../../api/roleApi/roleAPI";
 import ClipLoader from "react-spinners/ClipLoader";
 import RolesBlockDisplay from "./RolesBlockDisplay";
+import debounce from "lodash/debounce";
 
 interface Role {
   id: string;
@@ -19,12 +20,14 @@ const RolesView = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const limit = 10;
 
-  const fetchRoles = async (page = 1) => {
+  const fetchRoles = async (page = 1, query = "") => {
     setIsLoading(true);
     try {
-      const res = await RoleAPI.getAll({ page, limit });
+      const res = await RoleAPI.getAll({ page, limit, search: query });
       const formattedRoles = res.data.data.map((role: any) => ({
         id: role._id,
         name: role.name,
@@ -41,16 +44,31 @@ const RolesView = () => {
     }
   };
 
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        fetchRoles(1, query);
+      }, 1000),
+    []
+  );
+
   useEffect(() => {
-    fetchRoles(currentPage);
+    debouncedFetch(searchQuery);
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchRoles(currentPage, searchQuery);
   }, []);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) fetchRoles(currentPage + 1);
+    if (currentPage < totalPages) fetchRoles(currentPage + 1, searchQuery);
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) fetchRoles(currentPage - 1);
+    if (currentPage > 1) fetchRoles(currentPage - 1, searchQuery);
   };
 
   const handleEdit = (id: string) => {
@@ -75,7 +93,7 @@ const RolesView = () => {
     if (confirmDelete.isConfirmed) {
       try {
         await RoleAPI.DeleteRole(id);
-        await fetchRoles();
+        await fetchRoles(currentPage, searchQuery);
         Swal.fire({
           title: "Deleted!",
           text: "Role has been deleted!",
@@ -104,7 +122,7 @@ const RolesView = () => {
   };
 
   const handleSuccess = () => {
-    fetchRoles();
+    fetchRoles(currentPage, searchQuery);
   };
 
   return (
@@ -127,7 +145,9 @@ const RolesView = () => {
           />
           <input
             type="text"
-            placeholder="start typing to search Interviewers"
+            placeholder="Start typing to search Roles By Name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
           />
         </div>
@@ -151,6 +171,7 @@ const RolesView = () => {
           onDelete={handleDelete}
         />
       )}
+
       {totalPages >= 1 && (
         <div className="flex justify-center mt-6 gap-4 items-center">
           <button

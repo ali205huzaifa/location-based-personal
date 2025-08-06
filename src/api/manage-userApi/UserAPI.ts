@@ -9,7 +9,7 @@ class UsersAPI {
     return axiosClient.get("/users/", { params });
   }
 
-  static UpdateUser(id: string, data: { name: string; email: string; role: string; profilePicture?: string }) {
+  static UpdateUser(id: string, data: { name: string; email: string; role: string;}) {
     return axiosClient.patch(`/users/${id}`, data);
   }
 
@@ -23,6 +23,10 @@ class UsersAPI {
 
   static ImageUrl(data: {name: string; fileType: string; type:string}) {
     return axiosClient.post("/users/upload-media", data);
+  }
+
+    static UpdateProfileImage(id: string, data: {profilePicture?: string }) {
+    return axiosClient.patch(`/users/${id}`, data);
   }
 }
 

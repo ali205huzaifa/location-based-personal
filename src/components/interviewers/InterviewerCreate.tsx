@@ -7,12 +7,16 @@ interface Props {
   fetchInterviewers: () => Promise<void>;
   editData: Interviewer | null;
   setEditData: React.Dispatch<React.SetStateAction<Interviewer | null>>;
+  searchQuery: string;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function InterviewerCreate({
   fetchInterviewers,
   editData,
   setEditData,
+  searchQuery,
+  setSearchQuery,
 }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
@@ -133,8 +137,10 @@ export default function InterviewerCreate({
           />
           <input
             type="text"
-            placeholder="start typing to search Interviewers"
+            placeholder="Start typing to search Interviewers By Name"
             className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>

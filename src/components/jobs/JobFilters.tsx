@@ -49,7 +49,7 @@ export default function JobFilters() {
   };
 
   return (
-    <div className="bg-white border border-gray-200 px-6 py-4 rounded-xl flex items-center md:gap-2 lg:gap-4 xl:gap-20 mt-6 flex-wrap">
+    <div className="bg-white border border-gray-200 px-6 py-4 rounded-xl flex items-center md:gap-2 lg:gap-4 xl:gap-10 mt-6 flex-wrap">
       <div className="relative" ref={datePickerRef}>
         <div
           className="flex items-center gap-2 text-sm cursor-pointer"

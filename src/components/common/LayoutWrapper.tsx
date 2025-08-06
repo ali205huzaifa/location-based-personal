@@ -12,12 +12,13 @@ function getTitleFromPath(pathname: string): string {
   if (pathname.includes("/profile")) return "My Profile";
   if (pathname.includes("/jobs/create")) return "Create Job";
 
-  const isDynamic =
-    segments.length > 1 && /^\d+$/.test(segments[segments.length - 1]);
+  const isLikelyId =
+    segments.length > 1 &&
+    /^[a-zA-Z0-9]{12,}$/.test(segments[segments.length - 1]);
 
-  if (pathname.includes("/jobs/") && isDynamic) return "Jobs";
+  if (pathname.includes("/jobs/") && isLikelyId) return "Jobs";
 
-  const base = isDynamic
+  const base = isLikelyId
     ? segments[segments.length - 2]
     : segments[segments.length - 1];
 

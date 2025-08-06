@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import ClipLoader from "react-spinners/ClipLoader";
+import debounce from "lodash/debounce";
+
 import InterviewerCreate from "./InterviewerCreate";
 import InterviewerRowDisplay from "./InterviewerRowDisplay";
 import type { Interviewer } from "../../types/user";
@@ -10,15 +12,16 @@ export default function InterviewerView() {
   const [interviewers, setInterviewers] = useState<Interviewer[]>([]);
   const [editData, setEditData] = useState<Interviewer | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
-  const fetchInterviewers = async (page = 1) => {
+  const fetchInterviewers = async (page = 1, query = "") => {
     setIsLoading(true);
     try {
-      const res = await InterviewerAPI.getAll({ page, limit });
+      const res = await InterviewerAPI.getAll({ page, limit, search: query });
       setInterviewers(res.data.data);
       setCurrentPage(page);
       setTotalPages(res.data.totalPages);
@@ -34,25 +37,41 @@ export default function InterviewerView() {
     }
   };
 
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        fetchInterviewers(1, query);
+      }, 1000),
+    []
+  );
+
   useEffect(() => {
-    fetchInterviewers(currentPage);
+    debouncedFetch(searchQuery);
+    return () => debouncedFetch.cancel();
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchInterviewers(currentPage, searchQuery);
   }, []);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) fetchInterviewers(currentPage + 1);
+    if (currentPage < totalPages)
+      fetchInterviewers(currentPage + 1, searchQuery);
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) fetchInterviewers(currentPage - 1);
+    if (currentPage > 1) fetchInterviewers(currentPage - 1, searchQuery);
   };
 
   return (
     <div className="">
       <div className="px-6">
         <InterviewerCreate
-          fetchInterviewers={fetchInterviewers}
+          fetchInterviewers={() => fetchInterviewers(currentPage, searchQuery)}
           editData={editData}
           setEditData={setEditData}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
 
         <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg">
@@ -63,6 +82,7 @@ export default function InterviewerView() {
             </span>
           </span>
         </div>
+
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[200px]">
             <ClipLoader size={50} color="#16968F" />
@@ -71,9 +91,12 @@ export default function InterviewerView() {
           <InterviewerRowDisplay
             data={interviewers}
             onEdit={(interviewer) => setEditData(interviewer)}
-            fetchInterviewers={fetchInterviewers}
+            fetchInterviewers={() =>
+              fetchInterviewers(currentPage, searchQuery)
+            }
           />
         )}
+
         {totalPages >= 1 && (
           <div className="flex justify-center mt-6 gap-4 items-center">
             <button
