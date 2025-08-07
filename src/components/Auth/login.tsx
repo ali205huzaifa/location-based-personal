@@ -29,9 +29,29 @@ const LoginPage: React.FC = () => {
       const verifyRes = await AuthAPI.verifyToken(api_token);
       const user = verifyRes.data.data.user;
 
+      const userInfo = {
+        _id: user._id,
+        fullName: user.fullName || user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber || "",
+        accessLevel: user.accessLevel || "user",
+        lastLogin: user.lastLogin || new Date().toISOString(),
+        profilePicture: user.profilePicture,
+        role: {
+          _id: user.role._id,
+          name: user.role.name,
+          permissions: user.role.permissions || [],
+        },
+        isActive: user.isActive,
+        isBlocked: user.isBlocked,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+
       dispatch(
         setAuthData({
-          currentUser: user,
+          currentUser: userInfo,
           token: api_token,
           permissions: user.role.permissions,
         })

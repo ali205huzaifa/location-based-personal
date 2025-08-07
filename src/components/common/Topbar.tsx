@@ -17,15 +17,6 @@ const Topbar = ({ title }: TopbarProps) => {
         </h1>
 
         <div className="flex items-center gap-4 pr-2">
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
-            <img
-              src="/icons/calender-icon.svg"
-              alt="Calendar"
-              width={24}
-              height={24}
-            />
-          </button>
-
           <button
             className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
             onClick={() => navigate("/profile")}

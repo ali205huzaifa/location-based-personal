@@ -9,21 +9,22 @@ export interface Role {
 
 export interface User {
   _id: string;
-  name: string;
-  email: string;
-  role: Role;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface User {
   fullName: string;
   email: string;
   phoneNumber: string;
-  profilePicture?: string;
   accessLevel: string;
-  isActive: boolean;
   lastLogin: string;
+  profilePicture: string;
+  role: {
+    _id: string;
+    name: string;
+    permissions: string[];
+  };
+  isActive: boolean;
+  isBlocked: boolean;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Interviewer {

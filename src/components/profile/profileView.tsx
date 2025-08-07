@@ -139,13 +139,27 @@ export default function ProfileView() {
 
   const validate = () => {
     const newErrors: any = {};
-    if (!form.currentPassword)
+
+    if (!form.currentPassword) {
       newErrors.currentPassword = "Current password is required.";
-    if (!form.newPassword) newErrors.newPassword = "New password is required.";
-    if (!form.confirmNewPassword)
+    }
+
+    if (!form.newPassword) {
+      newErrors.newPassword = "New password is required.";
+    } else {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+      if (!passwordRegex.test(form.newPassword)) {
+        newErrors.newPassword =
+          "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
+      }
+    }
+
+    if (!form.confirmNewPassword) {
       newErrors.confirmNewPassword = "Please confirm new password.";
-    else if (form.newPassword !== form.confirmNewPassword)
+    } else if (form.newPassword !== form.confirmNewPassword) {
       newErrors.confirmNewPassword = "Passwords do not match.";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -172,10 +186,15 @@ export default function ProfileView() {
         confirmNewPassword: "",
       });
     } catch (error: any) {
+      console.error("Password change error:", error);
+
+      const errorMessage =
+        error?.response?.data?.message || "Something went wrong.";
+
       Swal.fire({
         icon: "error",
         title: "Failed to change password",
-        text: "Something went wrong.",
+        text: errorMessage,
       });
     }
   };

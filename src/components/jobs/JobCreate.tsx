@@ -572,7 +572,7 @@ export default function JobCreate({
                   <div>
                     <label className="block mb-6">Gender Preference</label>
                     <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md px-4 py-3 justify-center">
-                      {["Both", "Male", "Female"].map((gender) => (
+                      {["MALE", "FEMALE", "OTHER"].map((gender) => (
                         <button
                           key={gender}
                           type="button"
@@ -583,7 +583,7 @@ export default function JobCreate({
                               : "bg-[#D9D9D9] text-black"
                           }`}
                         >
-                          {gender}
+                          {gender.charAt(0) + gender.slice(1).toLowerCase()}
                         </button>
                       ))}
                     </div>
@@ -606,7 +606,9 @@ export default function JobCreate({
                       <option>Select Job Type</option>
                       <option value="FULL_TIME">Full Time</option>
                       <option value="PART_TIME">Part Time</option>
-                      <option value="CONTRACT_BASED">Contract Based</option>
+                      <option value="CONTRACT">Contract Based</option>
+                      <option value="PART_TIME">Part Time</option>
+                      <option value="INTERNSHIP">Internship</option>
                     </select>
                     {errors.jobType && (
                       <p className="text-red-500 text-sm mt-1">

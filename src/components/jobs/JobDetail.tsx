@@ -87,7 +87,7 @@ export default function JobDetailView() {
             <span className="flex items-center gap-1">
               Posted By:
               <img src="/icons/User.svg" alt="User Icon" className="w-4 h-4" />
-              {job?.updatedBy?.name || "Unknown"}
+              {job?.createdBy?.name || "Unknown"}
             </span>
           </div>
         </div>
