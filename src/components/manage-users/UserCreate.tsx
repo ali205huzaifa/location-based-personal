@@ -23,6 +23,7 @@ interface UserCreateProps {
 
 export default function UserCreate({
   userToEdit,
+  setUserToEdit,
   onClose,
   refreshUsers,
   searchQuery,
@@ -33,6 +34,7 @@ export default function UserCreate({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [usernameError, setUsernameError] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -64,6 +66,12 @@ export default function UserCreate({
     }
   }, [userToEdit]);
 
+  const validatePassword = (password: string) => {
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -86,9 +94,16 @@ export default function UserCreate({
       isValid = false;
     }
 
-    if (!userToEdit && !password.trim()) {
-      setPasswordError("Please enter Password");
-      isValid = false;
+    if (!userToEdit) {
+      if (!password.trim()) {
+        setPasswordError("Please enter Password");
+        isValid = false;
+      } else if (!validatePassword(password)) {
+        setPasswordError(
+          "Password must be at least 8 characters, include 1 uppercase, 1 lowercase, 1 number, and 1 special character."
+        );
+        isValid = false;
+      }
     }
 
     if (!role) {
@@ -143,6 +158,7 @@ export default function UserCreate({
           className="flex items-center gap-2 bg-[#16968F] text-white px-6 py-3 rounded-xl hover:bg-emerald-700 cursor-pointer"
           onClick={() => {
             onClose?.();
+            setUserToEdit(undefined);
             setUsername("");
             setEmail("");
             setPassword("");
@@ -187,6 +203,7 @@ export default function UserCreate({
             <button
               onClick={() => {
                 setShowModal(false);
+                setUserToEdit(undefined);
                 onClose?.();
               }}
               className="absolute top-4 right-4 text-gray-500 hover:text-black cursor-pointer"
@@ -254,16 +271,32 @@ export default function UserCreate({
               </div>
 
               {!userToEdit && (
-                <div>
+                <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter a Strong Password"
-                    className="w-full border border-gray-300 rounded-md px-4 py-3"
+                    className={`w-full border ${
+                      passwordError ? "border-red-500" : "border-gray-300"
+                    } rounded-md px-4 py-3 pr-12`}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <img
+                    src={
+                      showPassword
+                        ? "/icons/eyeView-icon.svg"
+                        : "/icons/eyeView-slash-icon.svg"
+                    }
+                    alt="Toggle Password"
+                    width={20}
+                    height={20}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  />
                   {passwordError && (
-                    <p className="text-red-600 text-sm mt-1">{passwordError}</p>
+                    <p className="text-red-600 text-sm mt-1 absolute bottom-[-45px]">
+                      {passwordError}
+                    </p>
                   )}
                 </div>
               )}
@@ -271,15 +304,16 @@ export default function UserCreate({
               <div className="flex justify-left gap-6 mt-6">
                 <button
                   type="submit"
-                  className="bg-[#16968F] text-white px-8 py-2 rounded-md hover:bg-emerald-700 cursor-pointer"
+                  className="bg-[#16968F] text-white px-8 py-2 rounded-md hover:bg-emerald-700 cursor-pointer mt-8"
                 >
                   {userToEdit ? "Update" : "Create"}
                 </button>
                 <button
                   type="button"
-                  className="border border-gray-300 px-8 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
+                  className="border border-gray-300 px-8 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer mt-8"
                   onClick={() => {
                     setShowModal(false);
+                    setUserToEdit(undefined);
                     onClose?.();
                     setUsernameError("");
                     setEmailError("");

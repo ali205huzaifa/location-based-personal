@@ -9,6 +9,7 @@ export interface Role {
 
 export interface User {
   _id: string;
+  name: string;
   fullName: string;
   email: string;
   phoneNumber: string;
@@ -64,7 +65,17 @@ export type JobPayloadType = {
 
 export type ApplicationQuestion = {
   label: string;
-  fieldType: "TEXT" | "DROPDOWN";
+  fieldType: "TEXT" | "DROPDOWN" | "Radio";
   isRequired?: boolean;
   options?: string[];
+};
+
+export type Filters = {
+  department: string;
+  location: string;
+  jobType: string;
+  experienceLevel: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  status: string;
 };

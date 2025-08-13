@@ -4,7 +4,7 @@ import "react-quill/dist/quill.snow.css";
 import ImageResize from "quill-image-resize-module-react";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import Swal from "sweetalert2";
-import type { JobPayloadType } from "../../types/user";
+import type { ApplicationQuestion, JobPayloadType } from "../../types/user";
 
 Quill.register("modules/imageResize", ImageResize);
 
@@ -85,8 +85,8 @@ export default function JobCreate({
     if (skills.length === 0)
       newErrors.skills = "Please enter at least one Required Skill";
     if (!department) newErrors.department = "Please select Job Department";
-    if (!openings) newErrors.openings = "Please select No of Openings";
     if (!selectedGender) newErrors.gender = "Please select Job Preference";
+    if (!openings) newErrors.openings = "Please select No of Openings";
     if (!jobType) newErrors.jobType = "Please select Job Type";
     if (!experience)
       newErrors.experience = "Please select Job Experience Level";
@@ -97,8 +97,33 @@ export default function JobCreate({
     return Object.keys(newErrors).length === 0;
   };
 
+  const clearError = (field: keyof JobFormErrors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
   const resetForm = () => {
     setErrors({});
+    setDesignation("");
+    setLevel("");
+    setJobDescription("");
+    setSkills([]);
+    setDepartment("");
+    setOpenings("");
+    setSelectedGender("");
+    setJobType("");
+    setExperience("");
+    setWorkplace("");
+    setLocation("");
+    setJobStatus("");
+    setStartDate(getTodayDate());
+    setEndDate(getNextMonthDate());
+    setQuestions([]);
+    setPredefinedQuestions({
+      currentSalary: false,
+      expectedSalary: false,
+      noticePeriod: false,
+      reasonForSwitching: false,
+    });
   };
 
   const addQuestion = () => {
@@ -120,6 +145,7 @@ export default function JobCreate({
     if (e.key === "Enter" && skillInput.trim()) {
       if (!skills.includes(skillInput.trim())) {
         setSkills([...skills, skillInput.trim()]);
+        clearError("skills");
       }
       setSkillInput("");
     }
@@ -183,13 +209,15 @@ export default function JobCreate({
 
     apiCall
       .then(() => {
-        Swal.fire(
-          "Success!",
-          isEdit ? "Job updated!" : "Job posted!",
-          "success"
-        );
-        setShowModal(false);
-        resetForm();
+        Swal.fire({
+          title: "Success!",
+          text: isEdit ? "Job updated!" : "Job posted!",
+          icon: "success",
+        }).then(() => {
+          setShowModal(false);
+          resetForm();
+          window.location.reload();
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -214,11 +242,11 @@ export default function JobCreate({
       setJobDescription(jobToEdit.description || "");
       setSkills(jobToEdit.requiredSkills || []);
       setDepartment(jobToEdit.department || "");
-      setOpenings(jobToEdit.totalPositions?.toString() || "1");
-      setSelectedGender(jobToEdit.gender?.toLowerCase() || "");
-      setJobType(jobToEdit.jobType || "");
-      setExperience(jobToEdit.experience || "");
-      setWorkplace(jobToEdit.workplaceType || "");
+      setOpenings(String(jobToEdit.positions || ""));
+      setSelectedGender(jobToEdit.gender || "");
+      setJobType(jobToEdit.type || "");
+      setExperience(jobToEdit.experienceLevel || "");
+      setWorkplace(jobToEdit.workArrangement || "");
       setLocation(jobToEdit.location || "");
       setJobStatus(jobToEdit.status || "Active");
       setStartDate(jobToEdit.postingStartDate?.split("T")[0] || getTodayDate());
@@ -227,7 +255,7 @@ export default function JobCreate({
       setQuestions(
         (jobToEdit.applicationQuestions || [])
           .filter(
-            (q: { label: string }) =>
+            (q: ApplicationQuestion) =>
               ![
                 "Current Salary",
                 "Expected Salary",
@@ -235,23 +263,31 @@ export default function JobCreate({
                 "Reason for switching",
               ].includes(q.label)
           )
-          .map((q: { label: string }) => q.label)
+          .map((q: ApplicationQuestion) => q.label)
       );
 
-      const predefs = {
+      const predefs: Record<
+        | "currentSalary"
+        | "expectedSalary"
+        | "noticePeriod"
+        | "reasonForSwitching",
+        boolean
+      > = {
         currentSalary: false,
         expectedSalary: false,
         noticePeriod: false,
         reasonForSwitching: false,
       };
 
-      (jobToEdit.applicationQuestions || []).forEach((q: { label: string }) => {
-        if (q.label === "Current Salary") predefs.currentSalary = true;
-        if (q.label === "Expected Salary") predefs.expectedSalary = true;
-        if (q.label === "Notice Period") predefs.noticePeriod = true;
-        if (q.label === "Reason for switching")
-          predefs.reasonForSwitching = true;
-      });
+      (jobToEdit.applicationQuestions || []).forEach(
+        (q: ApplicationQuestion) => {
+          if (q.label === "Current Salary") predefs.currentSalary = true;
+          if (q.label === "Expected Salary") predefs.expectedSalary = true;
+          if (q.label === "Notice Period") predefs.noticePeriod = true;
+          if (q.label === "Reason for switching")
+            predefs.reasonForSwitching = true;
+        }
+      );
 
       setPredefinedQuestions(predefs);
     }
@@ -261,7 +297,6 @@ export default function JobCreate({
     toolbar: [
       [{ header: [1, 2, 3, false] }],
       [{ font: [] }],
-      [{ size: [] }],
       [{ color: [] }, { background: [] }],
       ["bold", "italic", "underline", "strike"],
       [{ script: "sub" }, { script: "super" }],
@@ -281,7 +316,6 @@ export default function JobCreate({
   const quillFormats = [
     "header",
     "font",
-    "size",
     "bold",
     "italic",
     "underline",
@@ -331,7 +365,10 @@ export default function JobCreate({
                   <select
                     className="border border-gray-300 rounded-md px-4 py-4 w-full custom-select"
                     value={designation}
-                    onChange={(e) => setDesignation(e.target.value)}
+                    onChange={(e) => {
+                      setDesignation(e.target.value);
+                      clearError("designation");
+                    }}
                   >
                     <option value="">Select Designation</option>
                     <option value="Flutter Developer">Flutter Developer</option>
@@ -350,9 +387,10 @@ export default function JobCreate({
                     onChange={(e) => setLevel(e.target.value)}
                   >
                     <option value="">Select Level</option>
-                    <option value="Entry">Entry Level</option>
-                    <option value="Mid">Mid Level</option>
-                    <option value="Senior">Senior Level</option>
+                    <option value="0">Entry Level</option>
+                    <option value="0-1">Junior Level</option>
+                    <option value="1-3">Mid Level</option>
+                    <option value="3-5">Senior Level</option>
                   </select>
                   {errors.designation && (
                     <p className="text-red-500 text-sm mt-1">
@@ -370,7 +408,10 @@ export default function JobCreate({
                       theme="snow"
                       className="h-[250px] overflow-y-auto"
                       value={jobDescription}
-                      onChange={setJobDescription}
+                      onChange={(value) => {
+                        setJobDescription(value);
+                        clearError("jobDescription");
+                      }}
                       modules={quillModules}
                       formats={quillFormats}
                     />
@@ -449,16 +490,31 @@ export default function JobCreate({
                   <div className="border border-gray-300 rounded-md p-4">
                     <div className="mb-4">
                       <div className="flex items-center gap-5 flex-wrap">
-                        {[
-                          "Current Salary",
-                          "Expected Salary",
-                          "Notice Period",
-                          "Reason for switching",
-                        ].map((label, idx) => (
-                          <div key={idx} className="flex items-center gap-1">
+                        {(
+                          [
+                            { key: "currentSalary", label: "Current Salary" },
+                            { key: "expectedSalary", label: "Expected Salary" },
+                            { key: "noticePeriod", label: "Notice Period" },
+                            {
+                              key: "reasonForSwitching",
+                              label: "Reason for switching",
+                            },
+                          ] as {
+                            key: keyof typeof predefinedQuestions;
+                            label: string;
+                          }[]
+                        ).map(({ key, label }) => (
+                          <div key={key} className="flex items-center gap-1">
                             <input
                               type="checkbox"
                               className="accent-[#16968F]"
+                              checked={predefinedQuestions[key]}
+                              onChange={(e) =>
+                                setPredefinedQuestions((prev) => ({
+                                  ...prev,
+                                  [key]: e.target.checked,
+                                }))
+                              }
                             />
                             <span className="text-[12px]">{label}</span>
                           </div>
@@ -520,7 +576,10 @@ export default function JobCreate({
                   <select
                     className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                     value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
+                    onChange={(e) => {
+                      setDepartment(e.target.value);
+                      clearError("department");
+                    }}
                   >
                     <option value="">Select Department</option>
                     <option value="MOBILE_APP_DEVELOPMENT">
@@ -552,7 +611,10 @@ export default function JobCreate({
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={openings}
-                      onChange={(e) => setOpenings(e.target.value)}
+                      onChange={(e) => {
+                        setOpenings(e.target.value);
+                        clearError("openings");
+                      }}
                     >
                       <option value="">Select Job Openings</option>
                       <option value="2">1-2</option>
@@ -572,18 +634,27 @@ export default function JobCreate({
                   <div>
                     <label className="block mb-6">Gender Preference</label>
                     <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md px-4 py-3 justify-center">
-                      {["MALE", "FEMALE", "OTHER"].map((gender) => (
+                      {[
+                        { label: "Male", value: "MALE" },
+                        { label: "Female", value: "FEMALE" },
+                        { label: "Both", value: "OTHER" },
+                      ].map(({ label, value }) => (
                         <button
-                          key={gender}
+                          key={value}
                           type="button"
-                          onClick={() => setSelectedGender(gender)}
+                          onClick={() => {
+                            setSelectedGender((prev) =>
+                              prev === value ? "" : value
+                            );
+                            clearError("gender");
+                          }}
                           className={`cursor-pointer px-3 py-1 rounded transition ${
-                            selectedGender === gender
+                            selectedGender === value
                               ? "bg-[#16968F] text-white"
                               : "bg-[#D9D9D9] text-black"
                           }`}
                         >
-                          {gender.charAt(0) + gender.slice(1).toLowerCase()}
+                          {label}
                         </button>
                       ))}
                     </div>
@@ -601,13 +672,15 @@ export default function JobCreate({
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={jobType}
-                      onChange={(e) => setJobType(e.target.value)}
+                      onChange={(e) => {
+                        setJobType(e.target.value);
+                        clearError("jobType");
+                      }}
                     >
-                      <option>Select Job Type</option>
+                      <option value="">Select Job Type</option>
                       <option value="FULL_TIME">Full Time</option>
                       <option value="PART_TIME">Part Time</option>
                       <option value="CONTRACT">Contract Based</option>
-                      <option value="PART_TIME">Part Time</option>
                       <option value="INTERNSHIP">Internship</option>
                     </select>
                     {errors.jobType && (
@@ -621,15 +694,16 @@ export default function JobCreate({
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={experience}
-                      onChange={(e) => setExperience(e.target.value)}
+                      onChange={(e) => {
+                        setExperience(e.target.value);
+                        clearError("experience");
+                      }}
                     >
                       <option>Select Experience</option>
                       <option value="0">No Previous Experience</option>
-                      <option value="1">0-1 years</option>
-                      <option value="2">1-2 years</option>
-                      <option value="3">2-3 years</option>
-                      <option value="4">3-4 years</option>
-                      <option value="5">4-5 years</option>
+                      <option value="0-1">0-1 years</option>
+                      <option value="1-3">1-3 years</option>
+                      <option value="3-5">3-5 years</option>
                     </select>
                     {errors.experience && (
                       <p className="text-red-500 text-sm mt-1">
@@ -645,9 +719,12 @@ export default function JobCreate({
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={workplace}
-                      onChange={(e) => setWorkplace(e.target.value)}
+                      onChange={(e) => {
+                        setWorkplace(e.target.value);
+                        clearError("workplace");
+                      }}
                     >
-                      <option>Select Job Workplace</option>
+                      <option value="">Select Job Workplace</option>
                       <option value="REMOTE">Remote</option>
                       <option value="HYBRID">Hybrid</option>
                       <option value="ON_SITE">On-Site</option>
@@ -663,7 +740,10 @@ export default function JobCreate({
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                      onChange={(e) => {
+                        setLocation(e.target.value);
+                        clearError("location");
+                      }}
                     >
                       <option>Select location</option>
                       <option value="Islamabad">Islamabad</option>
@@ -679,17 +759,23 @@ export default function JobCreate({
                 <div className="mb-4">
                   <label className="block mb-4">Job Status</label>
                   <div className="flex gap-4">
-                    {["Active", "Archived"].map((status) => (
-                      <label key={status} className="flex items-center gap-2">
+                    {[
+                      { label: "Active", value: "Active" },
+                      { label: "Archived", value: "Inactive" },
+                    ].map(({ label, value }) => (
+                      <label key={value} className="flex items-center gap-2">
                         <input
                           type="radio"
                           name="status"
-                          value={status}
-                          checked={jobStatus === status}
-                          onChange={(e) => setJobStatus(e.target.value)}
+                          value={value}
+                          checked={jobStatus === value}
+                          onChange={(e) => {
+                            setJobStatus(e.target.value);
+                            clearError("jobStatus");
+                          }}
                           className="accent-[#16968F]"
                         />
-                        {status}
+                        {label}
                       </label>
                     ))}
                   </div>

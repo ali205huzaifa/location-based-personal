@@ -31,15 +31,16 @@ const AppRouter: React.FC = () => {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission="view-dashboard">
                 <Dashboard />
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/jobs"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission="view-job">
                 <JobView />
               </ProtectedRoute>
             }
@@ -55,7 +56,7 @@ const AppRouter: React.FC = () => {
           <Route
             path="/candidates"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission="view-candidates">
                 <CandidateView />
               </ProtectedRoute>
             }
@@ -63,7 +64,7 @@ const AppRouter: React.FC = () => {
           <Route
             path="/manage-users"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission="view-user">
                 <UsersView />
               </ProtectedRoute>
             }
@@ -71,7 +72,7 @@ const AppRouter: React.FC = () => {
           <Route
             path="/interviewers"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission="view-interviewer">
                 <InterviewerView />
               </ProtectedRoute>
             }
@@ -79,7 +80,7 @@ const AppRouter: React.FC = () => {
           <Route
             path="/roles"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredPermission="view-accessRole">
                 <RolesView />
               </ProtectedRoute>
             }

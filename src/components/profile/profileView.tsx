@@ -237,7 +237,7 @@ export default function ProfileView() {
           <div className="grid grid-cols-4 gap-6 w-full md:pl-30 pl-6">
             <div>
               <p className="text-sm text-gray-500">Full Name</p>
-              <p className="font-Regular">{currentUser.name}</p>
+              <p className="font-Regular">{currentUser.fullName}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Email Address</p>

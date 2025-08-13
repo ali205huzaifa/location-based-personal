@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { Job } from "../../types/user";
+import { useHasPermission } from "../../hooks/hasPermissions";
 
 interface Props {
   jobs: Job[];
@@ -7,6 +8,7 @@ interface Props {
 }
 export default function JobGridDisplay({ jobs, onEditJob }: Props) {
   const navigate = useNavigate();
+  const canEditJob = useHasPermission("edit-job");
 
   const formatDate = (value?: string) => {
     if (!value) return "N/A";
@@ -27,10 +29,10 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
 
             <span
               className={`text-sm font-medium ${
-                job.status === "Active" ? "text-emerald-600" : "text-red-500"
+                job.status === "Active" ? "text-[#16968F]" : "text-[#535353]"
               }`}
             >
-              {job.status}
+              {job.status === "Inactive" ? "Archived" : job.status}
             </span>
           </div>
 
@@ -39,10 +41,12 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
             <img
               src="/icons/edit-icon.svg"
               alt="Edit Icon"
-              width={24}
-              height={24}
-              className="cursor-pointer"
-              onClick={() => onEditJob(job)}
+              width={16}
+              height={16}
+              className={`${
+                canEditJob ? "cursor-pointer" : "opacity-50 cursor-not-allowed"
+              }`}
+              onClick={() => canEditJob && onEditJob(job)}
             />
           </h3>
 
@@ -86,8 +90,8 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
             <img
               src="/icons/grid-arrow.svg"
               alt="Arrow Icon"
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               className="text-gray-500 cursor-pointer"
               onClick={() => navigate(`/jobs/${job.id}`)}
             />

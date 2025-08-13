@@ -27,7 +27,10 @@ axiosClient.interceptors.response.use(
     return res;
   },
   function (error) {
-    if (error.response && error.response.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+
+    if (status === 401 && !url.includes('update-password')) {
       store.dispatch(clearAuthData());
       localStorage.removeItem('persist:root');
     }

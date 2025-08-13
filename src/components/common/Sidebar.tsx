@@ -1,19 +1,14 @@
 "use client";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 import { clearAuthData } from "../../store/Auth";
 import LogoutModal from "./LogoutModal";
 
-type SidebarProps = {
-  role?: string;
-  permissions: string[];
-};
-
-const Sidebar = ({ permissions }: SidebarProps) => {
+const Sidebar = () => {
+  const permissions = useSelector((state: any) => state.auth.permissions);
   const location = useLocation();
-  const pathname = location.pathname;
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -30,37 +25,37 @@ const Sidebar = ({ permissions }: SidebarProps) => {
       label: "Dashboard",
       href: "/dashboard",
       icon: "/icons/dashboard-icon.svg",
-      permission: "view_dashboard",
+      permission: "view-dashboard",
     },
     {
       label: "Jobs",
       href: "/jobs",
       icon: "/icons/jobs-icon.svg",
-      permission: "view_jobs",
+      permission: "view-job",
     },
     {
       label: "Candidates",
       href: "/candidates",
       icon: "/icons/candidate-icon.svg",
-      permission: "view_candidates",
+      permission: "view-candidates",
     },
     {
       label: "Manage Users",
       href: "/manage-users",
       icon: "/icons/manageUser-icon.svg",
-      permission: "manage_users",
+      permission: "view-user",
     },
     {
       label: "Interviewers",
       href: "/interviewers",
       icon: "/icons/interviewer-icon.svg",
-      permission: "Manage_interviewers",
+      permission: "view-interviewer",
     },
     {
       label: "Access Roles",
       href: "/roles",
       icon: "/icons/roles-icon.svg",
-      permission: "Manage_interviewers",
+      permission: "view-accessRole",
     },
   ];
 
@@ -96,7 +91,7 @@ const Sidebar = ({ permissions }: SidebarProps) => {
                   key={item.href}
                   to={item.href}
                   className={`flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 transition ${
-                    pathname === item.href ? "bg-white/20" : ""
+                    location.pathname === item.href ? "bg-white/20" : ""
                   }`}
                 >
                   <img

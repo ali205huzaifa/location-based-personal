@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import ClipLoader from "react-spinners/ClipLoader";
 import JobProfileTab from "./JobProfileTab";
+import JobAssesmentForm from "./JobAssesmentForm";
+import JobEvaluationForm from "./JobEvaluationForm";
+import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
+import Swal from "sweetalert2";
 
 export default function JobDetailView() {
   const navigate = useNavigate();
@@ -14,6 +18,7 @@ export default function JobDetailView() {
   const [activeTab, setActiveTab] = useState("Candidate Profile");
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -33,8 +38,18 @@ export default function JobDetailView() {
         );
 
         setCandidates(jobCandidates);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to load job/candidates", err);
+
+        Swal.fire({
+          icon: "error",
+          title: "Failed to Load Data",
+          text:
+            err?.response?.data?.message ||
+            err?.message ||
+            "Something went wrong while fetching job details or candidates.",
+          confirmButtonColor: "#16968F",
+        });
       } finally {
         setLoading(false);
       }
@@ -42,6 +57,43 @@ export default function JobDetailView() {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchCandidates();
+    }, 1000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, sortOption]);
+
+  const fetchCandidates = async () => {
+    try {
+      setListLoading(true);
+      const params = {
+        candidateName: searchTerm,
+        ordering: sortOption === "newest" ? "-created_at" : "created_at",
+      };
+      const res = await CandidatesAPI.getAll(params);
+
+      const arr = Array.isArray(res.data.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      setCandidates(arr);
+    } catch (err) {
+      console.error("Error fetching candidates:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to fetch candidates. Please try again.",
+        confirmButtonColor: "#16968F",
+      });
+      setCandidates([]);
+    } finally {
+      setListLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -147,57 +199,69 @@ export default function JobDetailView() {
             Total {candidates.length} Applicants
           </div>
           <div className="h-[400px] overflow-y-auto pr-1">
-            <ul className="space-y-2">
-              {candidates.map((app: any) => {
-                const c = app.candidate;
-                return (
-                  <li
-                    key={app._id}
-                    onClick={() => {
-                      setSelectedApplication(app);
-                      setActiveTab("Candidate Profile");
-                    }}
-                    className={`bg-white p-3 shadow-sm hover:bg-gray-100 cursor-pointer border-b border-gray-300 ${
-                      selectedApplication?._id === app._id ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                      <div>{new Date(app.appliedAt).toLocaleDateString()}</div>
-                      <div
-                        className={`font-semibold ${
-                          app.status === "Interviewed"
-                            ? "text-green-600"
-                            : app.status === "Rejected"
-                            ? "text-red-500"
-                            : app.status === "SHORTLISTED"
-                            ? "text-yellow-600"
-                            : app.status === "Send Offer Letter"
-                            ? "text-purple-600"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {app.status}
+            {listLoading ? (
+              <div className="flex justify-center items-center py-10">
+                <ClipLoader size={35} color="#16968F" loading />
+              </div>
+            ) : candidates.length === 0 ? (
+              <p className="text-center text-sm text-gray-500">
+                No candidates found
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {candidates.map((app) => {
+                  const c = app.candidate;
+                  return (
+                    <li
+                      key={app._id}
+                      onClick={() => {
+                        setSelectedApplication(app);
+                        setActiveTab("Candidate Profile");
+                      }}
+                      className={`bg-white p-3 shadow-sm hover:bg-gray-100 cursor-pointer border-b border-gray-300 ${
+                        selectedApplication?._id === app._id ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                        <div>
+                          {new Date(app.appliedAt).toLocaleDateString()}
+                        </div>
+                        <div
+                          className={`font-semibold ${
+                            app.status === "Interviewed"
+                              ? "text-green-600"
+                              : app.status === "Rejected"
+                              ? "text-red-500"
+                              : app.status === "SHORTLISTED"
+                              ? "text-yellow-600"
+                              : app.status === "Send Offer Letter"
+                              ? "text-purple-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {app.status}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-sm font-medium">{c?.fullName}</div>
-                    <div className="text-xs text-blue-600 mt-2">
-                      {c?.currentLocation || "No City"}
-                    </div>
-                    <div className="flex items-center gap-1 mt-2">
-                      <img
-                        src="/icons/comment-icon.svg"
-                        alt="List"
-                        width={15}
-                        height={15}
-                      />
-                      <div className="text-xs text-gray-700">
-                        {app.recruiterComment || "No comment"}
+                      <div className="text-sm font-medium">{c?.fullName}</div>
+                      <div className="text-xs text-blue-600 mt-2">
+                        {c?.currentLocation || "No City"}
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                      <div className="flex items-center gap-1 mt-2">
+                        <img
+                          src="/icons/comment-icon.svg"
+                          alt="List"
+                          width={15}
+                          height={15}
+                        />
+                        <div className="text-xs text-gray-700">
+                          {app.recruiterComment || "No comment"}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
 
@@ -205,35 +269,33 @@ export default function JobDetailView() {
           {selectedApplication ? (
             <>
               <div className="flex gap-10 border-b mb-4">
-                {["Candidate Profile", "Questions Form", "Evaluation Form"].map(
-                  (tab) => (
-                    <button
-                      key={tab}
-                      className={`py-2 px-4 capitalize border-b-2 ${
-                        activeTab === tab
-                          ? "border-teal-600 text-teal-600"
-                          : "border-transparent"
-                      }`}
-                      onClick={() => setActiveTab(tab)}
-                    >
-                      {tab.replace(/^\w/, (c) => c.toUpperCase())}
-                    </button>
-                  )
-                )}
+                {[
+                  "Candidate Profile",
+                  "Assessment Form",
+                  "Evaluation Form",
+                ].map((tab) => (
+                  <button
+                    key={tab}
+                    className={`py-2 px-4 capitalize border-b-2 ${
+                      activeTab === tab
+                        ? "border-teal-600 text-teal-600"
+                        : "border-transparent"
+                    }`}
+                    onClick={() => setActiveTab(tab)}
+                  >
+                    {tab.replace(/^\w/, (c) => c.toUpperCase())}
+                  </button>
+                ))}
               </div>
 
               {activeTab === "Candidate Profile" && (
                 <JobProfileTab application={selectedApplication} />
               )}
-              {activeTab === "Questions Form" && (
-                <div className="text-sm text-gray-600">
-                  Questions Form goes here
-                </div>
+              {activeTab === "Assessment Form" && (
+                <JobAssesmentForm applicationId={selectedApplication._id} />
               )}
               {activeTab === "Evaluation Form" && (
-                <div className="text-sm text-gray-600">
-                  Evaluation Form goes here
-                </div>
+                <JobEvaluationForm applicationId={selectedApplication._id} />
               )}
             </>
           ) : (

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { Job } from "../../types/user";
+import { useHasPermission } from "../../hooks/hasPermissions";
 
 interface Props {
   jobs: Job[];
@@ -8,6 +9,7 @@ interface Props {
 
 export default function JobRowDisplay({ jobs, onEditJob }: Props) {
   const navigate = useNavigate();
+  const canEditJob = useHasPermission("edit-job");
 
   return (
     <div className="bg-white rounded-b-lg shadow overflow-auto">
@@ -45,11 +47,11 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
                   <span
                     className={`font-medium ${
                       job.status === "Active"
-                        ? "text-emerald-600"
-                        : "text-gray-400"
+                        ? "text-[#16968F]"
+                        : "text-[#535353]"
                     }`}
                   >
-                    {job.status}
+                    {job.status === "Inactive" ? "Archived" : job.status}
                   </span>
                 </td>
                 <td className="p-4 text-left">
@@ -57,10 +59,14 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
                     <img
                       src="/icons/edit-icon.svg"
                       alt="Edit Icon"
-                      width={24}
-                      height={24}
-                      className="cursor-pointer"
-                      onClick={() => onEditJob(job)}
+                      width={16}
+                      height={16}
+                      className={`${
+                        canEditJob
+                          ? "cursor-pointer"
+                          : "opacity-50 cursor-not-allowed"
+                      }`}
+                      onClick={() => canEditJob && onEditJob(job)}
                     />
 
                     <img

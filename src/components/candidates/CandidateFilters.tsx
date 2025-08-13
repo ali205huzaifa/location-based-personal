@@ -119,6 +119,7 @@ export default function CandidateFilters({
                     key: "selection",
                   },
                 ]}
+                rangeColors={["#16968F"]}
                 onChange={(item: {
                   selection: { startDate: Date; endDate: Date };
                 }) => {

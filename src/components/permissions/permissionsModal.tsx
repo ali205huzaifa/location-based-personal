@@ -48,18 +48,18 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   }, [role]);
 
   const permissionsList = [
-    { label: "Create User", name: "create-user" },
-    { label: "View User", name: "view-user" },
-    { label: "Update User", name: "update-user" },
-    { label: "Delete User", name: "delete-user" },
+    { label: "View Dashboard", name: "view-dashboard" },
+    { label: "View Job", name: "view-job" },
+    { label: "View Candidates", name: "view-candidates" },
+    /*{ label: "View User", name: "view-user" },
+    { label: "View AccessRole", name: "view-accessRole" },*/
+    { label: "View Interviewer", name: "view-interviewer" },
     { label: "Create Job", name: "create-job" },
     { label: "Edit Job", name: "edit-job" },
-    { label: "View Job", name: "view-job" },
-    { label: "Delete Job", name: "delete-job" },
-    { label: "Create Application", name: "create-application" },
-    { label: "Edit Application", name: "edit-application" },
-    { label: "View Application", name: "view-application" },
-    { label: "Delete Application", name: "delete-application" },
+    { label: "Send Email", name: "send-email" },
+    { label: "Schedule Interview", name: "schedule-interview" },
+    { label: "Send Form", name: "send-form" },
+    { label: "Archived Jobs", name: "archived-jobs" },
   ];
 
   const handleCheckboxChange = (perm: string) => {

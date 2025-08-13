@@ -31,6 +31,7 @@ const LoginPage: React.FC = () => {
 
       const userInfo = {
         _id: user._id,
+        name: user.name,
         fullName: user.fullName || user.name,
         email: user.email,
         phoneNumber: user.phoneNumber || "",
@@ -59,7 +60,13 @@ const LoginPage: React.FC = () => {
 
       localStorage.setItem("token", api_token);
 
-      navigate("/dashboard");
+      const permissions = user.role.permissions;
+
+      if (permissions.includes("view-dashboard")) {
+        navigate("/dashboard");
+      } else if (permissions.includes("view-job")) {
+        navigate("/jobs");
+      }
     } catch (err: any) {
       Swal.fire({
         icon: "error",

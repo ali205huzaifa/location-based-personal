@@ -1,16 +1,17 @@
 import React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
+import { useHasPermission } from "../../hooks/hasPermissions";
+import EmailModal from "./JobEmailModal";
 
 const actions = [
-  "Reviewed",
-  "Shortlisted",
-  "Interview Scheduled",
-  "Interviewed",
-  "Selected",
-  "Send Offer Letter",
-  "Rejected",
+  { label: "Applicants", value: "APPLICANTS" },
+  { label: "Reviewed", value: "REVIEWED" },
+  { label: "Shortlisted", value: "SHORTLISTED" },
+  { label: "Interview Scheduled", value: "INTERVIEW_SCHEDULED" },
+  { label: "Selected", value: "SELECTED" },
+  { label: "Rejected", value: "REJECTED" },
 ];
 
 interface Props {
@@ -18,35 +19,45 @@ interface Props {
 }
 
 const JobProfileTab: React.FC<Props> = ({ application }) => {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const canEditJob = useHasPermission("schedule-interview");
+  const canSendEmail = useHasPermission("send-email");
   const candidate = application.candidate;
-  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [localComments, setLocalComments] = useState(
     application.comments || []
   );
 
-  const handleSelect = (action: string) => {
-    setSelected(action);
-    console.log("Selected action:", action);
-    setOpen(false);
+  const handleSelect = async (value: string) => {
+    setSelected(value);
+    if (!value) return;
+
+    try {
+      await JobsAPI.UpdateApplicantStatusById(application._id, {
+        status: value,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Status Updated",
+        text: `Application status has been updated to ${value}.`,
+        showConfirmButton: true,
+      }).then(() => {
+        if (value === "INTERVIEW_SCHEDULED") {
+          setShowEmailModal(true);
+        }
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to update application status. Please try again.",
+      });
+    }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     setLocalComments(application.comments || []);
@@ -58,44 +69,52 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
         <h2 className="text-2xl text-[#0E0E2C] mt-2 ">{candidate.fullName}</h2>
 
         <div className="flex gap-2">
-          <button className="px-4 py-2 text-xs rounded-lg bg-[#16968F] hover:bg-emerald-700 text-white">
-            <img
-              src="/icons/manageUser-icon.svg"
-              alt="Search"
-              className="w-4 h-4"
-            />
-          </button>
-          <button className="px-4 py-2 text-xs rounded-lg bg-[#16968F] hover:bg-emerald-700 text-white">
-            <img src="/icons/mail-icon2.svg" alt="Search" className="w-4 h-4" />
+          <button
+            className={`px-4 py-2 text-xs rounded-lg bg-[#16968F] text-white 
+    ${canSendEmail ? "hover:bg-emerald-700" : "opacity-50 cursor-not-allowed"}`}
+            onClick={() => canSendEmail && setShowEmailModal(true)}
+            disabled={!canSendEmail}
+          >
+            <img src="/icons/mail-icon2.svg" alt="Mail" className="w-4 h-4" />
           </button>
 
-          <div className="relative inline-block text-left" ref={dropdownRef}>
-            <div>
-              <button
-                onClick={() => setOpen((prev) => !prev)}
-                className="bg-[#16968F] hover:bg-emerald-700 text-white px-4 py-2 text-xs rounded-lg"
+          <>
+            <select
+              className={`bg-[#16968F] text-white px-4 py-2 text-xs rounded-lg 
+      ${
+        canEditJob
+          ? "hover:bg-emerald-700 cursor-pointer"
+          : "opacity-50 cursor-not-allowed"
+      }`}
+              value={selected}
+              onChange={(e) => handleSelect(e.target.value)}
+              disabled={!canEditJob}
+            >
+              <option
+                value=""
+                style={{ backgroundColor: "#ffffff", color: "#000000" }}
               >
-                {selected ? selected : "More Actions ▾"}
-              </button>
-            </div>
+                More Actions
+              </option>
+              {actions.map((action) => (
+                <option
+                  key={action.value}
+                  value={action.value}
+                  style={{ backgroundColor: "#ffffff", color: "#000000" }}
+                >
+                  {action.label}
+                </option>
+              ))}
+            </select>
 
-            {open && (
-              <div className="absolute right-0 z-10 mt-1 w-48 origin-top-right rounded-md bg-white-600 shadow-lg ring-1 ring-black/5">
-                <ul className="py-1 text-xs text-black">
-                  {actions.map((action) => (
-                    <li key={action}>
-                      <button
-                        onClick={() => handleSelect(action)}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-300"
-                      >
-                        {action}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {showEmailModal && (
+              <EmailModal
+                candidateEmail={candidate.email}
+                candidateName={candidate.fullName}
+                onClose={() => setShowEmailModal(false)}
+              />
             )}
-          </div>
+          </>
         </div>
       </div>
 
