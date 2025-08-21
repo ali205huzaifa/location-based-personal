@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface Role {
   id: string;
@@ -16,12 +17,38 @@ const RolesBlockDisplay: React.FC<RolesBlockDisplayProps> = ({
   onEdit,
   onDelete,
 }) => {
+  if (roles.length === 0) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <p className="text-red-500 font-medium text-lg"> No roles found!</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: { transition: { staggerChildren: 0.1 } },
+      }}
+    >
       {roles.map((role) => (
-        <div
+        <motion.div
           key={role.id}
-          className="border border-gray-300 rounded-lg p-6 flex items-center justify-between shadow-sm"
+          className="border border-gray-300 rounded-lg p-6 flex items-center justify-between shadow-sm bg-white"
+          variants={{
+            hidden: { opacity: 0, x: -40 },
+            visible: { opacity: 1, x: 0 },
+          }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          whileHover={{
+            scale: 1.03,
+            boxShadow: "0px 6px 16px rgba(0, 0, 0, 0.15)",
+            zIndex: 5,
+          }}
+          style={{ position: "relative" }}
         >
           <div className="flex items-center gap-3">
             <img
@@ -29,24 +56,32 @@ const RolesBlockDisplay: React.FC<RolesBlockDisplayProps> = ({
               alt="User Icon"
               className="w-6 h-6"
             />
-            <span className="text-md font-medium">{role.name}</span>
+            <span className="text-md font-medium text-gray-800">
+              {role.name}
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={() => onEdit(role.id)}>
+            <button
+              onClick={() => onEdit(role.id)}
+              className="hover:scale-110 transition-transform"
+            >
               <img src="/icons/edit-icon.svg" alt="Edit" className="w-4 h-4" />
             </button>
-            <button onClick={() => onDelete(role.id)}>
+            <button
+              onClick={() => onDelete(role.id)}
+              className="hover:scale-110 transition-transform"
+            >
               <img
                 src="/icons/delete-icon.svg"
                 alt="Delete"
-                className="w-4 h-4 text-red-500"
+                className="w-4 h-4"
               />
             </button>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 };
 

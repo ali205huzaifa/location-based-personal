@@ -4,6 +4,8 @@ import NoteAPI from "../../api/notesApi/NotesAPI";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import ImageResize from "quill-image-resize-module-react";
+import ClipLoader from "react-spinners/ClipLoader";
+import { motion } from "framer-motion";
 
 Quill.register("modules/imageResize", ImageResize);
 const FontWeightStyle = Quill.import("attributors/style/font");
@@ -21,15 +23,24 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editContent, setEditContent] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const fetchNotes = async () => {
     try {
+      setLoading(true);
       const res = await NoteAPI.getAll({ userId });
       const data = Array.isArray(res.data?.data) ? res.data.data : [];
       setNotes(data);
     } catch {
-      Swal.fire("Error", "Failed to fetch notes", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch notes",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
       setNotes([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,16 +50,34 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
 
   const handleSaveNote = async () => {
     if (!content.trim()) {
-      Swal.fire("Error", "Note content is empty", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Note content is empty!",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
       return;
     }
     try {
+      setLoading(true);
       await NoteAPI.CreateNote({ content });
-      Swal.fire("Added", "Note added successfully!", "success");
+      Swal.fire({
+        title: "Added",
+        text: "Note added successfully!",
+        icon: "success",
+        confirmButtonColor: "#16968F",
+      });
       setContent("");
       await fetchNotes();
     } catch {
-      Swal.fire("Error", "Failed to save note", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Failed to save note!",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,12 +90,23 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
           title: "Note",
           html: note.content,
           confirmButtonText: "Close",
+          confirmButtonColor: "#16968F",
         });
       } else {
-        Swal.fire("Not found", "Note not found", "info");
+        Swal.fire({
+          title: "Not found",
+          text: "Note not found",
+          icon: "info",
+          confirmButtonColor: "#16968F",
+        });
       }
     } catch {
-      Swal.fire("Error", "Failed to fetch note", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Failed to Fetch note!",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
     }
   };
 
@@ -79,19 +119,35 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
         setEditContent(note.content);
         setIsEditModalOpen(true);
       } else {
-        Swal.fire("Not found", "Note not found", "info");
+        Swal.fire({
+          title: "Not found",
+          text: "Note not found",
+          icon: "info",
+          confirmButtonColor: "#16968F",
+        });
       }
     } catch {
-      Swal.fire("Error", "Failed to fetch note", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Failed to Fetch note!",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
     }
   };
 
   const handleUpdateNote = async () => {
     if (!editContent.trim()) {
-      Swal.fire("Error", "Note content is empty", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Note content is empty",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
       return;
     }
     try {
+      setLoading(true);
       await NoteAPI.UpdateNote(editNoteId!, { content: editContent });
       Swal.fire("Updated", "Note updated successfully!", "success");
       setIsEditModalOpen(false);
@@ -99,7 +155,14 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
       setEditContent("");
       await fetchNotes();
     } catch {
-      Swal.fire("Error", "Failed to update note", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Failed to delete note",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,14 +173,29 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: "#16968F",
+      cancelButtonColor: "#d33",
     });
     if (result.isConfirmed) {
       try {
+        setLoading(true);
         await NoteAPI.DeleteNote(noteId);
-        Swal.fire("Deleted", "Note deleted successfully!", "success");
-        fetchNotes();
+        Swal.fire({
+          title: "Deleted",
+          text: "Note deleted successfully!",
+          icon: "success",
+          confirmButtonColor: "#16968F",
+        });
+        await fetchNotes();
       } catch {
-        Swal.fire("Error", "Failed to delete note", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Failed to delete note",
+          icon: "error",
+          confirmButtonColor: "#16968F",
+        });
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -163,7 +241,13 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
   ];
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 relative">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-50">
+          <ClipLoader size={50} color="#16968F" />
+        </div>
+      )}
+
       <h2 className="text-lg font-semibold mb-2">Notes</h2>
 
       <div className="rounded bg-white mb-3">
@@ -179,24 +263,32 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
       <div className="flex justify-end">
         <button
           onClick={handleSaveNote}
-          className="px-6 py-2 bg-[#16968F] text-white rounded hover:bg-teal-700 mt-20"
+          disabled={loading}
+          className="px-6 py-2 bg-[#16968F] text-white rounded hover:bg-teal-700 mt-20 disabled:opacity-50"
         >
           Add a Note
         </button>
       </div>
 
-      <div className="h-80 overflow-y-auto pr-2 mt-4">
-        {notes.map((note) => {
+      <div className="h-[380px] overflow-y-auto pr-2 mt-4">
+        {notes.map((note, i) => {
           const tempDiv = document.createElement("div");
           tempDiv.innerHTML = note.content;
           const plainText = tempDiv.textContent || tempDiv.innerText || "";
 
-          const isTruncated = plainText.length > 50;
-          const visibleText = plainText.substring(0, 50);
+          const isTruncated = plainText.length > 45;
+          const visibleText = plainText.substring(0, 45);
 
           return (
-            <div
+            <motion.div
               key={note._id}
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.05 }}
+              whileHover={{
+                scale: 1.02,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              }}
               className="border rounded p-3 mb-3 bg-white shadow-sm relative"
             >
               <div className="text-sm mb-2 flex justify-between items-center">
@@ -207,15 +299,15 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
                       onClick={() => handleView(note._id)}
                       style={{
                         color: "#16968F",
-                        textDecoration: "underline",
                         cursor: "pointer",
                       }}
                     >
-                      ... see more
+                      {" "}
+                      ...see more
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-500 whitespace-nowrap mr-24">
+                <div className="text-xs text-gray-500 whitespace-nowrap mr-20">
                   {new Date(note.createdAt).toLocaleDateString()}
                 </div>
               </div>
@@ -235,14 +327,14 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
                   />
                 </button>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       {isEditModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg w-[700px] h-[450px] p-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white rounded-lg w-[700px] h-[450px] p-4 relative">
             <h3 className="text-lg font-semibold mb-3">Edit Note</h3>
             <ReactQuill
               theme="snow"
@@ -261,7 +353,8 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
               </button>
               <button
                 onClick={handleUpdateNote}
-                className="px-4 py-2 bg-[#16968F] text-white rounded hover:bg-teal-700"
+                disabled={loading}
+                className="px-4 py-2 bg-[#16968F] text-white rounded hover:bg-teal-700 disabled:opacity-50"
               >
                 Update
               </button>

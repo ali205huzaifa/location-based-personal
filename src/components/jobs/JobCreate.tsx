@@ -5,6 +5,7 @@ import ImageResize from "quill-image-resize-module-react";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import Swal from "sweetalert2";
 import type { ApplicationQuestion, JobPayloadType } from "../../types/user";
+import ClipLoader from "react-spinners/ClipLoader";
 
 Quill.register("modules/imageResize", ImageResize);
 
@@ -52,7 +53,6 @@ export default function JobCreate({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
-  const [level, setLevel] = useState("");
   const [department, setDepartment] = useState("");
   const [openings, setOpenings] = useState("");
   const [jobType, setJobType] = useState("");
@@ -60,6 +60,8 @@ export default function JobCreate({
   const [workplace, setWorkplace] = useState("");
   const [location, setLocation] = useState("");
   const [jobStatus, setJobStatus] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   const [predefinedQuestions, setPredefinedQuestions] = useState({
     currentSalary: false,
@@ -104,7 +106,6 @@ export default function JobCreate({
   const resetForm = () => {
     setErrors({});
     setDesignation("");
-    setLevel("");
     setJobDescription("");
     setSkills([]);
     setDepartment("");
@@ -165,6 +166,7 @@ export default function JobCreate({
 
   const handleSubmit = () => {
     if (!validateForm()) return;
+    setLoading(true);
 
     const payload = {
       title: designation,
@@ -175,7 +177,7 @@ export default function JobCreate({
       postingStartDate: new Date(startDate).toISOString(),
       postingEndDate: new Date(endDate).toISOString(),
       requiredSkills: skills,
-      experienceLevel: level,
+      experienceLevel: experience,
       jobType,
       location,
       status: jobStatus,
@@ -211,8 +213,11 @@ export default function JobCreate({
       .then(() => {
         Swal.fire({
           title: "Success!",
-          text: isEdit ? "Job updated!" : "Job posted!",
+          text: isEdit
+            ? "Job updated Successfully!"
+            : "Job posted Successfully!",
           icon: "success",
+          confirmButtonColor: "#16968F",
         }).then(() => {
           setShowModal(false);
           resetForm();
@@ -221,7 +226,15 @@ export default function JobCreate({
       })
       .catch((err) => {
         console.error(err);
-        Swal.fire("Error", "Something went wrong", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Something went wrong",
+          icon: "error",
+          confirmButtonColor: "#16968F",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -238,7 +251,6 @@ export default function JobCreate({
   useEffect(() => {
     if (isEdit && jobToEdit) {
       setDesignation(jobToEdit.title || "");
-      setLevel(jobToEdit.experienceLevel || "");
       setJobDescription(jobToEdit.description || "");
       setSkills(jobToEdit.requiredSkills || []);
       setDepartment(jobToEdit.department || "");
@@ -337,8 +349,8 @@ export default function JobCreate({
   return (
     <div className="bg-white mt-4 relative">
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center ">
-          <div className="relative bg-[#FFFFFF] w-[90%] max-w-6xl h-[80vh] rounded-xl shadow-xl border border-[#D9D9D9] overflow-y-auto p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="relative bg-[#FFFFFF] w-[90%] max-w-6xl h-[75vh] rounded-xl shadow-xl border border-[#D9D9D9] overflow-y-auto p-6">
             <button
               onClick={() => {
                 resetForm();
@@ -349,8 +361,8 @@ export default function JobCreate({
               <img
                 src="/icons/cross-icon.svg"
                 alt="Jobs Icon"
-                width={22}
-                height={22}
+                width={15}
+                height={15}
               />
             </button>
 
@@ -360,38 +372,18 @@ export default function JobCreate({
 
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <label className="block mb-4 text-[16px]">Job title</label>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <select
-                    className="border border-gray-300 rounded-md px-4 py-4 w-full custom-select"
+                <label className="block mb-4 font-bold">Job title</label>
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Enter Job Title"
+                    className="border border-gray-300 rounded-md px-4 py-4 w-full"
                     value={designation}
                     onChange={(e) => {
                       setDesignation(e.target.value);
                       clearError("designation");
                     }}
-                  >
-                    <option value="">Select Designation</option>
-                    <option value="Flutter Developer">Flutter Developer</option>
-                    <option value="MERN Stack Developer">
-                      MERN Stack Developer
-                    </option>
-                    <option value="Frontend Developer">
-                      Frontend Developer
-                    </option>
-                    <option value="Backend Developer">Backend Developer</option>
-                  </select>
-
-                  <select
-                    className="border border-gray-300 rounded-md px-4 py-4 w-full custom-select"
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value)}
-                  >
-                    <option value="">Select Level</option>
-                    <option value="0">Entry Level</option>
-                    <option value="0-1">Junior Level</option>
-                    <option value="1-3">Mid Level</option>
-                    <option value="3-5">Senior Level</option>
-                  </select>
+                  />
                   {errors.designation && (
                     <p className="text-red-500 text-sm mt-1">
                       {errors.designation}
@@ -400,7 +392,7 @@ export default function JobCreate({
                 </div>
 
                 <div className="mb-6">
-                  <label className="block mb-4 text-[16px]">
+                  <label className="block mb-4 font-bold">
                     Job Description
                   </label>
                   <div className="border border-gray-300 rounded-md p-2 bg-white">
@@ -423,7 +415,7 @@ export default function JobCreate({
                   )}
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-4 text-lg font-semibold text-gray-800">
+                  <label className="block mb-4 font-bold">
                     Required Skills
                   </label>
                   <div className="border border-gray-300 rounded-md p-4">
@@ -463,7 +455,7 @@ export default function JobCreate({
                 </div>
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-4">
-                    <label className="block font-medium">
+                    <label className="block font-bold">
                       Questions{" "}
                       <span className="text-[10px] text-gray-500">
                         for candidates
@@ -572,7 +564,7 @@ export default function JobCreate({
 
               <div>
                 <div className="mb-8">
-                  <label className="block mb-6">Job Department</label>
+                  <label className="block mb-6 font-bold">Job Department</label>
                   <select
                     className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                     value={department}
@@ -607,7 +599,9 @@ export default function JobCreate({
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div>
-                    <label className="block mb-6">No. of Positions</label>
+                    <label className="block mb-6 font-bold">
+                      No. of Positions
+                    </label>
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={openings}
@@ -632,7 +626,9 @@ export default function JobCreate({
                   </div>
 
                   <div>
-                    <label className="block mb-6">Gender Preference</label>
+                    <label className="block mb-6 font-bold">
+                      Gender Preference
+                    </label>
                     <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md px-4 py-3 justify-center">
                       {[
                         { label: "Male", value: "MALE" },
@@ -668,7 +664,7 @@ export default function JobCreate({
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div>
-                    <label className="block mb-6">Job Type</label>
+                    <label className="block mb-6 font-bold">Job Type</label>
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={jobType}
@@ -690,7 +686,9 @@ export default function JobCreate({
                     )}
                   </div>
                   <div>
-                    <label className="block mb-6">Experience Level</label>
+                    <label className="block mb-6 font-bold">
+                      Experience Level
+                    </label>
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={experience}
@@ -715,7 +713,9 @@ export default function JobCreate({
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div>
-                    <label className="block mb-6">Workplace Type</label>
+                    <label className="block mb-6 font-bold">
+                      Workplace Type
+                    </label>
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={workplace}
@@ -736,7 +736,7 @@ export default function JobCreate({
                     )}
                   </div>
                   <div>
-                    <label className="block mb-6">Job Location</label>
+                    <label className="block mb-6 font-bold">Job Location</label>
                     <select
                       className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
                       value={location}
@@ -757,7 +757,7 @@ export default function JobCreate({
                 </div>
 
                 <div className="mb-4">
-                  <label className="block mb-4">Job Status</label>
+                  <label className="block mb-4 font-bold">Job Status</label>
                   <div className="flex gap-4">
                     {[
                       { label: "Active", value: "Active" },
@@ -789,16 +789,28 @@ export default function JobCreate({
                 <div className="flex justify-end mt-10">
                   <button
                     type="button"
-                    className="flex items-center justify-center bg-[#16968F] gap-2 text-white w-full py-3 rounded-md hover:bg-emerald-700 mr-6 cursor-pointer"
+                    className={`flex items-center justify-center gap-2 text-white w-full py-3 rounded-md mr-6 cursor-pointer 
+    ${
+      loading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-[#16968F] hover:bg-emerald-700"
+    }`}
                     onClick={handleSubmit}
+                    disabled={loading}
                   >
-                    <img
-                      src="/icons/jobs-icon.svg"
-                      alt="Jobs Icon"
-                      width={20}
-                      height={20}
-                    />
-                    {jobToEdit ? "Update Job" : "Post Job"}
+                    {loading ? (
+                      <ClipLoader size={25} color="#16968F" />
+                    ) : (
+                      <>
+                        <img
+                          src="/icons/jobs-icon.svg"
+                          alt="Jobs Icon"
+                          width={20}
+                          height={20}
+                        />
+                        {jobToEdit ? "Update Job" : "Post Job"}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -806,7 +818,7 @@ export default function JobCreate({
           </div>
 
           {showQuestionModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-10">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
               <div className="bg-white p-6 rounded-xl shadow-xl border border-[#D9D9D9] w-[400px] relative">
                 <button
                   onClick={() => setShowQuestionModal(false)}
@@ -815,8 +827,8 @@ export default function JobCreate({
                   <img
                     src="/icons/cross-icon.svg"
                     alt="Jobs Icon"
-                    width={22}
-                    height={22}
+                    width={15}
+                    height={15}
                   />
                 </button>
                 <div className="flex items-center gap-2 mb-4">

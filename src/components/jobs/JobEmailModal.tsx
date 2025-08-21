@@ -1,7 +1,9 @@
 import { useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import Swal from "sweetalert2";
 import InterviewersModal from "./InterviewersModal";
+import JobsAPI from "../../api/jobsApi/JobsAPI";
 
 interface EmailModalProps {
   candidateEmail?: string;
@@ -15,28 +17,95 @@ const EmailModal: React.FC<EmailModalProps> = ({
   onClose,
 }) => {
   const [emailTo, setEmailTo] = useState(candidateEmail || "");
-  const [emailType, setEmailType] = useState("Interview Scheduled");
+  const [emailType, setEmailType] = useState("INTERVIEW_SCHEDULED");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [body, setBody] = useState(`
+    <p>Dear <strong>${candidateName || "[Candidate Name]"}</strong>,</p>
+    <p>We are pleased to invite you for an interview for the <strong>[Job Title]</strong> position at IR Solutions.</p>
+    <p>📅 Date: [${date || "Select Date"}]</p>
+    <p>🕒 Time: [${time || "Select Time"}]</p>
+    <p>📍 Mode: [Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.]</p>
+    <p>Please confirm your availability by replying to this email.</p>
+    <p>Best regards,<br />IR Solutions HR Team.</p>
+  `);
 
+  const [loading, setLoading] = useState(false);
   const [showSelectModal, setShowSelectModal] = useState(false);
   const [selectedInterviewers, setSelectedInterviewers] = useState<any[]>([]);
-  const initialEmailBody = `Dear <strong>${
-    candidateName || "[ Selected Candidate Name ]"
-  }</strong>,<br><br>
 
-We are pleased to invite you for an interview for the [Job Title] position at IR Solutions.<br><br>
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
 
-📅 Date: [07 July, 2025]<br>
-🕒 Time: [ 02:35 PM ]<br>
-📍 Mode: [onsite , IR Solutions , Al-Rehman plaza , 3rd floor , G-11 Markaz , Islamabad. ]<br><br>
+  const formatTime = (timeString: string) => {
+    if (!timeString) return "";
+    const [hourStr, minute] = timeString.split(":");
+    let hour = parseInt(hourStr, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour.toString().padStart(2, "0")}:${minute} ${ampm}`;
+  };
 
-Please confirm your availability by replying to this email.<br><br>
+  const updateBodyWithDateTime = (newDate: string, newTime: string) => {
+    const formattedDate = formatDate(newDate);
+    const formattedTime = formatTime(newTime);
 
-Best regards,<br>
-IR Solutions HR Team.`;
+    setBody((prev) =>
+      prev
+        .replace(
+          /📅 Date:[^<]*/i,
+          `📅 Date: ${formattedDate || "[Select Date]"}`
+        )
+        .replace(
+          /🕒 Time:[^<]*/i,
+          `🕒 Time: ${formattedTime || "[Select Time]"}`
+        )
+    );
+  };
 
-  const [body, setBody] = useState(initialEmailBody);
+  const handleSendEmail = async () => {
+    if (!emailTo || selectedInterviewers.length === 0) {
+      Swal.fire(
+        "Missing Fields",
+        "Please enter candidate email & select interviewers!",
+        "warning"
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        email: emailTo,
+        emailType,
+        interviewerIds: selectedInterviewers.map((i) => i.id),
+        interviewDate: date,
+        interviewTime: time,
+        body,
+      };
+
+      await JobsAPI.SendCandidateEmail(payload);
+
+      Swal.fire("Success", "Email sent successfully!", "success");
+      onClose();
+    } catch (error: any) {
+      Swal.fire(
+        "Error",
+        error?.response?.data?.message || "Failed to send email.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
@@ -94,14 +163,20 @@ IR Solutions HR Team.`;
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => {
+              setDate(e.target.value);
+              updateBodyWithDateTime(e.target.value, time);
+            }}
             className="border border-gray-300 rounded px-3 py-2"
           />
 
           <input
             type="time"
             value={time}
-            onChange={(e) => setTime(e.target.value)}
+            onChange={(e) => {
+              setTime(e.target.value);
+              updateBodyWithDateTime(date, e.target.value);
+            }}
             className="border border-gray-300 rounded px-3 py-2"
           />
         </div>
@@ -125,13 +200,11 @@ IR Solutions HR Team.`;
 
         <div className="flex justify-end gap-2 mt-2">
           <button
-            onClick={() => {
-              console.log({ emailTo, emailType, date, time, body });
-              onClose();
-            }}
-            className="px-4 py-2 rounded bg-[#16968F] text-white flex items-center gap-2"
+            disabled={loading}
+            onClick={handleSendEmail}
+            className="px-4 py-2 rounded bg-[#16968F] text-white flex items-center gap-2 disabled:opacity-50"
           >
-            Send Email
+            {loading ? "Sending..." : "Send Email"}
             <img
               src="/icons/mail-arrow.svg"
               alt="Mail Icon"
@@ -146,6 +219,7 @@ IR Solutions HR Team.`;
         <InterviewersModal
           onClose={() => setShowSelectModal(false)}
           onSelect={(interviewers) => setSelectedInterviewers(interviewers)}
+          preselected={selectedInterviewers.map((i) => i.id)}
         />
       )}
     </div>

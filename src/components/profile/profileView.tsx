@@ -5,6 +5,8 @@ import Swal from "sweetalert2";
 import UsersAPI from "../../api/manage-userApi/UserAPI";
 import { setAuthData } from "../../store/Auth";
 
+type PasswordField = "currentPassword" | "newPassword" | "confirmNewPassword";
+
 export default function ProfileView() {
   const dispatch = useDispatch();
   const { currentUser, token, permissions } = useSelector(
@@ -27,6 +29,21 @@ export default function ProfileView() {
     newPassword: "",
     confirmNewPassword: "",
   });
+
+  const [showPassword, setShowPassword] = useState<
+    Record<PasswordField, boolean>
+  >({
+    currentPassword: false,
+    newPassword: false,
+    confirmNewPassword: false,
+  });
+
+  const togglePassword = (field: PasswordField) => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
   if (!currentUser) return <p>Loading...</p>;
 
@@ -88,7 +105,7 @@ export default function ProfileView() {
       Swal.fire({
         icon: "error",
         title: "Upload failed",
-        text: "Could not upload image.",
+        text: "Only image files of type PNG, JPG, JPEG, or GIF are allowed.",
       });
     }
   };
@@ -200,13 +217,13 @@ export default function ProfileView() {
   };
 
   return (
-    <div className="max-w-7xl p-6 space-y-10">
+    <div className="w-full p-6 space-y-10">
       <section>
-        <h2 className="text-2xl font-Regular mb-6">Personal Info</h2>
+        <h2 className="text-2xl font-bold mb-6">Personal Info</h2>
         <div className="flex items-center space-x-10">
           <div className="relative">
             <div className="flex w-[250px] items-center gap-4 mt-2">
-              <p className="text-sm text-gray-500">Profile Picture</p>
+              <p className="text-lg text-gray-500">Profile Picture</p>
               <img
                 src={profileImageUrl || "/profile.jpg"}
                 alt="Profile"
@@ -236,11 +253,11 @@ export default function ProfileView() {
 
           <div className="grid grid-cols-4 gap-6 w-full md:pl-30 pl-6">
             <div>
-              <p className="text-sm text-gray-500">Full Name</p>
+              <p className="text-lg text-gray-500">Full Name</p>
               <p className="font-Regular">{currentUser.fullName}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Email Address</p>
+              <p className="text-lg text-gray-500">Email Address</p>
               <p className="font-Regular">{currentUser.email}</p>
             </div>
           </div>
@@ -248,10 +265,10 @@ export default function ProfileView() {
       </section>
 
       <section className="border-t border-gray-300 pt-6">
-        <h2 className="text-2xl font-Regular mb-6">Role & Access</h2>
+        <h2 className="text-2xl font-bold mb-6">Role & Access</h2>
         <div className="grid grid-cols-4 gap-6">
           <div>
-            <p className="text-sm text-gray-500">User Role</p>
+            <p className="text-lg text-gray-500">User Role</p>
             <p>
               {typeof currentUser?.role === "string"
                 ? currentUser.role
@@ -259,7 +276,7 @@ export default function ProfileView() {
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Status</p>
+            <p className="text-lg text-gray-500">Status</p>
             <label className="inline-flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -276,49 +293,87 @@ export default function ProfileView() {
       </section>
 
       <section className="border-t border-gray-300 pt-6 w-full">
-        <h2 className="text-2xl font-Regular mb-6">Security & Credentials</h2>
+        <h2 className="text-2xl font-bold mb-6">Security & Credentials</h2>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-end">
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 relative">
             <input
-              type="password"
+              type={showPassword.currentPassword ? "text" : "password"}
               name="currentPassword"
               placeholder="Enter your previous Password"
               value={form.currentPassword}
               onChange={handleChange}
-              className="border border-gray-300 rounded-md px-4 py-2 w-full"
+              className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none"
+            />
+            <img
+              src={
+                showPassword.currentPassword
+                  ? "/icons/eyeView-icon.svg"
+                  : "/icons/eyeView-slash-icon.svg"
+              }
+              alt="Toggle Password"
+              width={20}
+              height={20}
+              onClick={() => togglePassword("currentPassword")}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
             />
             {errors.currentPassword && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-600 text-sm absolute bottom-[-45px]">
                 {errors.currentPassword}
               </p>
             )}
           </div>
 
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 relative">
             <input
-              type="password"
+              type={showPassword.newPassword ? "text" : "password"}
               name="newPassword"
               placeholder="Enter your new Password"
               value={form.newPassword}
               onChange={handleChange}
-              className="border border-gray-300 rounded-md px-4 py-2 w-full"
+              className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none"
+            />
+            <img
+              src={
+                showPassword.newPassword
+                  ? "/icons/eyeView-icon.svg"
+                  : "/icons/eyeView-slash-icon.svg"
+              }
+              alt="Toggle Password"
+              width={20}
+              height={20}
+              onClick={() => togglePassword("newPassword")}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
             />
             {errors.newPassword && (
-              <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>
+              <p className="text-red-600 text-sm absolute bottom-[-65px]">
+                {errors.newPassword}
+              </p>
             )}
           </div>
 
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 relative">
             <input
-              type="password"
+              type={showPassword.confirmNewPassword ? "text" : "password"}
               name="confirmNewPassword"
               placeholder="Re-enter your Password"
               value={form.confirmNewPassword}
               onChange={handleChange}
-              className="border border-gray-300 rounded-md px-4 py-2 w-full"
+              className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none"
+            />
+            <img
+              src={
+                showPassword.confirmNewPassword
+                  ? "/icons/eyeView-icon.svg"
+                  : "/icons/eyeView-slash-icon.svg"
+              }
+              alt="Toggle Password"
+              width={20}
+              height={20}
+              onClick={() => togglePassword("confirmNewPassword")}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
             />
             {errors.confirmNewPassword && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-600 text-sm absolute bottom-[-45px]">
                 {errors.confirmNewPassword}
               </p>
             )}

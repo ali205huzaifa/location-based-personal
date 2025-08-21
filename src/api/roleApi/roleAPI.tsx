@@ -16,6 +16,10 @@ class RoleAPI {
   static DeleteRole(id: string) {
     return axiosClient.delete(`/roles/${id}`);
   }
+
+  static ForceDeleteRole(id: string) {
+    return axiosClient.delete(`/roles/${id}?force=true`);
+  }
 }
 
 export default RoleAPI;

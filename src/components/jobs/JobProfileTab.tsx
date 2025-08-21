@@ -16,14 +16,15 @@ const actions = [
 
 interface Props {
   application: any;
+  onStatusChange?: () => void;
 }
 
-const JobProfileTab: React.FC<Props> = ({ application }) => {
+const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const canEditJob = useHasPermission("schedule-interview");
   const canSendEmail = useHasPermission("send-email");
   const candidate = application.candidate;
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(application.status || "");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [localComments, setLocalComments] = useState(
@@ -49,12 +50,12 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
           setShowEmailModal(true);
         }
       });
+      if (onStatusChange) onStatusChange();
     } catch (error) {
-      console.error("Error updating status:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to update application status. Please try again.",
+        text: "Failed to update status.",
       });
     }
   };
@@ -62,6 +63,10 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
   useEffect(() => {
     setLocalComments(application.comments || []);
   }, [application._id]);
+
+  useEffect(() => {
+    setSelected(application.status || "");
+  }, [application]);
 
   return (
     <div className="text-sm text-black space-y-4">
@@ -80,27 +85,22 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
 
           <>
             <select
-              className={`bg-[#16968F] text-white px-4 py-2 text-xs rounded-lg 
-      ${
-        canEditJob
-          ? "hover:bg-emerald-700 cursor-pointer"
-          : "opacity-50 cursor-not-allowed"
-      }`}
+              className={`bg-[#16968F] text-white px-4 py-2 text-xs rounded-lg more-select focus:outline-none
+    ${
+      canEditJob
+        ? "hover:bg-emerald-700 cursor-pointer"
+        : "opacity-50 cursor-not-allowed"
+    }`}
               value={selected}
               onChange={(e) => handleSelect(e.target.value)}
               disabled={!canEditJob}
             >
-              <option
-                value=""
-                style={{ backgroundColor: "#ffffff", color: "#000000" }}
-              >
-                More Actions
-              </option>
+              <option value="">More Actions</option>
               {actions.map((action) => (
                 <option
                   key={action.value}
                   value={action.value}
-                  style={{ backgroundColor: "#ffffff", color: "#000000" }}
+                  className="option-style"
                 >
                   {action.label}
                 </option>
@@ -118,136 +118,120 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
         </div>
       </div>
 
-      <div className="flex gap-20">
+      <div className="flex gap-16">
         <div className="flex items-center gap-2">
-          <img
-            src="/icons/location-icon.svg"
-            alt="Location"
-            width={14}
-            height={14}
-          />
+          <img src="/icons/location-icon.svg" alt="Location" width={12} />
           <span>{candidate.currentLocation}</span>
         </div>
         <div className="flex items-center gap-2">
-          <img src="/icons/mail-icon.svg" alt="Email" width={14} height={14} />
+          <img src="/icons/mail-icon.svg" alt="Email" width={16} />
           <span>{candidate.email}</span>
         </div>
       </div>
 
-      <div className="flex gap-14">
+      <div className="flex gap-10">
         <div className="flex items-center gap-2">
-          <img src="/icons/phone-icon.svg" alt="Phone" width={14} height={14} />
+          <img src="/icons/phone-icon.svg" alt="Phone" width={16} />
           <span>{candidate.phoneNumber}</span>
         </div>
         <div className="flex items-center gap-2">
-          <img
-            src="/icons/linkedin-icon.svg"
-            alt="LinkedIn"
-            width={14}
-            height={14}
-          />
+          <img src="/icons/linkedin-icon.svg" alt="LinkedIn" width={20} />
           <a
             href={candidate.linkedinProfile}
             target="_blank"
-            rel="noopener noreferrer"
             className="hover:underline"
           >
             {candidate.linkedinProfile}
           </a>
         </div>
       </div>
+      <div className="border-b border-gray-400"></div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src="/icons/cv-icon.svg" alt="CV" width={16} height={16} />
-          <span className="text-gray-600">
-            Candidate's CV:&nbsp;
-            <span className="text-black">
-              {candidate.cvUrl?.split("/").pop()}
-            </span>
-          </span>
+      <div className="bg-white font-sans text-gray-900 flex">
+        <div className="w-full max-w-5xl bg-white p-2 rounded-xl">
+          <div className="flex text-lg mb-6">
+            <div className="flex items-center gap-4">
+              <img src="/icons/cv-icon.svg" alt="CV" width={20} />
+              <span>Candidate's CV:</span>
+            </div>
+            <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-16">
+              <span className="text-sm font-medium text-gray-800 truncate">
+                {candidate.cvUrl?.split("/").pop()}
+              </span>
+              <a
+                href={candidate.cvUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-black text-white rounded-md py-2 px-4 text-xs font-semibold hover:bg-gray-800 transition-colors duration-200"
+              >
+                View CV
+              </a>
+            </div>
+          </div>
+
+          <div className="flex text-lg">
+            <div className="flex items-center gap-4">
+              <img src="/icons/link-icon.svg" alt="Portfolio" width={20} />
+              <span>Portfolio Link:</span>
+            </div>
+
+            <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
+              <span className="text-sm font-medium text-gray-800 truncate">
+                {candidate.portfolio}
+              </span>
+              <a
+                href={`${candidate.portfolio}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-black text-white rounded-md py-2 px-4 text-xs font-semibold hover:bg-gray-800 transition-colors duration-200"
+              >
+                View Link
+              </a>
+            </div>
+          </div>
         </div>
-        <a
-          href={candidate.cvUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-white/90 border rounded-lg bg-black py-2 px-3 text-xs"
-        >
-          View CV
-        </a>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img
-            src="/icons/link-icon.svg"
-            alt="Portfolio"
-            width={16}
-            height={16}
-          />
-          <span className="text-gray-600">
-            Portfolio Link:&nbsp;
-            <span className="text-black break-words">
-              {candidate.portfolio}
-            </span>
-          </span>
-        </div>
-        <a
-          href={candidate.portfolio}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-white/90 border rounded-lg bg-black py-2 px-3 text-xs"
-        >
-          View Link
-        </a>
-      </div>
-
-      <div className="flex gap-10">
-        <div className="flex items-center gap-2">
-          <img
-            src="/icons/salary-icon.svg"
-            alt="Salary"
-            width={16}
-            height={16}
-          />
+      <div className="flex gap-10 text-lg p-2">
+        <div className="flex items-center gap-4">
+          <img src="/icons/salary-icon.svg" alt="Salary" width={20} />
           <span className="text-gray-600">
             Current Salary:&nbsp;
-            <span className="text-black">{candidate.currentSalary} PKR</span>
+            <span className="text-black ml-16">
+              {candidate.currentSalary} PKR
+            </span>
           </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-600">
             Expected Salary:&nbsp;
-            <span className="text-black">{candidate.expectedSalary} PKR</span>
+            <span className="text-black ml-8">
+              {candidate.expectedSalary} PKR
+            </span>
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <img
-          src="/icons/timer-icon.svg"
-          alt="Notice Period"
-          width={16}
-          height={16}
-        />
+      <div className="flex items-center gap-4 text-lg p-2">
+        <img src="/icons/timer-icon.svg" alt="Notice Period" width={20} />
         <span className="text-gray-600">
           Notice Period:&nbsp;
-          <span className="text-black">{candidate.noticePeriod}</span>
+          <span className="text-black ml-16">{candidate.noticePeriod}</span>
         </span>
       </div>
 
       {application.job?.applicationQuestions?.length > 0 && (
         <div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-4 text-lg p-2">
             <img
               src="/icons/questions-icon.svg"
               alt="Application Questions"
-              width={16}
-              height={16}
+              width={20}
+              height={20}
             />
             <span>Application Questions:</span>
           </div>
-          <ul className="ml-6 list-disc text-gray-600 space-y-2 mt-2">
+          <ul className="ml-6 list-disc text-gray-600 space-y-2 mt-2 text-lg">
             {application.job.applicationQuestions.map(
               (q: any, index: number) => (
                 <li key={index}>
@@ -305,12 +289,17 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
                 const date = createdAt.toLocaleDateString("en-GB");
 
                 return (
-                  <div key={comment._id || index} className="px-4 py-3 text-sm">
-                    <div className="text-black mb-1">{comment.text}</div>
-                    <div className="flex justify-end flex-col items-end text-xs text-gray-500">
-                      <div>{name}</div>
-                      <div className="text-[11px]">
-                        {time} {date}
+                  <div key={comment._id || index} className="px-4 py-2 text-sm">
+                    <div className="flex justify-between items-start">
+                      <div className="text-black flex-1">{comment.text}</div>
+
+                      <div className="flex flex-col text-xs text-gray-500 pl-4 whitespace-nowrap">
+                        <span className="font-medium text-gray-700">
+                          {name}
+                        </span>
+                        <span>
+                          {time} {date}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -325,8 +314,8 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
       </div>
 
       {showCommentModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white w-96 rounded-xl shadow-lg p-6 pt-4 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white w-[350px] rounded-xl shadow-lg p-6 pt-4 relative">
             <button
               onClick={() => setShowCommentModal(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-black"
@@ -343,15 +332,15 @@ const JobProfileTab: React.FC<Props> = ({ application }) => {
               <img
                 src="/icons/note-icon.svg"
                 alt="Comment Icon"
-                width={16}
-                height={16}
+                width={20}
+                height={20}
               />
-              <h3 className="text-lg text-black">Add Your Comment</h3>
+              <h3 className="text-lg text-black font-bold">Add Your Comment</h3>
             </div>
 
             <textarea
               rows={4}
-              className="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[100px]"
               placeholder="Type your comment here..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}

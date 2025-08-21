@@ -1,11 +1,23 @@
 import { useNavigate } from "react-router-dom";
 import type { Job } from "../../types/user";
 import { useHasPermission } from "../../hooks/hasPermissions";
+import { motion } from "framer-motion";
 
 interface Props {
   jobs: Job[];
   onEditJob: (job: Job) => void;
 }
+
+function toTitleCase(str: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export default function JobGridDisplay({ jobs, onEditJob }: Props) {
   const navigate = useNavigate();
   const canEditJob = useHasPermission("edit-job");
@@ -15,12 +27,46 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
     return new Date(value).toLocaleDateString("en-GB");
   };
 
+  if (jobs.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-center h-40 text-red-500 text-lg font-bold"
+      >
+        No jobs found!
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+    <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { staggerChildren: 0.15 },
+        },
+      }}
+    >
       {jobs.map((job, i) => (
-        <div
+        <motion.div
           key={i}
           className="bg-white shadow-md rounded-xl p-5 flex flex-col"
+          variants={{
+            hidden: { opacity: 0, x: -50 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+          }}
+          whileHover={{
+            scale: 1.03,
+            boxShadow: "0px 8px 24px rgba(0,0,0,0.15)",
+            zIndex: 10,
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           <div className="flex justify-between items-center mb-2">
             <p className="text-gray-500 text-sm">
@@ -51,7 +97,7 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
           </h3>
 
           <p className="text-blue-700 text-base font-medium mb-4">
-            {job.department}
+            {toTitleCase(job.department)}
           </p>
 
           <div className="flex items-center justify-between mt-auto pt-4">
@@ -63,7 +109,7 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
                   width={20}
                   height={20}
                 />
-                <span>{job.type}</span>
+                <span>{toTitleCase(job.type)}</span>
               </div>
 
               <div className="flex items-center gap-1">
@@ -83,7 +129,7 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
                   width={20}
                   height={20}
                 />
-                <span>{job.workArrangement || "N/A"}</span>
+                <span>{toTitleCase(job.workArrangement || "N/A")}</span>
               </div>
             </div>
 
@@ -96,8 +142,8 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
               onClick={() => navigate(`/jobs/${job.id}`)}
             />
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

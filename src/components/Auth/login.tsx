@@ -6,24 +6,26 @@ import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import AuthAPI from "../../api/authApi/AuthAPI";
 import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
+import ClipLoader from "react-spinners/ClipLoader";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleFinish = async (values: {
     username: string;
     password: string;
   }) => {
     try {
+      setLoading(true);
       const loginRes = await AuthAPI.logIn({
         email: values.username,
         password: values.password,
       });
 
       const api_token = loginRes.data.api_token;
-
       if (!api_token) throw new Error("Token not found");
 
       const verifyRes = await AuthAPI.verifyToken(api_token);
@@ -61,7 +63,6 @@ const LoginPage: React.FC = () => {
       localStorage.setItem("token", api_token);
 
       const permissions = user.role.permissions;
-
       if (permissions.includes("view-dashboard")) {
         navigate("/dashboard");
       } else if (permissions.includes("view-job")) {
@@ -77,6 +78,8 @@ const LoginPage: React.FC = () => {
           "Invalid username or password.",
         confirmButtonColor: "#000",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -122,7 +125,7 @@ const LoginPage: React.FC = () => {
               type="text"
               placeholder="Email Address"
               autoComplete="username"
-              className="urbanist pl-20 py-3 w-full bg-white rounded-lg focus:outline-none text-sm sm:text-base"
+              className="urbanist pl-20 py-3 w-full bg-white rounded-lg focus:outline-none text-sm sm:text-base password-input"
             />
           </div>
         </Form.Item>
@@ -142,7 +145,7 @@ const LoginPage: React.FC = () => {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="urbanist pl-20 pr-12 py-3 w-full bg-white rounded-lg focus:outline-none text-sm sm:text-base"
+              className="urbanist pl-20 pr-12 py-3 w-full bg-white rounded-lg focus:outline-none text-sm sm:text-base password-input"
             />
             <span
               className="absolute right-4 top-3.5 cursor-pointer text-gray-500"
@@ -161,9 +164,10 @@ const LoginPage: React.FC = () => {
           <AntButton
             type="primary"
             htmlType="submit"
-            className="urbanist w-full bg-black text-white py-6 mt-4 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none"
+            disabled={loading}
+            className="urbanist w-full bg-black text-white py-6 mt-4 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none flex items-center justify-center"
           >
-            Login
+            {loading ? <ClipLoader size={25} color="#16968F" /> : "Login"}
           </AntButton>
         </Form.Item>
       </Form>

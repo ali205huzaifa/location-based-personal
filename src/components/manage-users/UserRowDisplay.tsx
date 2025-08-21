@@ -4,6 +4,7 @@ import UsersAPI from "../../api/manage-userApi/UserAPI";
 import ClipLoader from "react-spinners/ClipLoader";
 import type { User } from "../../types/user";
 import debounce from "lodash/debounce";
+import { motion } from "framer-motion";
 
 interface Props {
   setUserToEdit: React.Dispatch<React.SetStateAction<User | undefined>>;
@@ -43,7 +44,9 @@ const UserRowDisplay: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    fetchUsers(1);
+    if (refreshKey > 0) {
+      fetchUsers(1, searchQuery);
+    }
   }, [refreshKey]);
 
   const debouncedFetchUsers = useMemo(
@@ -55,10 +58,14 @@ const UserRowDisplay: React.FC<Props> = ({
   );
 
   useEffect(() => {
-    debouncedFetchUsers(searchQuery);
+    if (searchQuery.trim() !== "") {
+      debouncedFetchUsers(searchQuery);
+    } else {
+      fetchUsers(1, "");
+    }
+
     return () => debouncedFetchUsers.cancel();
   }, [searchQuery]);
-
   const handleDelete = async (userId: string) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -100,7 +107,7 @@ const UserRowDisplay: React.FC<Props> = ({
           <ClipLoader color="#16968F" size={50} />
         </div>
       ) : (
-        <div className="bg-white rounded-b-lg shadow-lg overflow-auto">
+        <div className="bg-white rounded-b-lg shadow-lg overflow-auto p-4">
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50 text-[#8B8B8B] uppercase text-sm">
               <tr>
@@ -114,15 +121,29 @@ const UserRowDisplay: React.FC<Props> = ({
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td
+                    colSpan={5}
+                    className="text-center py-6 text-red-500 font-medium text-lg"
+                  >
                     No users found.
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
-                  <tr
+                users.map((user, i) => (
+                  <motion.tr
                     key={user._id}
-                    className="border-b border-[#CDCDCD] hover:bg-gray-50 text-[16px]"
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeOut",
+                      delay: i * 0.1,
+                    }}
+                    whileHover={{
+                      scale: 1.01,
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                    }}
+                    className="border-b border-[#CDCDCD] text-[16px] cursor-pointer"
                   >
                     <td className="p-4">{user.name}</td>
                     <td className="p-4">{user.email}</td>
@@ -148,7 +169,7 @@ const UserRowDisplay: React.FC<Props> = ({
                         />
                       </button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
@@ -158,7 +179,7 @@ const UserRowDisplay: React.FC<Props> = ({
 
       <div className="flex justify-center mt-6 gap-4 items-center">
         <button
-          onClick={() => fetchUsers(currentPage + 1, searchQuery)}
+          onClick={() => fetchUsers(currentPage - 1, searchQuery)}
           disabled={currentPage === 1}
           className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
         >

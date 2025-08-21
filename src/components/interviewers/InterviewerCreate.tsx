@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import InterviewerAPI from "../../api/interviewersApi/InterviewersAPI";
 import type { Interviewer } from "../../types/user";
 import Swal from "sweetalert2";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface Props {
   fetchInterviewers: () => Promise<void>;
@@ -26,6 +27,7 @@ export default function InterviewerCreate({
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [departmentError, setDepartmentError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (editData) {
@@ -48,11 +50,9 @@ export default function InterviewerCreate({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     let isValid = true;
-    setNameError("");
-    setEmailError("");
-    setDepartmentError("");
 
     if (!name.trim()) {
       setNameError("Please enter Interviewer Name");
@@ -72,7 +72,10 @@ export default function InterviewerCreate({
       isValid = false;
     }
 
-    if (!isValid) return;
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
 
     const formData = { name, email, designation: department };
 
@@ -104,7 +107,10 @@ export default function InterviewerCreate({
         icon: "error",
         title: "Error!",
         text: "Something went wrong.",
+        confirmButtonColor: "#16968F",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,7 +152,7 @@ export default function InterviewerCreate({
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="relative bg-white w-[90%] max-w-md rounded-xl shadow-lg p-6">
             <button
               onClick={() => {
@@ -158,8 +164,8 @@ export default function InterviewerCreate({
               <img
                 src="/icons/cross-icon.svg"
                 alt="Close"
-                width={22}
-                height={22}
+                width={15}
+                height={15}
               />
             </button>
 
@@ -176,7 +182,10 @@ export default function InterviewerCreate({
                     nameError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (nameError) setNameError("");
+                  }}
                 />
                 {nameError && (
                   <p className="text-red-600 text-sm mt-1">{nameError}</p>
@@ -191,7 +200,10 @@ export default function InterviewerCreate({
                     emailError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
                 />
                 {emailError && (
                   <p className="text-red-600 text-sm mt-1">{emailError}</p>
@@ -206,7 +218,10 @@ export default function InterviewerCreate({
                     departmentError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}
                   value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
+                  onChange={(e) => {
+                    setDepartment(e.target.value);
+                    if (departmentError) setDepartmentError("");
+                  }}
                 />
                 {departmentError && (
                   <p className="text-red-600 text-sm mt-1">{departmentError}</p>
@@ -216,9 +231,19 @@ export default function InterviewerCreate({
               <div className="flex justify-left gap-6 mt-6">
                 <button
                   type="submit"
-                  className="bg-[#16968F] text-white px-10 py-2 rounded-md hover:bg-emerald-700 cursor-pointer"
+                  disabled={loading}
+                  className={`flex items-center justify-center gap-2 text-white px-10 py-2 rounded-md 
+    ${
+      loading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-[#16968F] hover:bg-emerald-700"
+    }`}
                 >
-                  {editData ? "Update" : "Add"}
+                  {loading ? (
+                    <ClipLoader size={20} color="#fff" />
+                  ) : (
+                    <>{editData ? "Update" : "Add"}</>
+                  )}
                 </button>
                 <button
                   type="button"

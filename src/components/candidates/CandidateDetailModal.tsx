@@ -15,13 +15,13 @@ export default function CandidateDetailModal({
 
   return (
     <div className="fixed inset-0 flex justify-center items-center z-50">
-      <div className="bg-white w-[90%] max-w-xl rounded-lg p-6 relative shadow-lg overflow-y-auto max-h-[90vh]">
+      <div className="bg-white w-[800px] max-w-2xl rounded-lg p-6 relative shadow-lg overflow-y-auto h-[450px]">
         <button
           className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl"
           onClick={onClose}
         >
           {" "}
-          <img src="/icons/cross-icon.svg" alt="Close" width={20} height={20} />
+          <img src="/icons/cross-icon.svg" alt="Close" width={15} height={15} />
         </button>
 
         <h2 className="text-2xl text-[#0E0E2C] mb-2">{candidate.fullName}</h2>

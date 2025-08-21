@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import RoleAPI from "../../api/roleApi/roleAPI";
 import UsersAPI from "../../api/manage-userApi/UserAPI";
 import type { User } from "../../types/user";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface UserCreateProps {
   userToEdit?: {
@@ -41,6 +42,8 @@ export default function UserCreate({
   const [passwordError, setPasswordError] = useState("");
   const [roleError, setRoleError] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const [roles, setRoles] = useState<{ _id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -74,13 +77,9 @@ export default function UserCreate({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     let isValid = true;
-
-    setUsernameError("");
-    setEmailError("");
-    setPasswordError("");
-    setRoleError("");
 
     if (!username.trim()) {
       setUsernameError("Please enter Username");
@@ -111,7 +110,10 @@ export default function UserCreate({
       isValid = false;
     }
 
-    if (!isValid) return;
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
 
     const formData: any = {
       name: username,
@@ -147,7 +149,14 @@ export default function UserCreate({
       onClose?.();
       refreshUsers?.();
     } catch (err: any) {
-      Swal.fire("Error", "Unexpected error", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Something went wrong",
+        icon: "error",
+        confirmButtonColor: "#16968F",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,7 +207,7 @@ export default function UserCreate({
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="relative bg-white w-[90%] max-w-md rounded-xl shadow-xl border border-[#D9D9D9] p-6">
             <button
               onClick={() => {
@@ -211,8 +220,8 @@ export default function UserCreate({
               <img
                 src="/icons/cross-icon.svg"
                 alt="Close"
-                width={20}
-                height={20}
+                width={15}
+                height={15}
               />
             </button>
 
@@ -227,7 +236,10 @@ export default function UserCreate({
                   placeholder="Enter Username"
                   className="w-full border border-gray-300 rounded-md px-4 py-3"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (usernameError) setUsernameError("");
+                  }}
                 />
                 {usernameError && (
                   <p className="text-red-600 text-sm mt-1">{usernameError}</p>
@@ -242,7 +254,10 @@ export default function UserCreate({
                     emailError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
                 />
                 {emailError && (
                   <p className="text-red-600 text-sm mt-1">{emailError}</p>
@@ -255,7 +270,10 @@ export default function UserCreate({
                     roleError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3 custom-select`}
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) => {
+                    setRole(e.target.value);
+                    if (roleError) setRoleError("");
+                  }}
                 >
                   <option value="">Select Role</option>
                   {roles.map((r: any) => (
@@ -264,7 +282,6 @@ export default function UserCreate({
                     </option>
                   ))}
                 </select>
-
                 {roleError && (
                   <p className="text-red-600 text-sm mt-1">{roleError}</p>
                 )}
@@ -279,8 +296,12 @@ export default function UserCreate({
                       passwordError ? "border-red-500" : "border-gray-300"
                     } rounded-md px-4 py-3 pr-12`}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError("");
+                    }}
                   />
+
                   <img
                     src={
                       showPassword
@@ -304,9 +325,19 @@ export default function UserCreate({
               <div className="flex justify-left gap-6 mt-6">
                 <button
                   type="submit"
-                  className="bg-[#16968F] text-white px-8 py-2 rounded-md hover:bg-emerald-700 cursor-pointer mt-8"
+                  disabled={loading}
+                  className={`flex items-center justify-center gap-2 text-white px-8 py-2 rounded-md mt-8 
+    ${
+      loading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-[#16968F] hover:bg-emerald-700"
+    }`}
                 >
-                  {userToEdit ? "Update" : "Create"}
+                  {loading ? (
+                    <ClipLoader size={25} color="#16968F" />
+                  ) : (
+                    <>{userToEdit ? "Update" : "Create"}</>
+                  )}
                 </button>
                 <button
                   type="button"

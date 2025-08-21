@@ -46,13 +46,16 @@ export default function InterviewerView() {
   );
 
   useEffect(() => {
-    debouncedFetch(searchQuery);
-    return () => debouncedFetch.cancel();
-  }, [searchQuery]);
+    if (searchQuery.trim() !== "") {
+      debouncedFetch(searchQuery);
+    } else {
+      fetchInterviewers(1, "");
+    }
 
-  useEffect(() => {
-    fetchInterviewers(currentPage, searchQuery);
-  }, []);
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [searchQuery]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages)

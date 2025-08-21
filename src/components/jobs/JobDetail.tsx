@@ -8,17 +8,46 @@ import JobEvaluationForm from "./JobEvaluationForm";
 import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
 import Swal from "sweetalert2";
 
+import { motion, AnimatePresence } from "framer-motion";
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -40 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -40 },
+};
+
 export default function JobDetailView() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [job, setJob] = useState<any>(null);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("newest");
+  const [sortOption, setSortOption] = useState("");
   const [activeTab, setActiveTab] = useState("Candidate Profile");
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [genderFilter, setGenderFilter] = useState<string>("");
+  const [locationFilter, setLocationFilter] = useState<string>("");
+
+  const resetFilters = () => {
+    setStatusFilter("");
+    setGenderFilter("");
+    setLocationFilter("");
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -26,18 +55,13 @@ export default function JobDetailView() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [jobRes, allApplicationsRes] = await Promise.all([
+        const [jobRes, applicationsRes] = await Promise.all([
           JobsAPI.getById(id),
-          JobsAPI.getAllApplications(),
+          JobsAPI.getApplicationsByJob(id),
         ]);
 
         setJob(jobRes.data);
-
-        const jobCandidates = allApplicationsRes.data.data.filter(
-          (app: any) => app.jobId === id
-        );
-
-        setCandidates(jobCandidates);
+        setCandidates(applicationsRes.data.data);
       } catch (err: any) {
         console.error("Failed to load job/candidates", err);
 
@@ -58,28 +82,28 @@ export default function JobDetailView() {
     fetchData();
   }, [id]);
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchCandidates();
-    }, 1000);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, sortOption]);
-
   const fetchCandidates = async () => {
     try {
       setListLoading(true);
-      const params = {
-        candidateName: searchTerm,
-        ordering: sortOption === "newest" ? "-created_at" : "created_at",
-      };
-      const res = await CandidatesAPI.getAll(params);
 
+      const params: Record<string, any> = {
+        jobId: id,
+      };
+
+      if (searchTerm.trim()) params.candidateName = searchTerm;
+      if (statusFilter) params.status = statusFilter;
+      if (genderFilter) params.candidateGender = genderFilter;
+      if (locationFilter) params.candidateLocation = locationFilter;
+
+      params.sort = sortOption ? Number(sortOption) : -1;
+
+      const res = await CandidatesAPI.getAll(params);
       const arr = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data)
         ? res.data
         : [];
+
       setCandidates(arr);
     } catch (err) {
       console.error("Error fetching candidates:", err);
@@ -94,6 +118,31 @@ export default function JobDetailView() {
       setListLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!searchTerm.trim()) return;
+
+    const delayDebounce = setTimeout(() => {
+      fetchCandidates();
+    }, 1000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!searchTerm.trim()) return;
+
+    const delayDebounce = setTimeout(() => {
+      fetchCandidates();
+    }, 1000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!sortOption) return;
+    fetchCandidates();
+  }, [sortOption]);
 
   if (loading) {
     return (
@@ -150,15 +199,15 @@ export default function JobDetailView() {
           </span>{" "}
           |<span>{job.experienceLevel} Level</span> |
           <span className="capitalize">{job.workplaceType.toLowerCase()}</span>{" "}
-          |<span>{job.totalPositions} Position(s)</span> |
+          |<span>{job.totalPositions} Positions</span> |
           <span>{job.location}</span>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-[340px] border-r overflow-y-auto px-4 py-3 bg-gray-50">
-          <div className="flex items-center justify-between border rounded-lg px-4 py-2 bg-white shadow-sm mb-4">
-            <div className="flex items-center gap-2 w-full max-w-sm">
+      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+        <div className="w-[340px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
+          <div className="flex items-center justify-between border rounded-lg px-4 py-2 mb-4">
+            <div className="flex gap-2 w-full max-w-sm">
               <img
                 src="/icons/search-icon.svg"
                 alt="Search"
@@ -178,19 +227,16 @@ export default function JobDetailView() {
                 src="/icons/filtering-icon.svg"
                 alt="Filter"
                 className="w-4 h-4 opacity-60 cursor-pointer"
-              />
-              <img
-                src="/icons/calender-icon.svg"
-                alt="Calendar"
-                className="w-4 h-4 opacity-60 cursor-pointer"
+                onClick={() => setIsFilterOpen(true)}
               />
               <select
-                className="text-sm text-gray-800 bg-transparent focus:outline-none cursor-pointer"
+                className="text-sm text-gray-800 bg-transparent focus:outline-none cursor-pointer mr-4"
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
+                <option value="">Sort By</option>
+                <option value="-1">Newest</option>
+                <option value="1">Oldest</option>
               </select>
             </div>
           </div>
@@ -204,71 +250,86 @@ export default function JobDetailView() {
                 <ClipLoader size={35} color="#16968F" loading />
               </div>
             ) : candidates.length === 0 ? (
-              <p className="text-center text-sm text-gray-500">
+              <p className="text-center text-lg text-red-500 mt-4">
                 No candidates found
               </p>
             ) : (
-              <ul className="space-y-2">
-                {candidates.map((app) => {
-                  const c = app.candidate;
-                  return (
-                    <li
-                      key={app._id}
-                      onClick={() => {
-                        setSelectedApplication(app);
-                        setActiveTab("Candidate Profile");
-                      }}
-                      className={`bg-white p-3 shadow-sm hover:bg-gray-100 cursor-pointer border-b border-gray-300 ${
-                        selectedApplication?._id === app._id ? "bg-blue-50" : ""
-                      }`}
-                    >
-                      <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                        <div>
-                          {new Date(app.appliedAt).toLocaleDateString()}
+              <motion.ul
+                className="space-y-2"
+                variants={listVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <AnimatePresence>
+                  {candidates.map((app) => {
+                    const c = app.candidate;
+                    return (
+                      <motion.li
+                        key={app._id}
+                        onClick={() => {
+                          setSelectedApplication(app);
+                          setActiveTab("Candidate Profile");
+                        }}
+                        className={`bg-white p-3 shadow-sm cursor-pointer border-b border-gray-300 ${
+                          selectedApplication?._id === app._id
+                            ? "bg-blue-50"
+                            : "hover:bg-gray-100"
+                        }`}
+                        variants={itemVariants}
+                        whileHover={{
+                          scale: 1.02,
+                          boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      >
+                        <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                          <div>
+                            {new Date(app.appliedAt).toLocaleDateString()}
+                          </div>
+                          <div
+                            className={`font-semibold ${
+                              app.status === "Interviewed"
+                                ? "text-green-600"
+                                : app.status === "Rejected"
+                                ? "text-red-500"
+                                : app.status === "SHORTLISTED"
+                                ? "text-yellow-600"
+                                : app.status === "Send Offer Letter"
+                                ? "text-purple-600"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {app.status}
+                          </div>
                         </div>
-                        <div
-                          className={`font-semibold ${
-                            app.status === "Interviewed"
-                              ? "text-green-600"
-                              : app.status === "Rejected"
-                              ? "text-red-500"
-                              : app.status === "SHORTLISTED"
-                              ? "text-yellow-600"
-                              : app.status === "Send Offer Letter"
-                              ? "text-purple-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {app.status}
+                        <div className="text-sm font-medium">{c?.fullName}</div>
+                        <div className="text-xs text-blue-600 mt-2">
+                          {c?.currentLocation || "No City"}
                         </div>
-                      </div>
-                      <div className="text-sm font-medium">{c?.fullName}</div>
-                      <div className="text-xs text-blue-600 mt-2">
-                        {c?.currentLocation || "No City"}
-                      </div>
-                      <div className="flex items-center gap-1 mt-2">
-                        <img
-                          src="/icons/comment-icon.svg"
-                          alt="List"
-                          width={15}
-                          height={15}
-                        />
-                        <div className="text-xs text-gray-700">
-                          {app.recruiterComment || "No comment"}
+                        <div className="flex items-center gap-1 mt-2">
+                          <img
+                            src="/icons/comment-icon.svg"
+                            alt="List"
+                            width={15}
+                            height={15}
+                          />
+                          <div className="text-xs text-gray-700">
+                            {app.recruiterComment || "No comment"}
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+                      </motion.li>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.ul>
             )}
           </div>
         </div>
 
-        <div className="flex-1 bg-white p-2 overflow-y-auto ml-10">
+        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg">
           {selectedApplication ? (
             <>
-              <div className="flex gap-10 border-b mb-4">
+              <div className="flex gap-2 mb-4 border-b border-gray-400">
                 {[
                   "Candidate Profile",
                   "Assessment Form",
@@ -276,20 +337,24 @@ export default function JobDetailView() {
                 ].map((tab) => (
                   <button
                     key={tab}
-                    className={`py-2 px-4 capitalize border-b-2 ${
-                      activeTab === tab
-                        ? "border-teal-600 text-teal-600"
-                        : "border-transparent"
-                    }`}
                     onClick={() => setActiveTab(tab)}
+                    className={`px-5 py-2 rounded-t-md border-t border-l border-r text-sm font-medium transition-colors
+        ${
+          activeTab === tab
+            ? "border-teal-600 text-teal-600 bg-white"
+            : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+        }`}
                   >
-                    {tab.replace(/^\w/, (c) => c.toUpperCase())}
+                    {tab}
                   </button>
                 ))}
               </div>
 
               {activeTab === "Candidate Profile" && (
-                <JobProfileTab application={selectedApplication} />
+                <JobProfileTab
+                  application={selectedApplication}
+                  onStatusChange={fetchCandidates}
+                />
               )}
               {activeTab === "Assessment Form" && (
                 <JobAssesmentForm applicationId={selectedApplication._id} />
@@ -305,6 +370,121 @@ export default function JobDetailView() {
           )}
         </div>
       </div>
+      {isFilterOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[750px]">
+            <div className="flex justify-between items-center mb-4 border-b border-gray-400">
+              <h2 className="text-lg font-semibold">Filters</h2>
+              <button
+                onClick={() => {
+                  setIsFilterOpen(false);
+                  fetchCandidates();
+                }}
+              >
+                {" "}
+                <img
+                  src="/icons/cross-icon.svg"
+                  alt="List"
+                  width={15}
+                  height={15}
+                />
+              </button>
+            </div>
+
+            <h3 className="font-medium mb-4">Status Filter</h3>
+            <div className="grid grid-cols-3 gap-4 text-sm mb-6">
+              {[
+                "APPLICANTS",
+                "REVIEWED",
+                "SHORTLISTED",
+                "INTERVIEW_SCHEDULED",
+                "SELECTED",
+                "REJECTED",
+              ].map((status) => {
+                const label = status
+                  .replace(/_/g, " ")
+                  .toLowerCase()
+                  .replace(/^\w/, (c) => c.toUpperCase());
+
+                return (
+                  <label
+                    key={status}
+                    className="flex items-center gap-4 accent-[#16968F]"
+                  >
+                    <input
+                      type="checkbox"
+                      value={status}
+                      checked={statusFilter === status}
+                      onChange={(e) =>
+                        setStatusFilter(e.target.checked ? e.target.value : "")
+                      }
+                    />
+                    {label}
+                  </label>
+                );
+              })}
+            </div>
+            <div className="border-b border-gray-400" />
+
+            <h3 className="font-medium mb-4 mt-4">Gender</h3>
+            <div className="flex gap-10 text-sm mb-6">
+              {["MALE", "FEMALE", "OTHER"].map((gender) => (
+                <label
+                  key={gender}
+                  className="flex items-center gap-4 accent-[#16968F]"
+                >
+                  <input
+                    type="checkbox"
+                    value={gender}
+                    checked={genderFilter === gender}
+                    onChange={(e) =>
+                      setGenderFilter(e.target.checked ? e.target.value : "")
+                    }
+                  />
+                  {gender.charAt(0) + gender.slice(1).toLowerCase()}
+                </label>
+              ))}
+            </div>
+            <div className="border-b border-gray-400" />
+
+            <h3 className="font-medium mb-4 mt-4">Location</h3>
+            <div className="flex gap-4 text-sm mb-6">
+              {["Islamabad", "Rawalpindi"].map((loc) => (
+                <label
+                  key={loc}
+                  className="flex items-center gap-4 accent-[#16968F]"
+                >
+                  <input
+                    type="checkbox"
+                    value={loc}
+                    checked={locationFilter === loc}
+                    onChange={(e) =>
+                      setLocationFilter(e.target.checked ? e.target.value : "")
+                    }
+                  />
+                  {loc}
+                </label>
+              ))}
+            </div>
+            <div className="border-b border-gray-400" />
+
+            <div className="flex justify-end gap-4 mt-4">
+              <button className="text-gray-600" onClick={resetFilters}>
+                Clear Filters
+              </button>
+              <button
+                className="bg-teal-600 text-white px-4 py-1 rounded"
+                onClick={() => {
+                  fetchCandidates();
+                  setIsFilterOpen(false);
+                }}
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

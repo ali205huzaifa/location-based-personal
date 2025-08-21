@@ -11,8 +11,10 @@ class JobsAPI {
     return axiosClient.get(`/jobs/${id}`);
   }
 
-  static getAllApplications() {
-    return axiosClient.get(`/applications`);
+  static getApplicationsByJob(jobId: string) {
+    return axiosClient.get(`/applications`, {
+      params: { jobId },
+    });
   }
 
   static AddComment(id: string, payload: { text: string }) {
@@ -49,6 +51,17 @@ class JobsAPI {
 
   static SendEvaluationForm(id: string, payload: any){
     return axiosClient.post(`/applications/${id}/send-assessment-interviewers`, payload);
+  }
+
+  static SendCandidateEmail(data: {
+      email: string;
+      emailType: string;
+      interviewerIds: string[];
+      interviewDate: string;
+      interviewTime: string;
+      body: string;
+    }) {
+    return axiosClient.post(`/applications/send-email`, data);
   }
 }
 

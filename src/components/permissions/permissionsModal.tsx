@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import RoleAPI from "../../api/roleApi/roleAPI";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface PermissionsModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
 
   const [name, setName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const resetForm = () => {
     setName("");
@@ -70,14 +72,12 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setLoading(true);
 
     const payload = {
       name: name.trim(),
       permissions: selectedPermissions,
     };
-
-    setNameError("");
-    setPermissionsError("");
 
     let hasError = false;
 
@@ -91,7 +91,10 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
       hasError = true;
     }
 
-    if (hasError) return;
+    if (hasError) {
+      setLoading(false);
+      return;
+    }
 
     try {
       if (role?.id) {
@@ -121,13 +124,15 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
         "Something went wrong while saving role.";
       Swal.fire("Error", errorMsg, "error");
       console.error("Failed to save role", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
       <div className="bg-white rounded-lg w-[350px] p-6 relative max-h-[90vh] overflow-y-auto shadow-xl border border-[#D9D9D9]">
         <button
           onClick={handleClose}
@@ -152,7 +157,10 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
               type="text"
               name="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (nameError) setNameError("");
+              }}
               autoComplete="off"
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
               placeholder="Enter role name"
@@ -169,7 +177,10 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                   type="checkbox"
                   name={perm.name}
                   checked={selectedPermissions.includes(perm.name)}
-                  onChange={() => handleCheckboxChange(perm.name)}
+                  onChange={() => {
+                    handleCheckboxChange(perm.name);
+                    if (permissionsError) setPermissionsError("");
+                  }}
                   className="form-checkbox accent-[#16968F]"
                 />
                 <span className="text-sm">{perm.label}</span>
@@ -184,9 +195,15 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
 
           <button
             type="submit"
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md font-Regular"
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-2 text-white py-2 rounded-md font-Regular 
+    ${
+      loading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-teal-600 hover:bg-teal-700"
+    }`}
           >
-            Save changes
+            {loading ? <ClipLoader size={20} color="#fff" /> : "Save changes"}
           </button>
         </form>
       </div>

@@ -28,7 +28,7 @@ const JobEvaluationForm: React.FC<JobAssessmentFormProps> = ({
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: err?.response?.data?.message || "Failed to send form.",
+        text: err?.response?.data?.message?.message || "Failed to send form.",
       });
     }
   };

@@ -25,9 +25,14 @@ class UsersAPI {
     return axiosClient.post("/users/upload-media", data);
   }
 
-    static UpdateProfileImage(id: string, data: {profilePicture?: string }) {
+  static UpdateProfileImage(id: string, data: {profilePicture?: string }) {
     return axiosClient.patch(`/users/${id}`, data);
   }
+
+  static getUsersByRole(roleId: string) {
+    return axiosClient.get(`/users?role=${roleId}`);
+  }
+
 }
 
 export default UsersAPI;

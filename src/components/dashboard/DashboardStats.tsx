@@ -57,15 +57,15 @@ const DashboardStats = () => {
       {statData.map((stat) => (
         <div
           key={stat.label}
-          className="flex items-center justify-between py-3 bg-white"
+          className="flex items-center justify-between py-3 bg-white border rounded-lg p-4"
         >
           <div className="flex items-center gap-2">
             <div className="bg-[#F5F6FA] p-2 rounded-md">
               <img src={stat.icon} alt={stat.label} className="w-6 h-6" />
             </div>
-            <p className="text-lg text-black">{stat.label}</p>
+            <p className="text-black">{stat.label}</p>
           </div>
-          <p className="text-lg font-semibold text-black">{stat.count}</p>
+          <p className="font-semibold text-black">{stat.count}</p>
         </div>
       ))}
     </div>

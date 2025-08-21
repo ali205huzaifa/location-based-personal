@@ -4,13 +4,15 @@ import { format } from "date-fns";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import CandidateFilterListbox from "./CandidateFiltersListbox";
+import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
 
 interface CandidateFiltersProps {
-  searchQuery: string;
-  setSearchQuery: (val: string) => void;
+  candidateName: string;
+  setcandidateName: (val: string) => void;
 
-  jobType: string;
-  setJobType: (val: string) => void;
+  jobTitle: string;
+  setJobTitle: (val: string) => void;
 
   candidateLocation: string;
   setCandidateLocation: (val: string) => void;
@@ -32,10 +34,10 @@ interface CandidateFiltersProps {
 }
 
 export default function CandidateFilters({
-  searchQuery,
-  setSearchQuery,
-  jobType,
-  setJobType,
+  candidateName,
+  setcandidateName,
+  jobTitle,
+  setJobTitle,
   candidateLocation,
   setCandidateLocation,
   candidateGender,
@@ -52,9 +54,29 @@ export default function CandidateFilters({
 }: CandidateFiltersProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
+  const [titles, setTitles] = useState<{ value: string; label: string }[]>([]);
 
   const salaryMin = 0;
   const salaryMax = 200000;
+
+  useEffect(() => {
+    async function fetchTitles() {
+      try {
+        const { data } = await CandidatesAPI.fetchTitles();
+        if (data?.data) {
+          setTitles(
+            data.data.map((t: { _id: string; title: string }) => ({
+              value: t.title,
+              label: t.title,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching titles:", err);
+      }
+    }
+    fetchTitles();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,7 +94,7 @@ export default function CandidateFilters({
   return (
     <>
       <div className="bg-white mt-4 relative">
-        <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <div className="relative flex-1">
             <img
               src="/icons/search-icon.svg"
@@ -83,8 +105,8 @@ export default function CandidateFilters({
             />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={candidateName}
+              onChange={(e) => setcandidateName(e.target.value)}
               placeholder="Start typing to search Candidates By their Name"
               className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
             />
@@ -92,7 +114,7 @@ export default function CandidateFilters({
         </div>
       </div>
 
-      <div className="relative bg-white border border-gray-200 px-4 py-3 rounded-xl flex items-center flex-wrap md:gap-2 lg:gap-2 xl:gap-4 mt-6">
+      <div className="relative bg-white border border-gray-200 px-4 py-3 rounded-xl flex items-center flex-wrap md:gap-2 lg:gap-2 xl:gap-2 mt-6">
         <div className="relative" ref={datePickerRef}>
           <div
             className="flex items-center gap-2 text-sm cursor-pointer"
@@ -131,43 +153,39 @@ export default function CandidateFilters({
           )}
         </div>
 
-        <select
-          value={jobType}
-          onChange={(e) => setJobType(e.target.value)}
-          className="text-sm bg-transparent border-none outline-none cursor-pointer"
-        >
-          <option>All Jobs</option>
-          <option value="FULL_TIME">Full Time</option>
-          <option value="PART_TIME">Part Time</option>
-          <option value="CONTRACT-BASED">Contract</option>
-        </select>
+        <CandidateFilterListbox
+          value={jobTitle}
+          onChange={setJobTitle}
+          options={titles}
+          placeholder="Select Job Title"
+        />
 
-        <select
+        <CandidateFilterListbox
           value={candidateLocation}
-          onChange={(e) => setCandidateLocation(e.target.value)}
-          className="text-sm bg-transparent border-none outline-none cursor-pointer"
-        >
-          <option>By Location</option>
-          <option>Lahore</option>
-          <option>Islamabad</option>
-          <option>Remote</option>
-        </select>
+          onChange={setCandidateLocation}
+          options={[
+            { value: "Islamabad", label: "Islamabad" },
+            { value: "Rawalpindi", label: "Rawalpindi" },
+            { value: "Lahore", label: "Lahore" },
+          ]}
+          placeholder="Select Location"
+        />
 
-        <select
+        <CandidateFilterListbox
           value={candidateGender}
-          onChange={(e) => setCandidateGender(e.target.value)}
-          className="text-sm bg-transparent border-none outline-none cursor-pointer"
-        >
-          <option>By Gender</option>
-          <option value="MALE">Male</option>
-          <option value="FEMALE">Female</option>
-          <option value="OTHER">Other</option>
-        </select>
+          onChange={setCandidateGender}
+          options={[
+            { value: "MALE", label: "Male" },
+            { value: "FEMALE", label: "Female" },
+            { value: "OTHER", label: "Other" },
+          ]}
+          placeholder="Select Gender"
+        />
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           <span className="text-sm whitespace-nowrap">Current Salary</span>
 
-          <div className="relative w-[250px] sm:w-[300px] mt-2">
+          <div className="relative w-[150px] sm:w-[200px] mt-2">
             <div className="flex justify-between text-sm text-gray-700 mb-1 px-1">
               <span>{currentSalary.toLocaleString()}</span>
               <span>{expectedSalary.toLocaleString()}</span>
@@ -226,7 +244,7 @@ export default function CandidateFilters({
 
         <button
           onClick={onReset}
-          className="font-Regular ml-auto items-center gap-2 bg-[#16968F] text-white px-4 py-2 rounded-xl hover:bg-emerald-700 cursor-pointer"
+          className="font-Regular ml-auto items-center bg-[#16968F] text-white px-4 py-2 rounded-xl hover:bg-emerald-700 cursor-pointer"
         >
           Reset Filter
         </button>

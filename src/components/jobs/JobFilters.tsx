@@ -6,6 +6,37 @@ import type { Filters } from "../../types/user";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+import { Listbox } from "@headlessui/react";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+
+const departments = [
+  { value: "MOBILE_APP_DEVELOPMENT", label: "Mobile Development" },
+  { value: "HUMAN_RESOURCE", label: "Human Resource" },
+  { value: "WEB_DEVELOPMENT", label: "Web Development" },
+  { value: "MARKETING", label: "Marketing" },
+  { value: "ARTIFICIAL_INTELLIGENCE", label: "Artificial Intelligence" },
+  { value: "BUSINESS_DEVELOPMENT", label: "Business Development" },
+  { value: "UI/UX", label: "UI/UX Designer" },
+  { value: "GAME_DEVELOPMENT", label: "Game Development" },
+];
+
+const locationOptions = [{ value: "Islamabad", label: "Islamabad" }];
+
+const jobTypeOptions = [
+  { value: "FULL_TIME", label: "Full Time" },
+  { value: "PART_TIME", label: "Part Time" },
+  { value: "CONTRACT", label: "Contract" },
+  { value: "INTERNSHIP", label: "Internship" },
+];
+
+const experienceOptions = [
+  { value: " ", label: "Job Experience" },
+  { value: "0", label: "No Experience" },
+  { value: "0-1", label: "0-1 years" },
+  { value: "1-3", label: "1-3 years" },
+  { value: "3-5", label: "3-5 years" },
+];
+
 interface JobFiltersProps {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
@@ -93,65 +124,140 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
         )}
       </div>
 
-      <select
+      <Listbox
         value={filters.department}
-        onChange={(e) =>
-          setFilters((prev) => ({ ...prev, department: e.target.value }))
-        }
-        className="font-Regular text-sm border-none outline-none bg-transparent cursor-pointer"
+        onChange={(val) => setFilters((prev) => ({ ...prev, department: val }))}
       >
-        <option value="">Select Department</option>
-        <option value="MOBILE_APP_DEVELOPMENT">Mobile Development</option>
-        <option value="HUMAN_RESOURCE">Human Resource</option>
-        <option value="WEB_DEVELOPMENT">Web Development</option>
-        <option value="MARKETING">Marketing</option>
-        <option value="ARTIFICIAL_INTELLIGENCE">Artificial Intelligence</option>
-        <option value="BUSINESS_DEVELOPMENT">Business Development</option>
-        <option value="UI/UX">UI/UX</option>
-        <option value="GAME_DEVELOPMENT">Game Development</option>
-      </select>
+        <div className="relative">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none">
+            <span>
+              {departments.find((d) => d.value === filters.department)?.label ||
+                "Select Department"}
+            </span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+            </span>
+          </Listbox.Button>
 
-      <select
+          <Listbox.Options className="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none">
+            {departments.map((d) => (
+              <Listbox.Option
+                key={d.value}
+                value={d.value}
+                className={({ active }) =>
+                  `cursor-pointer select-none px-4 py-2 rounded-lg ${
+                    active ? "bg-teal-100 text-teal-700" : "text-gray-700"
+                  }`
+                }
+              >
+                {d.label}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </div>
+      </Listbox>
+
+      <Listbox
         value={filters.location}
-        onChange={(e) =>
-          setFilters((prev) => ({ ...prev, location: e.target.value }))
-        }
-        className="font-Regular text-sm border-none outline-none bg-transparent cursor-pointer"
+        onChange={(val) => setFilters((prev) => ({ ...prev, location: val }))}
       >
-        <option value="">All locations</option>
-        <option value="Islamabad">Islamabad</option>
-      </select>
+        <div className="relative">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none">
+            <span>
+              {locationOptions.find((d) => d.value === filters.location)
+                ?.label || "All Locations"}
+            </span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+            </span>
+          </Listbox.Button>
 
-      <select
+          <Listbox.Options className="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none">
+            {locationOptions.map((d) => (
+              <Listbox.Option
+                key={d.value}
+                value={d.value}
+                className={({ active }) =>
+                  `cursor-pointer select-none px-4 py-2 rounded-lg ${
+                    active ? "bg-teal-100 text-teal-700" : "text-gray-700"
+                  }`
+                }
+              >
+                {d.label}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </div>
+      </Listbox>
+
+      <Listbox
         value={filters.jobType}
-        onChange={(e) =>
-          setFilters((prev) => ({ ...prev, jobType: e.target.value }))
-        }
-        className="font-Regular text-sm border-none outline-none bg-transparent cursor-pointer"
+        onChange={(val) => setFilters((prev) => ({ ...prev, jobType: val }))}
       >
-        <option value="">All Job Type</option>
-        <option value="FULL_TIME">Full Time</option>
-        <option value="PART_TIME">Part Time</option>
-        <option value="CONTRACT">Contract</option>
-        <option value="INTERNSHIP">Internship</option>
-      </select>
+        <div className="relative">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none">
+            <span>
+              {jobTypeOptions.find((d) => d.value === filters.jobType)?.label ||
+                "All Job Type"}
+            </span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+            </span>
+          </Listbox.Button>
 
-      <select
+          <Listbox.Options className="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none">
+            {jobTypeOptions.map((d) => (
+              <Listbox.Option
+                key={d.value}
+                value={d.value}
+                className={({ active }) =>
+                  `cursor-pointer select-none px-4 py-2 rounded-lg ${
+                    active ? "bg-teal-100 text-teal-700" : "text-gray-700"
+                  }`
+                }
+              >
+                {d.label}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </div>
+      </Listbox>
+
+      <Listbox
         value={filters.experienceLevel}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            experienceLevel: e.target.value,
-          }))
+        onChange={(val) =>
+          setFilters((prev) => ({ ...prev, experienceLevel: val }))
         }
-        className="font-Regular text-sm border-none outline-none bg-transparent cursor-pointer"
       >
-        <option>Job Experience</option>
-        <option value="0">No Experience</option>
-        <option value="0-1">0-1 years</option>
-        <option value="1-3">1-3 years</option>
-        <option value="3-5">3-5 years</option>
-      </select>
+        <div className="relative">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none ">
+            <span>
+              {experienceOptions.find(
+                (d) => d.value === filters.experienceLevel
+              )?.label || "Job Experience"}
+            </span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+            </span>
+          </Listbox.Button>
+
+          <Listbox.Options className="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none">
+            {experienceOptions.map((d) => (
+              <Listbox.Option
+                key={d.value}
+                value={d.value}
+                className={({ active }) =>
+                  `cursor-pointer select-none px-4 py-2 rounded-lg ${
+                    active ? "bg-teal-100 text-teal-700" : "text-gray-700"
+                  }`
+                }
+              >
+                {d.label}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </div>
+      </Listbox>
 
       {/*
       <select

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import SchedularAPI from "../../api/schedularApi/SchedularAPI";
 import Swal from "sweetalert2";
+import ClipLoader from "react-spinners/ClipLoader";
+import { motion } from "framer-motion";
 
 interface EventItem {
   id: string;
@@ -34,11 +36,28 @@ const ScheduleCard: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   const formatLocalDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  };
+
+  const refetchWithFilter = async () => {
+    if (startDate && endDate) {
+      await fetchSchedules(
+        formatLocalDate(startDate),
+        formatLocalDate(endDate)
+      );
+    } else if (startDate) {
+      const formatted = formatLocalDate(startDate);
+      await fetchSchedules(formatted, formatted);
+    } else {
+      await fetchSchedules();
+    }
   };
 
   const handleDateClick = (date: Date) => {
@@ -52,10 +71,6 @@ const ScheduleCard: React.FC = () => {
         return;
       }
       setEndDate(date);
-
-      const formattedStart = formatLocalDate(startDate);
-      const formattedEnd = formatLocalDate(date);
-      fetchSchedules(formattedStart, formattedEnd);
     } else {
       setStartDate(date);
       setEndDate(null);
@@ -63,11 +78,12 @@ const ScheduleCard: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchSchedules();
-  }, []);
+    refetchWithFilter();
+  }, [startDate, endDate]);
 
   const fetchSchedules = async (start?: string, end?: string) => {
     try {
+      setLoading(true);
       let res;
       if (start && end) {
         res = await SchedularAPI.getByDateRange(start, end);
@@ -139,6 +155,8 @@ const ScheduleCard: React.FC = () => {
         text: "Unable to fetch schedules from the server.",
         confirmButtonColor: "#d33",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -190,6 +208,7 @@ const ScheduleCard: React.FC = () => {
     if (!confirmDelete.isConfirmed) return;
 
     try {
+      setLoading(true);
       await SchedularAPI.deleteSchedule(editId);
       Swal.fire({
         icon: "success",
@@ -199,9 +218,9 @@ const ScheduleCard: React.FC = () => {
       });
 
       setShowPopup(false);
-      setEditId(null);
-      setIsEditing(false);
-      fetchSchedules();
+      resetForm();
+
+      await refetchWithFilter();
     } catch (err) {
       Swal.fire({
         icon: "error",
@@ -209,6 +228,8 @@ const ScheduleCard: React.FC = () => {
         text: "Could not delete the schedule.",
         confirmButtonColor: "#d33",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -232,6 +253,7 @@ const ScheduleCard: React.FC = () => {
     };
 
     try {
+      setSaving(true);
       if (isEditing && editId) {
         await SchedularAPI.UpdateSchedule(editId, {
           date: formDate,
@@ -268,7 +290,8 @@ const ScheduleCard: React.FC = () => {
       setEditId(null);
       setIsEditing(false);
 
-      fetchSchedules();
+      setLoading(true);
+      await refetchWithFilter();
     } catch (error) {
       console.error("Failed to save schedule", error);
       Swal.fire({
@@ -277,6 +300,9 @@ const ScheduleCard: React.FC = () => {
         text: "Failed to save the schedule. Please try again.",
         confirmButtonColor: "#d33",
       });
+    } finally {
+      setSaving(false);
+      setLoading(false);
     }
   };
 
@@ -307,13 +333,27 @@ const ScheduleCard: React.FC = () => {
 
   const formatDisplayTime = (time: string) => {
     if (!time) return "";
-    return time.slice(0, 5);
+    const [hmSeconds, ampm] = time.split(" ");
+
+    if (!hmSeconds || !ampm) return time;
+    const [hours, minutes] = hmSeconds.split(":");
+
+    return `${hours}:${minutes} ${ampm}`;
+  };
+
+  const resetForm = () => {
+    setFormDate("");
+    setFormTime("");
+    setFormTitle("");
+    setFormTagline("");
+    setEditId(null);
+    setIsEditing(false);
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-md p-4 flex flex-col ml-8">
+    <div className="w-full bg-white rounded-2xl shadow-md p-6 flex flex-col ml-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg">My Schedule</h3>
+        <h3 className="text-lg font-bold">My Schedule</h3>
         <button onClick={() => setShowPopup(true)}>
           <img src="/icons/plus-icon.svg" alt="add" className="w-4 h-4" />
         </button>
@@ -383,43 +423,67 @@ const ScheduleCard: React.FC = () => {
       </div>
 
       <div className="mt-4">
-        {days.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <ClipLoader size={30} color="#16968F" />
+          </div>
+        ) : days.length === 0 ? (
           <p className="text-gray-500 text-sm">No schedules found.</p>
         ) : (
-          days.map((day) => (
-            <div key={day.dateLabel} className="mb-4">
-              <p className="text-sm font-semibold">{day.dateLabel}</p>
-              {day.events.map((event, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start justify-between py-2 border-b last:border-b-0"
-                >
-                  <span className="w-14 text-sm font-medium">
-                    {formatDisplayTime(event.time)}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-700">{event.role}</p>
-                    <p className="text-sm text-teal-600 font-medium">
-                      {event.task}
-                    </p>
-                  </div>
-                  {event.editable && (
-                    <img
-                      src="/icons/edit-icon.svg"
-                      alt="edit"
-                      className="w-4 h-4 cursor-pointer"
-                      onClick={() => handleEditClick(event.id)}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          ))
+          <div className="h-[600px] overflow-y-auto pr-2">
+            {days.map((day, dayIndex) => (
+              <motion.div
+                key={day.dateLabel}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.4,
+                  ease: "easeOut",
+                  delay: dayIndex * 0.1,
+                }}
+                className="mb-4"
+              >
+                <p className="text-sm font-semibold">{day.dateLabel}</p>
+
+                {day.events.map((event, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.3,
+                      ease: "easeOut",
+                      delay: dayIndex * 0.1 + idx * 0.05,
+                    }}
+                    className="flex items-start justify-between py-2"
+                  >
+                    <span className="w-18 text-sm font-medium">
+                      {formatDisplayTime(event.time)}
+                    </span>
+                    <div className="flex-1 ml-6">
+                      <p className="text-sm text-gray-700">{event.role}</p>
+                      <p className="text-sm text-teal-600 font-medium">
+                        {event.task}
+                      </p>
+                    </div>
+                    {event.editable && (
+                      <img
+                        src="/icons/edit-icon.svg"
+                        alt="edit"
+                        className="w-4 h-4 cursor-pointer mr-4"
+                        onClick={() => handleEditClick(event.id)}
+                      />
+                    )}
+                  </motion.div>
+                ))}
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
 
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] space-y-6 shadow-lg">
             <div className="flex justify-between items-center border-b pb-2 border-b border-gray-500">
               <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -431,7 +495,10 @@ const ScheduleCard: React.FC = () => {
                 {isEditing ? "Edit Schedule" : "Add Schedule"}
               </h2>
               <button
-                onClick={() => setShowPopup(false)}
+                onClick={() => {
+                  setShowPopup(false);
+                  resetForm();
+                }}
                 className="text-gray-600 hover:text-red-500 text-xl"
               >
                 <img
@@ -504,9 +571,20 @@ const ScheduleCard: React.FC = () => {
               )}
               <button
                 onClick={handleSaveSchedule}
-                className="bg-[#16968F] text-white px-6 py-3 rounded hover:bg-[#127e78]"
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded text-white ${
+                  saving
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#16968F] hover:bg-[#127e78]"
+                }`}
+                disabled={saving}
               >
-                {isEditing ? "Save Changes" : "Schedule"}
+                {saving ? (
+                  <ClipLoader size={20} color="#16968F" />
+                ) : isEditing ? (
+                  "Save Changes"
+                ) : (
+                  "Schedule"
+                )}
               </button>
             </div>
           </div>

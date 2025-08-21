@@ -79,7 +79,7 @@ export default function ArchivedJobs({ onClose }: ArchivedJobsProps) {
           icon: "success",
           title: "Job Unarchived",
           text: "The job has been successfully moved back to active.",
-          showConfirmButton: true,
+          confirmButtonColor: "#16968F",
         });
       })
       .catch((err) => {
@@ -96,7 +96,7 @@ export default function ArchivedJobs({ onClose }: ArchivedJobsProps) {
   return (
     <div className="pt-2">
       <div className="flex items-center justify-between pb-2 mb-4">
-        <h2 className="text-lg flex items-center gap-2 whitespace-nowrap">
+        <h2 className="text-lg font-bold flex items-center gap-2 whitespace-nowrap">
           Showing all Archived Jobs{" "}
           <span className="text-sm text-gray-500">{jobs.length} Results</span>
         </h2>
@@ -122,7 +122,7 @@ export default function ArchivedJobs({ onClose }: ArchivedJobsProps) {
           onClick={onClose}
           className="p-1 hover:bg-gray-100 rounded-full flex items-center justify-center"
         >
-          <img src="/icons/cross-icon.svg" alt="Close" width={16} height={16} />
+          <img src="/icons/cross-icon.svg" alt="Close" width={15} height={15} />
         </button>
       </div>
 

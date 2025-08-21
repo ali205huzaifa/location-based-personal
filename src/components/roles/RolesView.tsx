@@ -5,6 +5,7 @@ import RoleAPI from "../../api/roleApi/roleAPI";
 import ClipLoader from "react-spinners/ClipLoader";
 import RolesBlockDisplay from "./RolesBlockDisplay";
 import debounce from "lodash/debounce";
+import UsersAPI from "../../api/manage-userApi/UserAPI";
 
 interface Role {
   id: string;
@@ -53,15 +54,16 @@ const RolesView = () => {
   );
 
   useEffect(() => {
-    debouncedFetch(searchQuery);
+    if (searchQuery.trim() !== "") {
+      debouncedFetch(searchQuery);
+    } else {
+      fetchRoles(1, "");
+    }
+
     return () => {
       debouncedFetch.cancel();
     };
   }, [searchQuery]);
-
-  useEffect(() => {
-    fetchRoles(currentPage, searchQuery);
-  }, []);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) fetchRoles(currentPage + 1, searchQuery);
@@ -90,17 +92,67 @@ const RolesView = () => {
       cancelButtonColor: "#d33",
     });
 
-    if (confirmDelete.isConfirmed) {
-      try {
-        await RoleAPI.DeleteRole(id);
-        await fetchRoles(currentPage, searchQuery);
-        Swal.fire({
-          title: "Deleted!",
-          text: "Role has been deleted!",
-          icon: "success",
-          confirmButtonColor: "#16968F",
-        });
-      } catch (err) {
+    if (!confirmDelete.isConfirmed) return;
+
+    try {
+      await RoleAPI.DeleteRole(id);
+
+      await fetchRoles(currentPage, searchQuery);
+      Swal.fire({
+        title: "Deleted!",
+        text: "Role has been deleted!",
+        icon: "success",
+        confirmButtonColor: "#16968F",
+      });
+    } catch (err: any) {
+      const apiError = err?.response?.data?.error;
+
+      if (apiError && apiError.includes("Role is assigned to users")) {
+        try {
+          const usersRes = await UsersAPI.getUsersByRole(id);
+          const assignedUsers = usersRes.data?.data || [];
+
+          const userListHTML = assignedUsers.length
+            ? `<ul style="text-align:left;">
+               ${assignedUsers.map((u: any) => `<li>• ${u.name}</li>`).join("")}
+             </ul>`
+            : "<p>No user names found, but role is assigned.</p>";
+
+          const confirmForceDelete = await Swal.fire({
+            title: "Role is assigned to users",
+            html: `
+            <p>The following users are assigned to this role:</p>
+            ${userListHTML}
+            <p>Do you want to delete the role and these users?</p>
+          `,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete all",
+            confirmButtonColor: "#16968F",
+            cancelButtonColor: "#d33",
+            width: 500,
+          });
+
+          if (confirmForceDelete.isConfirmed) {
+            await RoleAPI.ForceDeleteRole(id);
+            await fetchRoles(currentPage, searchQuery);
+
+            Swal.fire({
+              title: "Deleted!",
+              text: "Role and assigned users have been deleted.",
+              icon: "success",
+              confirmButtonColor: "#16968F",
+            });
+          }
+        } catch (fetchErr) {
+          Swal.fire({
+            title: "Error!",
+            text: "Failed to fetch assigned users.",
+            icon: "error",
+            confirmButtonColor: "#16968F",
+          });
+        }
+      } else {
         Swal.fire({
           title: "Error!",
           text: "Failed to delete role",
@@ -126,7 +178,7 @@ const RolesView = () => {
   };
 
   return (
-    <div className="px-6">
+    <div className="p-6">
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <button
           className="flex items-center gap-2 bg-[#16968F] text-white px-6 py-3 rounded-xl hover:bg-emerald-700 cursor-pointer"

@@ -25,8 +25,8 @@ export interface Candidate {
 }
 
 function buildCandidateFilters({
-  searchQuery,
-  jobType,
+  candidateName,
+  jobTitle,
   candidateLocation,
   candidateGender,
   currentSalary,
@@ -34,8 +34,8 @@ function buildCandidateFilters({
   startDate,
   endDate,
 }: {
-  searchQuery: string;
-  jobType: string;
+  candidateName: string;
+  jobTitle: string;
   candidateLocation: string;
   candidateGender: string;
   currentSalary: number;
@@ -45,8 +45,8 @@ function buildCandidateFilters({
 }) {
   const filters: Record<string, any> = {};
 
-  if (searchQuery.trim()) filters.searchQuery = searchQuery;
-  if (jobType !== "All Jobs") filters.jobType = jobType;
+  if (candidateName.trim()) filters.candidateName = candidateName;
+  if (jobTitle !== "All Jobs") filters.jobTitle = jobTitle;
   if (candidateLocation !== "By Location")
     filters.candidateLocation = candidateLocation;
   if (candidateGender !== "gender") filters.candidateGender = candidateGender;
@@ -86,7 +86,7 @@ export default function CandidateView() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [jobType, setJobType] = useState("All Jobs");
+  const [jobTitle, setJobTitle] = useState("All Jobs");
   const [candidateLocation, setCandidateLocation] = useState("By Location");
   const [candidateGender, setCandidateGender] = useState("gender");
 
@@ -105,7 +105,7 @@ export default function CandidateView() {
 
   const [filtersTouched, setFiltersTouched] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [candidateName, setcandidateName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
@@ -120,8 +120,8 @@ export default function CandidateView() {
     try {
       const filters = filtersTouched
         ? buildCandidateFilters({
-            searchQuery,
-            jobType,
+            candidateName,
+            jobTitle,
             candidateLocation,
             candidateGender,
             currentSalary,
@@ -131,12 +131,17 @@ export default function CandidateView() {
           })
         : {};
 
-      const res = await CandidatesAPI.getAll({
+      const params: any = {
         page,
         limit,
-        candidateName: query,
         ...filters,
-      });
+      };
+
+      if (query.trim() !== "") {
+        params.candidateName = query;
+      }
+
+      const res = await CandidatesAPI.getAll(params);
 
       const transformed = res.data.data.map((app: any) => ({
         fullName: app.candidate.fullName,
@@ -172,13 +177,6 @@ export default function CandidateView() {
       }, 1000),
     []
   );
-
-  useEffect(() => {
-    debouncedFetch(searchQuery);
-    return () => {
-      debouncedFetch.cancel();
-    };
-  }, [searchQuery]);
 
   const debouncedSetCurrentSalary = useMemo(
     () =>
@@ -228,12 +226,21 @@ export default function CandidateView() {
 
   useEffect(() => {
     const page = filtersTouched ? 1 : currentPage;
-    fetchCandidates(page, searchQuery);
+
+    if (candidateName.trim() !== "") {
+      debouncedFetch(candidateName);
+    } else {
+      fetchCandidates(page);
+    }
+
+    return () => {
+      debouncedFetch.cancel();
+    };
   }, [
+    candidateName,
     currentPage,
-    searchQuery,
     filtersTouched,
-    jobType,
+    jobTitle,
     candidateLocation,
     candidateGender,
     currentSalary,
@@ -243,24 +250,25 @@ export default function CandidateView() {
   ]);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) fetchCandidates(currentPage + 1, searchQuery);
+    if (currentPage < totalPages)
+      fetchCandidates(currentPage + 1, candidateName);
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) fetchCandidates(currentPage - 1, searchQuery);
+    if (currentPage > 1) fetchCandidates(currentPage - 1, candidateName);
   };
   return (
     <div className="">
       <div className="px-6">
         <CandidateFilters
-          searchQuery={searchQuery}
-          setSearchQuery={(val) => {
-            setSearchQuery(val);
+          candidateName={candidateName}
+          setcandidateName={(val) => {
+            setcandidateName(val);
             setFiltersTouched(true);
           }}
-          jobType={jobType}
-          setJobType={(val) => {
-            setJobType(val);
+          jobTitle={jobTitle}
+          setJobTitle={(val) => {
+            setJobTitle(val);
             setFiltersTouched(true);
           }}
           candidateLocation={candidateLocation}
@@ -289,11 +297,13 @@ export default function CandidateView() {
           setEndDate={debouncedSetEndDate}
           onReset={() => {
             setFiltersTouched(false);
-            setJobType("All Jobs");
+            setJobTitle("All Jobs");
             setCandidateLocation("By Location");
             setCandidateGender("gender");
             setCurrentSalary(0);
             setExpectedSalary(200000);
+            setCurrentSalaryInput(0);
+            setExpectedSalaryInput(200000);
             setStartDate(
               new Date(new Date().getFullYear(), new Date().getMonth(), 1)
             );

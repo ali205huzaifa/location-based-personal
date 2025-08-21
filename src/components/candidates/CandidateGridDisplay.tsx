@@ -1,4 +1,5 @@
 import type { Candidate } from "./CandidateView";
+import { motion } from "framer-motion";
 
 interface Props {
   candidates: Candidate[];
@@ -6,12 +7,46 @@ interface Props {
 }
 
 export default function CandidateGridDisplay({ candidates, onView }: Props) {
+  if (candidates.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-center h-40 text-red-500 text-lg font-bold"
+      >
+        No candidate found!
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 p-4 font-sans">
+    <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 p-4 font-sans"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: { staggerChildren: 0.12 },
+        },
+      }}
+    >
       {candidates.map((candidate, i) => (
-        <div
+        <motion.div
           key={i}
-          className="bg-white shadow-md rounded-xl p-5 flex flex-col border border-gray-200 hover:shadow-lg transition-shadow duration-300"
+          className="bg-white shadow-md rounded-xl p-5 flex flex-col border border-gray-200 
+                     transition-shadow duration-300"
+          variants={{
+            hidden: { opacity: 0, x: -40 },
+            visible: { opacity: 1, x: 0 },
+          }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          whileHover={{
+            scale: 1.03,
+            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+            zIndex: 5,
+          }}
+          style={{ position: "relative" }}
         >
           <div className="flex justify-between items-center mb-2">
             <p className="text-gray-500 text-sm">
@@ -56,8 +91,8 @@ export default function CandidateGridDisplay({ candidates, onView }: Props) {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

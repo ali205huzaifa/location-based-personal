@@ -39,7 +39,7 @@ export default function LayoutWrapper({
   return (
     <div className="flex flex-col h-full">
       <Topbar title={pageTitle} />
-      <main className="flex-grow overflow-y-auto p-4">{children}</main>
+      <main className="flex-grow overflow-y-auto">{children}</main>
     </div>
   );
 }
