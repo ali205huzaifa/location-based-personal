@@ -30,7 +30,6 @@ const jobTypeOptions = [
 ];
 
 const experienceOptions = [
-  { value: " ", label: "Job Experience" },
   { value: "0", label: "No Experience" },
   { value: "0-1", label: "0-1 years" },
   { value: "1-3", label: "1-3 years" },
