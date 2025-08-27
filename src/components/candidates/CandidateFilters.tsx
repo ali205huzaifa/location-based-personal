@@ -63,11 +63,11 @@ export default function CandidateFilters({
     async function fetchTitles() {
       try {
         const { data } = await CandidatesAPI.fetchTitles();
-        if (data?.data) {
+        if (Array.isArray(data)) {
           setTitles(
-            data.data.map((t: { _id: string; title: string }) => ({
-              value: t.title,
-              label: t.title,
+            data.map((title: string) => ({
+              value: title,
+              label: title,
             }))
           );
         }

@@ -488,7 +488,7 @@ export default function JobCreate({
                             { key: "expectedSalary", label: "Expected Salary" },
                             { key: "noticePeriod", label: "Notice Period" },
                             {
-                              key: "reasonForSwitching",
+                              key: "whySwitch",
                               label: "Reason for switching",
                             },
                           ] as {
