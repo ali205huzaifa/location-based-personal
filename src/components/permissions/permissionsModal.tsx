@@ -146,9 +146,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
           />
         </button>
 
-        <h2 className="text-lg font-medium mb-4 text-center">
-          {role ? "Update Role" : "Create Role"}
-        </h2>
+        <h2 className="text-lg font-medium mb-4 text-center">Access Role</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

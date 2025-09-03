@@ -1,12 +1,12 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import Select from "react-select";
 import Swal from "sweetalert2";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import { useHasPermission } from "../../hooks/hasPermissions";
 import EmailModal from "./JobEmailModal";
 
 const actions = [
-  { label: "Applicants", value: "APPLICANTS" },
+  { label: "Applied", value: "APPLIED" },
   { label: "Reviewed", value: "REVIEWED" },
   { label: "Shortlisted", value: "SHORTLISTED" },
   { label: "Interview Scheduled", value: "INTERVIEW_SCHEDULED" },
@@ -24,32 +24,35 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
   const canEditJob = useHasPermission("schedule-interview");
   const canSendEmail = useHasPermission("send-email");
   const candidate = application.candidate;
-  const [selected, setSelected] = useState(application.status || "");
+  const [selected, setSelected] = useState(
+    actions.find((a) => a.value === application.status) || null
+  );
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [localComments, setLocalComments] = useState(
     application.comments || []
   );
 
-  const handleSelect = async (value: string) => {
-    setSelected(value);
-    if (!value) return;
+  const handleSelect = async (option: any) => {
+    setSelected(option);
+    if (!option) return;
 
     try {
       await JobsAPI.UpdateApplicantStatusById(application._id, {
-        status: value,
+        status: option.value,
       });
 
       Swal.fire({
         icon: "success",
         title: "Status Updated",
-        text: `Application status has been updated to ${value}.`,
+        text: `Application status has been updated to ${option.label}.`,
         showConfirmButton: true,
       }).then(() => {
-        if (value === "INTERVIEW_SCHEDULED") {
+        if (option.value === "INTERVIEW_SCHEDULED") {
           setShowEmailModal(true);
         }
       });
+
       if (onStatusChange) onStatusChange();
     } catch (error) {
       Swal.fire({
@@ -65,8 +68,15 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
   }, [application._id]);
 
   useEffect(() => {
-    setSelected(application.status || "");
+    setSelected(actions.find((a) => a.value === application.status) || null);
   }, [application]);
+
+  const excludedLabels = [
+    "Current Salary",
+    "Expected Salary",
+    "Notice Period",
+    "Reason for switching",
+  ];
 
   return (
     <div className="text-sm text-black space-y-4">
@@ -82,69 +92,123 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
           >
             <img src="/icons/mail-icon2.svg" alt="Mail" className="w-4 h-4" />
           </button>
-
-          <>
-            <select
-              className={`bg-[#16968F] text-white px-4 py-2 text-xs rounded-lg more-select focus:outline-none
-    ${
-      canEditJob
-        ? "hover:bg-emerald-700 cursor-pointer"
-        : "opacity-50 cursor-not-allowed"
-    }`}
+          <div className="w-48">
+            <Select
               value={selected}
-              onChange={(e) => handleSelect(e.target.value)}
-              disabled={!canEditJob}
-            >
-              <option value="">More Actions</option>
-              {actions.map((action) => (
-                <option
-                  key={action.value}
-                  value={action.value}
-                  className="option-style"
-                >
-                  {action.label}
-                </option>
-              ))}
-            </select>
+              onChange={handleSelect}
+              options={actions}
+              isDisabled={!canEditJob}
+              isSearchable={false}
+              placeholder="Select status..."
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  backgroundColor: canEditJob ? "#16968F" : "#e5e7eb",
+                  borderRadius: "0.5rem",
+                  borderColor: state.isFocused ? "#10b981" : "#16968F",
+                  boxShadow: "none",
+                  cursor: canEditJob ? "pointer" : "not-allowed",
+                  minHeight: "38px",
+                  outline: "none",
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  color: "white",
+                  fontWeight: 500,
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  fontSize: "14px",
+                  backgroundColor: state.isSelected
+                    ? "#16968F"
+                    : state.isFocused
+                    ? "#e5f4f2"
+                    : "white",
+                  color: state.isSelected ? "white" : "#374151",
+                  cursor: "pointer",
+                }),
+                dropdownIndicator: (base) => ({
+                  ...base,
+                  color: "white",
+                  padding: "4px",
+                  "&:hover": {
+                    color: "white",
+                  },
+                }),
+              }}
+            />
+          </div>
 
-            {showEmailModal && (
-              <EmailModal
-                candidateEmail={candidate.email}
-                candidateName={candidate.fullName}
-                onClose={() => setShowEmailModal(false)}
-              />
-            )}
-          </>
+          {showEmailModal && (
+            <EmailModal
+              candidateEmail={candidate.email}
+              candidateName={candidate.fullName}
+              onClose={() => setShowEmailModal(false)}
+            />
+          )}
         </div>
       </div>
 
-      <div className="flex gap-16">
-        <div className="flex items-center gap-2">
-          <img src="/icons/location-icon.svg" alt="Location" width={12} />
+      <div className="flex gap-14 mb-2">
+        <div className="flex items-center gap-2 text-sm text-[#0C0C0C] w-[160px]">
+          <span className="w-4 flex-shrink-0 flex justify-center">
+            <img
+              src="/icons/location2-icon.svg"
+              alt="Location"
+              width={12}
+              height={12}
+            />
+          </span>
           <span>{candidate.currentLocation}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <img src="/icons/mail-icon.svg" alt="Email" width={16} />
-          <span>{candidate.email}</span>
+
+        <div className="flex items-center gap-2 text-sm text-black w-[350px]">
+          <span className="w-4 flex-shrink-0 flex justify-center">
+            <img
+              src="/icons/mail-icon.svg"
+              alt="Email"
+              width={14}
+              height={14}
+              className="max-w-[350px]"
+            />
+          </span>
+          <span className="truncate max-w-[200px]">{candidate.email}</span>
         </div>
       </div>
 
-      <div className="flex gap-10">
-        <div className="flex items-center gap-2">
-          <img src="/icons/phone-icon.svg" alt="Phone" width={16} />
-          <span>{candidate.phoneNumber}</span>
+      <div className="flex gap-14 mb-4">
+        <div className="flex items-center gap-2 text-sm text-black w-[160px]">
+          <span className="w-4 flex-shrink-0 flex justify-center">
+            <img
+              src="/icons/phone-icon.svg"
+              alt="Phone"
+              width={14}
+              height={14}
+            />
+          </span>
+          <span>+{candidate.phoneNumber}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <img src="/icons/linkedin-icon.svg" alt="LinkedIn" width={20} />
+
+        <div className="flex items-center gap-2 text-sm text-black w-[350px]">
+          <span className="w-4 flex-shrink-0 flex justify-center">
+            <img
+              src="/icons/linkedin-icon.svg"
+              alt="LinkedIn"
+              width={16}
+              height={16}
+            />
+          </span>
           <a
             href={candidate.linkedinProfile}
             target="_blank"
-            className="hover:underline"
+            rel="noopener noreferrer"
+            className="hover:underline truncate max-w-[350px]"
           >
             {candidate.linkedinProfile}
           </a>
         </div>
       </div>
+
       <div className="border-b border-gray-400"></div>
 
       <div className="bg-white font-sans text-gray-900 flex">
@@ -229,11 +293,11 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
               width={20}
               height={20}
             />
-            <span>Application Questions:</span>
           </div>
-          <ul className="ml-6 list-disc text-gray-600 space-y-2 mt-2 text-lg">
-            {application.job.applicationQuestions.map(
-              (q: any, index: number) => (
+          <ol className="ml-6 list-disc text-gray-600 space-y-2 mt-2 text-lg">
+            {application.job.applicationQuestions
+              .filter((q: any) => !excludedLabels.includes(q.label))
+              .map((q: any, index: number) => (
                 <li key={index}>
                   <span className="font-medium text-black">{q.label}</span>
                   {application.answers?.[index] && (
@@ -242,9 +306,8 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
                     </div>
                   )}
                 </li>
-              )
-            )}
-          </ul>
+              ))}
+          </ol>
         </div>
       )}
 
@@ -257,7 +320,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
               width={16}
               height={16}
             />
-            <span className="font-semibold text-black text-sm">
+            <span className="text-[#000000] text-base font-normal leading-10">
               Recruiter Comments
             </span>
           </div>
@@ -306,7 +369,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
                 );
               })
           ) : (
-            <div className="px-4 py-6 text-sm text-gray-500 text-center">
+            <div className="px-4 py-6 text-sm text-red-500 text-center">
               No comments yet.
             </div>
           )}

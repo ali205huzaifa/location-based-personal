@@ -5,7 +5,6 @@ import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import ImageResize from "quill-image-resize-module-react";
 import ClipLoader from "react-spinners/ClipLoader";
-import { motion } from "framer-motion";
 
 Quill.register("modules/imageResize", ImageResize);
 const FontWeightStyle = Quill.import("attributors/style/font");
@@ -204,14 +203,12 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
       [{ font: [] }],
-      [{ color: [] }, { background: [] }],
       ["bold", "italic", "underline", "strike"],
       [{ script: "sub" }, { script: "super" }],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }],
       [{ align: [] }],
       ["blockquote", "code-block"],
-      ["link", "image", "video"],
       ["clean"],
     ],
     imageResize: {
@@ -230,9 +227,6 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
     "list",
     "bullet",
     "indent",
-    "link",
-    "image",
-    "video",
     "color",
     "background",
     "code-block",
@@ -248,7 +242,7 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
         </div>
       )}
 
-      <h2 className="text-lg font-semibold mb-2">Notes</h2>
+      <h2 className="text-[19.5px] mb-2">Notes</h2>
 
       <div className="rounded bg-white mb-3">
         <ReactQuill
@@ -264,54 +258,56 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
         <button
           onClick={handleSaveNote}
           disabled={loading}
-          className="px-6 py-2 bg-[#16968F] text-white rounded hover:bg-teal-700 mt-20 disabled:opacity-50"
+          className="px-12 py-3 bg-[#16968F] text-white rounded hover:bg-teal-700 mt-16 xl:mt-10 disabled:opacity-50 rounded-lg"
         >
           Add a Note
         </button>
       </div>
-
       <div className="h-[380px] overflow-y-auto pr-2 mt-4">
-        {notes.map((note, i) => {
+        {notes.map((note) => {
           const tempDiv = document.createElement("div");
           tempDiv.innerHTML = note.content;
           const plainText = tempDiv.textContent || tempDiv.innerText || "";
 
-          const isTruncated = plainText.length > 45;
-          const visibleText = plainText.substring(0, 45);
+          const isTruncated = plainText.length > 60;
+          const visibleText = plainText.substring(0, 60);
 
           return (
-            <motion.div
+            <div
               key={note._id}
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.05 }}
-              whileHover={{
-                scale: 1.02,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              }}
-              className="border rounded p-3 mb-3 bg-white shadow-sm relative"
+              className="flex items-start justify-between border-b py-4 relative"
             >
-              <div className="text-sm mb-2 flex justify-between items-center">
+              <div className="flex items-start gap-4 text-sm text-[#737373]">
+                <img
+                  src="/icons/note-icon.svg"
+                  alt="comment"
+                  className="w-6 h-6"
+                />
                 <div>
                   {visibleText}
                   {isTruncated && (
-                    <span
-                      onClick={() => handleView(note._id)}
-                      style={{
-                        color: "#16968F",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {" "}
-                      ...see more
-                    </span>
+                    <>
+                      <span>...</span>
+                      <span
+                        onClick={() => handleView(note._id)}
+                        style={{
+                          color: "#16968F",
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                          marginLeft: "4px",
+                        }}
+                      >
+                        see more
+                      </span>
+                    </>
                   )}
                 </div>
-                <div className="text-xs text-gray-500 whitespace-nowrap mr-20">
-                  {new Date(note.createdAt).toLocaleDateString()}
-                </div>
               </div>
-              <div className="absolute top-3 right-3 flex gap-4">
+
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-[#737373] whitespace-nowrap">
+                  {new Date(note.createdAt).toLocaleDateString()}
+                </span>
                 <button title="Edit" onClick={() => handleEdit(note._id)}>
                   <img
                     src="/icons/edit-icon.svg"
@@ -327,7 +323,7 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
                   />
                 </button>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>

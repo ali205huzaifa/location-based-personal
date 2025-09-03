@@ -219,7 +219,9 @@ export default function ProfileView() {
   return (
     <div className="w-full p-6 space-y-10">
       <section>
-        <h2 className="text-2xl font-bold mb-6">Personal Info</h2>
+        <h2 className="justify-start text-black text-3xl font-normal font-['Product_Sans'] leading-[67.47px] mb-6">
+          Personal Info
+        </h2>
         <div className="flex items-center space-x-10">
           <div className="relative">
             <div className="flex w-[250px] items-center gap-4 mt-2">
@@ -227,7 +229,7 @@ export default function ProfileView() {
               <img
                 src={profileImageUrl || "/profile.jpg"}
                 alt="Profile"
-                className="w-24 h-24 rounded-md object-cover"
+                className="w-28 h-24 rounded-md object-cover"
               />
             </div>
 
@@ -238,7 +240,7 @@ export default function ProfileView() {
               <img
                 src="/icons/profile-icon.svg"
                 alt="Edit"
-                className="w-6 h-6"
+                className="w-8 h-8"
               />
             </button>
 
@@ -253,11 +255,11 @@ export default function ProfileView() {
 
           <div className="grid grid-cols-4 gap-6 w-full md:pl-30 pl-6">
             <div>
-              <p className="text-lg text-gray-500">Full Name</p>
+              <p className="text-lg text-gray-500 mb-2">Full Name</p>
               <p className="font-Regular">{currentUser.fullName}</p>
             </div>
             <div>
-              <p className="text-lg text-gray-500">Email Address</p>
+              <p className="text-lg text-gray-500 mb-2">Email Address</p>
               <p className="font-Regular">{currentUser.email}</p>
             </div>
           </div>
@@ -265,10 +267,12 @@ export default function ProfileView() {
       </section>
 
       <section className="border-t border-gray-300 pt-6">
-        <h2 className="text-2xl font-bold mb-6">Role & Access</h2>
+        <h2 className="justify-start text-black text-3xl font-normal font-['Product_Sans'] leading-[67.47px] mb-6">
+          Role & Access
+        </h2>
         <div className="grid grid-cols-4 gap-6">
           <div>
-            <p className="text-lg text-gray-500">User Role</p>
+            <p className="text-lg text-gray-500 mb-2">User Role</p>
             <p>
               {typeof currentUser?.role === "string"
                 ? currentUser.role
@@ -276,7 +280,7 @@ export default function ProfileView() {
             </p>
           </div>
           <div>
-            <p className="text-lg text-gray-500">Status</p>
+            <p className="text-lg text-gray-500 mb-2">Status</p>
             <label className="inline-flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -293,13 +297,15 @@ export default function ProfileView() {
       </section>
 
       <section className="border-t border-gray-300 pt-6 w-full">
-        <h2 className="text-2xl font-bold mb-6">Security & Credentials</h2>
+        <h2 className="justify-start text-black text-3xl font-normal font-['Product_Sans'] leading-[67.47px] mb-6">
+          Security & Credentials
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-end">
           <div className="md:col-span-3 relative">
             <input
               type={showPassword.currentPassword ? "text" : "password"}
               name="currentPassword"
-              placeholder="Enter your previous Password"
+              placeholder="Enter your current password"
               value={form.currentPassword}
               onChange={handleChange}
               className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none"
@@ -389,7 +395,7 @@ export default function ProfileView() {
           </div>
         </div>
       </section>
-
+      <section className="border-t border-gray-300 pt-6 w-full"></section>
       <div className="flex justify-end mt-6">
         <button
           onClick={handleSaveChanges}

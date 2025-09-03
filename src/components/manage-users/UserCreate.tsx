@@ -185,7 +185,7 @@ export default function UserCreate({
             width={20}
             height={20}
           />
-          Add User
+          Add New User
         </button>
 
         <div className="relative flex-1">
@@ -200,7 +200,7 @@ export default function UserCreate({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Start typing to search Users By Name"
+            placeholder="Search users by name"
             className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
           />
         </div>
@@ -326,7 +326,7 @@ export default function UserCreate({
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`flex items-center justify-center gap-2 text-white px-8 py-2 rounded-md mt-8 
+                  className={`flex items-center justify-center gap-2 text-white px-12 py-2 rounded-md mt-8 
     ${
       loading
         ? "bg-gray-400 cursor-not-allowed"
@@ -341,7 +341,7 @@ export default function UserCreate({
                 </button>
                 <button
                   type="button"
-                  className="border border-gray-300 px-8 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer mt-8"
+                  className="border border-gray-300 px-12 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer mt-8"
                   onClick={() => {
                     setShowModal(false);
                     setUserToEdit(undefined);

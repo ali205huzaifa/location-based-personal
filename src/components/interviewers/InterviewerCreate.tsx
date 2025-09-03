@@ -137,14 +137,14 @@ export default function InterviewerCreate({
           <img
             src="/icons/search-icon.svg"
             alt="Search Icon"
-            width={20}
-            height={20}
+            width={16}
+            height={16}
             className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"
           />
           <input
             type="text"
-            placeholder="Start typing to search Interviewers By Name"
-            className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
+            placeholder="Search Interviewer By Name"
+            className="w-full border border-gray-300 rounded-md py-3 pl-10 pr-4"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -177,7 +177,7 @@ export default function InterviewerCreate({
               <div>
                 <input
                   type="text"
-                  placeholder="Enter Interviewer Name"
+                  placeholder="Enter Name"
                   className={`w-full border ${
                     nameError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}
@@ -195,7 +195,7 @@ export default function InterviewerCreate({
               <div>
                 <input
                   type="email"
-                  placeholder="Enter Interviewer Email"
+                  placeholder="Enter Email Address"
                   className={`w-full border ${
                     emailError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}
@@ -213,7 +213,7 @@ export default function InterviewerCreate({
               <div>
                 <input
                   type="text"
-                  placeholder="Enter Department Name"
+                  placeholder="Add Designation"
                   className={`w-full border ${
                     departmentError ? "border-red-500" : "border-gray-300"
                   } rounded-md px-4 py-3`}

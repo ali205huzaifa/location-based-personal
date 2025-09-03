@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import SchedularAPI from "../../api/schedularApi/SchedularAPI";
 import Swal from "sweetalert2";
 import ClipLoader from "react-spinners/ClipLoader";
-import { motion } from "framer-motion";
 
 interface EventItem {
   id: string;
@@ -85,10 +84,14 @@ const ScheduleCard: React.FC = () => {
     try {
       setLoading(true);
       let res;
+
       if (start && end) {
         res = await SchedularAPI.getByDateRange(start, end);
       } else {
-        res = await SchedularAPI.getAll();
+        const today = new Date().toISOString().split("T")[0];
+        res = await SchedularAPI.getAll({
+          "startDate[gte]": today,
+        });
       }
 
       const schedulesArray = Array.isArray(res.data)
@@ -338,7 +341,14 @@ const ScheduleCard: React.FC = () => {
     if (!hmSeconds || !ampm) return time;
     const [hours, minutes] = hmSeconds.split(":");
 
-    return `${hours}:${minutes} ${ampm}`;
+    return (
+      <span>
+        {hours}:{minutes}{" "}
+        <span className=" text-zinc-900 text-xs font-normal leading-none">
+          {ampm}
+        </span>
+      </span>
+    );
   };
 
   const resetForm = () => {
@@ -351,75 +361,107 @@ const ScheduleCard: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-md p-6 flex flex-col ml-8">
+    <div className="w-full bg-white rounded-2xl shadow-md p-4 flex flex-col ml-4 border border-[#A2A1A833]">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold">My Schedule</h3>
-        <button onClick={() => setShowPopup(true)}>
-          <img src="/icons/plus-icon.svg" alt="add" className="w-4 h-4" />
-        </button>
+        <div className="flex flex-col text-zinc-900 text-xl font-normal leading-7">
+          <div>My Schedule</div>
+          <div
+            className="text-teal-600 text-sm font-normal leading-tight mt-2 cursor-pointer"
+            onClick={() => {
+              setStartDate(null);
+              setEndDate(null);
+              fetchSchedules();
+            }}
+          >
+            Reset date
+          </div>
+        </div>
+        <div className="w-12 h-12 bg-indigo-500/10 rounded-[9.75px] inline-flex justify-center items-center">
+          <button onClick={() => setShowPopup(true)}>
+            <img src="/icons/plus-icon.svg" alt="add" className="w-3 h-3" />
+          </button>
+        </div>
       </div>
 
       <div className="flex justify-between items-center mt-8">
         <button
-          className="bg-teal-600 text-white p-1 rounded"
+          className="bg-teal-600 text-white p-2 rounded"
           onClick={() => changeMonth(-1)}
         >
-          <img src="/icons/right-arrow.svg" alt="prev" className="w-4 h-4" />
+          <img src="/icons/right-arrow.svg" alt="prev" className="w-3 h-3" />
         </button>
-        <span className="text-sm font-medium">
+        <span className="text-center justify-center text-zinc-900 text-base font-normal leading-normal">
           {currentMonth.toLocaleString("default", { month: "long" })},{" "}
           {currentMonth.getFullYear()}
         </span>
         <button
-          className="bg-teal-600 text-white p-1 rounded"
+          className="bg-teal-600 text-white p-2 rounded"
           onClick={() => changeMonth(1)}
         >
-          <img src="/icons/left-arrow.svg" alt="next" className="w-4 h-4" />
+          <img src="/icons/left-arrow.svg" alt="next" className="w-3 h-3" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center mt-3 text-sm">
+      <div className="grid grid-cols-7 text-center mt-3 text-sm">
         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-          <div key={d} className="text-gray-600 font-medium">
+          <div key={d} className="text-zinc-900 font-normal py-1">
             {d}
           </div>
         ))}
-        {monthDays().map((day, idx) =>
-          day ? (
+
+        {monthDays().map((day, idx) => {
+          if (!day) return <div key={idx}></div>;
+
+          const dateObj = new Date(
+            currentMonth.getFullYear(),
+            currentMonth.getMonth(),
+            day
+          );
+
+          const isStart =
+            startDate &&
+            dateObj.getDate() === startDate.getDate() &&
+            dateObj.getMonth() === startDate.getMonth() &&
+            dateObj.getFullYear() === startDate.getFullYear();
+
+          const isEnd =
+            endDate &&
+            dateObj.getDate() === endDate.getDate() &&
+            dateObj.getMonth() === endDate.getMonth() &&
+            dateObj.getFullYear() === endDate.getFullYear();
+
+          const isInRange =
+            startDate && endDate && dateObj > startDate && dateObj < endDate;
+
+          return (
             <div
               key={idx}
-              onClick={() =>
-                handleDateClick(
-                  new Date(
-                    currentMonth.getFullYear(),
-                    currentMonth.getMonth(),
-                    day
-                  )
-                )
-              }
-              className={`cursor-pointer rounded-full px-2 py-1
-  ${
-    startDate &&
-    endDate &&
-    new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day) >=
-      startDate &&
-    new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day) <=
-      endDate
-      ? "bg-[#16968F] text-white"
-      : startDate &&
-        !endDate &&
-        day === startDate.getDate() &&
-        currentMonth.getMonth() === startDate.getMonth()
-      ? "bg-[#16968F] text-white"
-      : "hover:bg-gray-200"
-  }`}
+              onClick={() => handleDateClick(dateObj)}
+              className="relative cursor-pointer text-zinc-900 text-base font-normal"
             >
-              {day}
+              {isInRange && <div className="absolute inset-0 bg-violet-100" />}
+              {isStart && endDate && (
+                <div className="absolute inset-y-0 right-0 w-1/2 bg-violet-100" />
+              )}
+              {isEnd && startDate && (
+                <div className="absolute inset-y-0 left-0 w-1/2 bg-violet-100" />
+              )}
+
+              <div
+                className={`relative z-10 flex items-center justify-center w-8 h-8 mx-auto
+            ${isStart || isEnd ? "bg-[#16968F] text-white rounded-full" : ""}
+            ${
+              !isStart && !isEnd && !isInRange
+                ? "hover:bg-gray-200 rounded-full"
+                : ""
+            }
+          `}
+              >
+                {day}
+              </div>
             </div>
-          ) : (
-            <div key={idx}></div>
-          )
-        )}
+          );
+        })}
       </div>
 
       <div className="mt-4">
@@ -431,41 +473,49 @@ const ScheduleCard: React.FC = () => {
           <p className="text-gray-500 text-sm">No schedules found.</p>
         ) : (
           <div className="h-[600px] overflow-y-auto pr-2">
-            {days.map((day, dayIndex) => (
-              <motion.div
-                key={day.dateLabel}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{
-                  duration: 0.4,
-                  ease: "easeOut",
-                  delay: dayIndex * 0.1,
-                }}
-                className="mb-4"
-              >
-                <p className="text-sm font-semibold">{day.dateLabel}</p>
+            {days.map((day) => (
+              <div key={day.dateLabel} className="mb-4">
+                <p className="justify-center text-zinc-900 text-base font-normal leading-normal">
+                  {new Intl.DateTimeFormat("en-GB", {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })
+                    .formatToParts(new Date(day.dateLabel))
+                    .map((part) => {
+                      if (part.type === "weekday") {
+                        return part.value + ",";
+                      }
+                      return part.value;
+                    })
+                    .join("")}
+                </p>
 
                 {day.events.map((event, idx) => (
-                  <motion.div
+                  <div
                     key={idx}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      duration: 0.3,
-                      ease: "easeOut",
-                      delay: dayIndex * 0.1 + idx * 0.05,
-                    }}
                     className="flex items-start justify-between py-2"
                   >
-                    <span className="w-18 text-sm font-medium">
+                    <span className="justify-center text-zinc-900 text-lg font-normal leading-relaxed">
                       {formatDisplayTime(event.time)}
                     </span>
-                    <div className="flex-1 ml-6">
-                      <p className="text-sm text-gray-700">{event.role}</p>
-                      <p className="text-sm text-teal-600 font-medium">
-                        {event.task}
-                      </p>
+
+                    <div className="flex items-start flex-1 ml-2">
+                      <img
+                        src="/icons/schedule-line.svg"
+                        alt="schedule"
+                        className="w-4 h-12 mr-2 mt-1"
+                      />
+
+                      <div>
+                        <p className="text-sm text-gray-700">{event.role}</p>
+                        <p className="text-sm text-teal-600 font-medium">
+                          {event.task}
+                        </p>
+                      </div>
                     </div>
+
                     {event.editable && (
                       <img
                         src="/icons/edit-icon.svg"
@@ -474,9 +524,9 @@ const ScheduleCard: React.FC = () => {
                         onClick={() => handleEditClick(event.id)}
                       />
                     )}
-                  </motion.div>
+                  </div>
                 ))}
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -485,8 +535,8 @@ const ScheduleCard: React.FC = () => {
       {showPopup && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] space-y-6 shadow-lg">
-            <div className="flex justify-between items-center border-b pb-2 border-b border-gray-500">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <div className="flex justify-between items-center border-b pb-2 border-b border-zinc-400">
+              <h2 className="flex items-center gap-2 justify-start text-black text-lg font-normal leading-7">
                 <img
                   src="/icons/schedular-icon.svg"
                   alt="add"
@@ -509,38 +559,75 @@ const ScheduleCard: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium w-[100px]">
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <div className="flex items-center gap-4">
+                <label className="text-[#1C1C1C] text-sm font-normal w-[100px]">
                   Select Date:
                 </label>
-                <input
-                  type="date"
-                  className="border rounded px-2 py-2 flex-1 border-gray-400"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                />
+                <div
+                  className="relative flex-1 cursor-text"
+                  onClick={() =>
+                    (
+                      document.getElementById(
+                        "date-input"
+                      ) as HTMLInputElement | null
+                    )?.showPicker?.() ||
+                    document.getElementById("date-input")?.focus()
+                  }
+                >
+                  <input
+                    id="date-input"
+                    type="date"
+                    className="border rounded px-2 py-2 w-full border-zinc-400 pl-8"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                  />
+                  <img
+                    src="/icons/calender-icon.svg"
+                    alt="Calendar Icon"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none"
+                  />
+                </div>
               </div>
+
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium w-[100px]">
+                <label className="text-[#1C1C1C] text-sm font-normal w-[100px]">
                   Select Time:
                 </label>
-                <input
-                  type="time"
-                  className="border rounded px-2 py-2 flex-1 border-gray-400"
-                  value={formTime}
-                  onChange={(e) => setFormTime(e.target.value)}
-                />
+                <div
+                  className="relative flex-1 cursor-text"
+                  onClick={() =>
+                    (
+                      document.getElementById(
+                        "time-input"
+                      ) as HTMLInputElement | null
+                    )?.showPicker?.() ||
+                    document.getElementById("time-input")?.focus()
+                  }
+                >
+                  <input
+                    id="time-input"
+                    type="time"
+                    className="border rounded px-2 py-2 w-full border-zinc-400 pl-8"
+                    value={formTime}
+                    onChange={(e) => setFormTime(e.target.value)}
+                  />
+                  <img
+                    src="/icons/timer-icon.svg"
+                    alt="Timer Icon"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none"
+                  />
+                </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium w-[100px]">
+              <label className="text-[#1C1C1C] text-sm font-normal w-[100px]">
                 Add Title:
               </label>
               <input
                 type="text"
-                className="border rounded px-2 py-2 flex-1 border-gray-400"
+                className="border rounded px-2 py-2 flex-1 border-zinc-400"
                 placeholder="Enter title"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
@@ -548,12 +635,12 @@ const ScheduleCard: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium w-[100px]">
+              <label className="text-[#1C1C1C] text-sm font-normal w-[100px]">
                 Short Tagline:
               </label>
               <input
                 type="text"
-                className="border rounded px-2 py-2 flex-1 border-gray-400"
+                className="border rounded px-2 py-2 flex-1 border-zinc-400"
                 placeholder="Enter tagline"
                 value={formTagline}
                 onChange={(e) => setFormTagline(e.target.value)}
@@ -564,14 +651,14 @@ const ScheduleCard: React.FC = () => {
               {isEditing && (
                 <button
                   onClick={handleDeleteSchedule}
-                  className="bg-red-500 text-white px-6 py-3 rounded hover:bg-red-600"
+                  className="bg-[#F15C5C] text-xs text-white px-8 py-3 rounded hover:bg-red-600"
                 >
                   Delete Schedule
                 </button>
               )}
               <button
                 onClick={handleSaveSchedule}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded text-white ${
+                className={`flex text-xs font-normal gap-2 px-10 py-3 rounded text-white ${
                   saving
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-[#16968F] hover:bg-[#127e78]"

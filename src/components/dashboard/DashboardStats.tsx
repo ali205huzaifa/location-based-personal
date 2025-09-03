@@ -63,9 +63,9 @@ const DashboardStats = () => {
             <div className="bg-[#F5F6FA] p-2 rounded-md">
               <img src={stat.icon} alt={stat.label} className="w-6 h-6" />
             </div>
-            <p className="text-black">{stat.label}</p>
+            <p className="text-[#16151C] text-[19.5px]">{stat.label}</p>
           </div>
-          <p className="font-semibold text-black">{stat.count}</p>
+          <p className="text-[#16151C] text-[32.01px]">{stat.count}</p>
         </div>
       ))}
     </div>

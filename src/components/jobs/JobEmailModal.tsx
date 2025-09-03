@@ -160,25 +160,53 @@ const EmailModal: React.FC<EmailModalProps> = ({
             <span>Select Interviewers</span>
           </button>
 
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              updateBodyWithDateTime(e.target.value, time);
-            }}
-            className="border border-gray-300 rounded px-3 py-2"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value);
+                updateBodyWithDateTime(e.target.value, time);
+              }}
+              className="border border-gray-300 rounded px-3 py-2 pr-10"
+            />
+            <img
+              src="/icons/calender-icon.svg"
+              alt="Calendar"
+              width={18}
+              height={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+              onClick={() =>
+                document
+                  .querySelector<HTMLInputElement>('input[type="date"]')
+                  ?.showPicker?.()
+              }
+            />
+          </div>
 
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => {
-              setTime(e.target.value);
-              updateBodyWithDateTime(date, e.target.value);
-            }}
-            className="border border-gray-300 rounded px-3 py-2"
-          />
+          <div className="relative">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => {
+                setTime(e.target.value);
+                updateBodyWithDateTime(date, e.target.value);
+              }}
+              className="border border-gray-300 rounded px-3 py-2 pr-10"
+            />
+            <img
+              src="/icons/timer-icon.svg"
+              alt="Time"
+              width={18}
+              height={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+              onClick={() =>
+                document
+                  .querySelector<HTMLInputElement>('input[type="time"]')
+                  ?.showPicker?.()
+              }
+            />
+          </div>
         </div>
 
         <div className="mb-4">

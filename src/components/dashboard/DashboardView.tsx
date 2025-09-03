@@ -10,13 +10,13 @@ export default function Dashboard() {
   if (!currentUser) return null;
 
   return (
-    <div className="p-4 md:p-6 w-full flex flex-col lg:flex-row">
-      <div className="flex-1 lg:w-1/2 mt-4">
+    <div className="px-4 md:p-6 w-full flex flex-col lg:flex-row">
+      <div className="lg:w-2/3 mt-4">
         <DashboardStats />
         <NotesSection userId={currentUser._id} />
       </div>
 
-      <div className="flex-1 lg:w-1/2 p-4">
+      <div className="lg:w-1/3 px-4">
         <ScheduleCard />
       </div>
     </div>

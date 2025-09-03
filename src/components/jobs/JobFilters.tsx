@@ -95,8 +95,8 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
           <img
             src="/icons/calender-icon.svg"
             alt="Calendar"
-            width={16}
-            height={16}
+            width={24}
+            height={24}
           />
           <span>
             {filters.startDate ? format(filters.startDate, "dd MMM") : "Start"}{" "}
@@ -128,10 +128,10 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
         onChange={(val) => setFilters((prev) => ({ ...prev, department: val }))}
       >
         <div className="relative">
-          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none text-zinc-900 text-base font-normal leading-relaxed">
             <span>
               {departments.find((d) => d.value === filters.department)?.label ||
-                "Select Department"}
+                "All Departments"}
             </span>
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <ChevronDownIcon className="h-5 w-5 text-gray-400" />
@@ -161,7 +161,7 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
         onChange={(val) => setFilters((prev) => ({ ...prev, location: val }))}
       >
         <div className="relative">
-          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none text-zinc-900 text-base font-normal leading-relaxed">
             <span>
               {locationOptions.find((d) => d.value === filters.location)
                 ?.label || "All Locations"}
@@ -194,10 +194,10 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
         onChange={(val) => setFilters((prev) => ({ ...prev, jobType: val }))}
       >
         <div className="relative">
-          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none text-zinc-900 text-base font-normal leading-relaxed">
             <span>
               {jobTypeOptions.find((d) => d.value === filters.jobType)?.label ||
-                "All Job Type"}
+                " Job Type"}
             </span>
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <ChevronDownIcon className="h-5 w-5 text-gray-400" />
@@ -229,7 +229,7 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
         }
       >
         <div className="relative">
-          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none ">
+          <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none text-zinc-900 text-base font-normal leading-relaxed">
             <span>
               {experienceOptions.find(
                 (d) => d.value === filters.experienceLevel
@@ -274,9 +274,9 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
 
       <button
         onClick={handleReset}
-        className="font-Regular ml-auto items-center gap-2 bg-[#16968F] text-white px-4 py-2 rounded-xl hover:bg-emerald-700 cursor-pointer"
+        className="font-Regular ml-auto items-center gap-2 bg-[#D9D9D9] text-[#000000] px-4 py-2 rounded-xl cursor-pointer"
       >
-        Reset Filter
+        Clear Filters
       </button>
     </div>
   );

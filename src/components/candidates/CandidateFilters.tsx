@@ -99,16 +99,16 @@ export default function CandidateFilters({
             <img
               src="/icons/search-icon.svg"
               alt="Search Icon"
-              width={20}
-              height={20}
+              width={16}
+              height={16}
               className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"
             />
             <input
               type="text"
               value={candidateName}
               onChange={(e) => setcandidateName(e.target.value)}
-              placeholder="Start typing to search Candidates By their Name"
-              className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
+              placeholder="Search by Name"
+              className="w-full border border-gray-300 rounded-md py-3 pl-10 pr-4"
             />
           </div>
         </div>
@@ -123,8 +123,8 @@ export default function CandidateFilters({
             <img
               src="/icons/calender-icon.svg"
               alt="Calendar"
-              width={16}
-              height={16}
+              width={24}
+              height={24}
             />
             <span>
               {format(startDate, "dd MMM")} - {format(endDate, "dd MMM")}
@@ -157,7 +157,7 @@ export default function CandidateFilters({
           value={jobTitle}
           onChange={setJobTitle}
           options={titles}
-          placeholder="Select Job Title"
+          placeholder="All Jobs"
         />
 
         <CandidateFilterListbox
@@ -168,7 +168,7 @@ export default function CandidateFilters({
             { value: "Rawalpindi", label: "Rawalpindi" },
             { value: "Lahore", label: "Lahore" },
           ]}
-          placeholder="Select Location"
+          placeholder="By Location"
         />
 
         <CandidateFilterListbox
@@ -179,11 +179,13 @@ export default function CandidateFilters({
             { value: "FEMALE", label: "Female" },
             { value: "OTHER", label: "Other" },
           ]}
-          placeholder="Select Gender"
+          placeholder="By Gender"
         />
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-          <span className="text-sm whitespace-nowrap">Current Salary</span>
+          <span className="justify-start text-zinc-900 text-base font-normal leading-none">
+            Current Salary
+          </span>
 
           <div className="relative w-[150px] sm:w-[200px] mt-2">
             <div className="flex justify-between text-sm text-gray-700 mb-1 px-1">
@@ -239,7 +241,9 @@ export default function CandidateFilters({
             </div>
           </div>
 
-          <span className="text-sm whitespace-nowrap">Expected Salary</span>
+          <span className="justify-start text-zinc-900 text-base font-normal leading-none">
+            Expected Salary
+          </span>
         </div>
 
         <button

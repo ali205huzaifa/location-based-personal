@@ -151,6 +151,7 @@ export default function JobsView() {
           salaryRange: jobData.salaryRange,
           skills: jobData.skills,
           applicationQuestions: jobData.applicationQuestions,
+          createdBy: jobData.createdBy,
         };
 
         setJobToEdit(formattedJob);
@@ -182,7 +183,7 @@ export default function JobsView() {
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <button
           disabled={!canCreateJob}
-          className={`font-Regular flex items-center gap-2 px-6 py-3 rounded-xl ${
+          className={`font-Regular flex items-center gap-2 px-8 py-3 rounded-xl ${
             canCreateJob
               ? "bg-[#16968F] text-white hover:bg-emerald-700 cursor-pointer"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -208,7 +209,7 @@ export default function JobsView() {
           />
           <input
             type="text"
-            placeholder="Start typing to search jobs by title"
+            placeholder="start typing to search jobs"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="font-Regular w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"
@@ -217,7 +218,7 @@ export default function JobsView() {
 
         <button
           disabled={!canViewArchivedJobs}
-          className={`font-Regular border px-6 py-3 rounded-xl ${
+          className={`font-Regular border px-8 py-3 rounded-xl ${
             canViewArchivedJobs
               ? "border-[#000000] cursor-pointer hover:bg-gray-100"
               : "border-gray-300 text-gray-400 cursor-not-allowed"
@@ -241,9 +242,11 @@ export default function JobsView() {
       <JobFilters filters={filters} setFilters={setFilters} />
 
       <div className="bg-black text-white/80 px-4 py-5 flex items-center justify-between rounded-t-lg mt-4">
-        <span className="font-Regular text-[20.38px]">
+        <span className="font-Regular text-[20.38px] text-[#FFFFFF]">
           Showing all Jobs{" "}
-          <span className="text-[11.91px]">- {jobs.length} Results</span>
+          <span className="text-[11.91px] text-[#CDCDCD]">
+            - {jobs.length} Results
+          </span>
         </span>
 
         <div className="flex items-center gap-4">

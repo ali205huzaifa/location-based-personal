@@ -23,7 +23,7 @@ function CandidateFilterListbox({
     <Listbox value={value} onChange={onChange}>
       <div className="relative">
         <Listbox.Button className="flex items-center text-sm cursor-pointer px-3 py-2 rounded-lg bg-white focus:outline-none">
-          <span>
+          <span className="justify-start text-zinc-900 text-base font-normal leading-none">
             {options.find((opt) => opt.value === value)?.label || placeholder}
           </span>
           <ChevronDownIcon className="w-4 h-4 text-gray-500" />

@@ -93,6 +93,11 @@ const UserRowDisplay: React.FC<Props> = ({
     }
   };
 
+  function capitalizeFirstLetter(value: string | undefined | null): string {
+    if (!value) return "-";
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  }
+
   return (
     <div className="relative">
       <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg">
@@ -109,11 +114,11 @@ const UserRowDisplay: React.FC<Props> = ({
       ) : (
         <div className="bg-white rounded-b-lg shadow-lg overflow-auto p-4">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 text-[#8B8B8B] uppercase text-sm">
+            <thead className="bg-gray-50 text-[#8B8B8B] text-sm border-b border-gray-300">
               <tr>
                 <th className="p-4">Name</th>
                 <th className="p-4">Email</th>
-                <th className="p-4">Roles</th>
+                <th className="p-4">Role</th>
                 <th className="p-4">Last Updated</th>
                 <th className="p-4 text-center">Action</th>
               </tr>
@@ -145,8 +150,8 @@ const UserRowDisplay: React.FC<Props> = ({
                     }}
                     className="border-b border-[#CDCDCD] text-[16px] cursor-pointer"
                   >
-                    <td className="p-4">{user.name}</td>
-                    <td className="p-4">{user.email}</td>
+                    <td className="p-4">{capitalizeFirstLetter(user.name)}</td>
+                    <td className="p-4">{capitalizeFirstLetter(user.email)}</td>
                     <td className="p-4">{user.role?.name}</td>
                     <td className="p-4">
                       {new Date(user.updatedAt).toLocaleDateString()}

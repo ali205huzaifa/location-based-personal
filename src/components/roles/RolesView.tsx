@@ -181,7 +181,7 @@ const RolesView = () => {
     <div className="p-6">
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <button
-          className="flex items-center gap-2 bg-[#16968F] text-white px-6 py-3 rounded-xl hover:bg-emerald-700 cursor-pointer"
+          className="flex items-center gap-2 bg-[#16968F] px-10 py-3 rounded-xl hover:bg-emerald-700 cursor-pointer text-white text-base font-normal"
           onClick={handleAddNew}
         >
           Add New Role
@@ -197,7 +197,7 @@ const RolesView = () => {
           />
           <input
             type="text"
-            placeholder="Start typing to search Roles By Name"
+            placeholder="Search Roles by name"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-gray-300 rounded-md py-3 pl-14 pr-4"

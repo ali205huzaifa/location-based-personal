@@ -316,14 +316,14 @@ export default function CandidateView() {
         <div className="bg-black text-white px-4 py-5 flex items-center justify-between rounded-t-lg mt-4">
           <span className="font-Regular text-[20.38px]">
             Showing all Candidates{" "}
-            <span className="text-[11.91px]">
+            <span className="text-[11.91px] text-stone-300 text-xs font-normal leading-snug">
               - {candidates.length} Results
             </span>
           </span>
 
           <div className="flex items-center gap-4">
             <span className="font-Regular text-[11.91px]">
-              {view === "list" ? "Showing List view" : "Showing Card view"}
+              {view === "list" ? "List view" : "Card view"}
             </span>
 
             <div className="flex gap-2">

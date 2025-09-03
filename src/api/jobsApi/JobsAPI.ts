@@ -45,8 +45,16 @@ class JobsAPI {
     return axiosClient.patch(`/applications/${id}`, payload);
   }
 
+  static UpdateInterviewerInApplicationById(id: string, payload: any){
+    return axiosClient.patch(`/applications/${id}`, payload);
+  }
+
   static SendAssessmentForm(id: string, payload: any){
     return axiosClient.post(`/applications/${id}/send-assessment-candidate`, payload);
+  }
+
+  static SendAssessmentFormDate(id: string, payload: any){
+    return axiosClient.patch(`/applications/${id}`, payload);
   }
 
   static SendEvaluationForm(id: string, payload: any){
@@ -62,6 +70,14 @@ class JobsAPI {
       body: string;
     }) {
     return axiosClient.post(`/applications/send-email`, data);
+  }
+
+  static readUnreadCount(jobId: string) {
+    return axiosClient.get(`/applications/read-unread-count`, { params: { jobId } });
+  }
+
+  static UpdateUnreadCountByJobId(applicationId: string, payload: any){
+    return axiosClient.patch(`/applications/${applicationId}`, payload);
   }
 }
 

@@ -11,6 +11,7 @@ function getTitleFromPath(pathname: string): string {
 
   if (pathname.includes("/profile")) return "My Profile";
   if (pathname.includes("/jobs/create")) return "Create Job";
+  if (pathname.includes("/roles")) return "Access Roles";
 
   const isLikelyId =
     segments.length > 1 &&

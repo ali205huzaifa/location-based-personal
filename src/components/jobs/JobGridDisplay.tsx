@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { Job } from "../../types/user";
 import { useHasPermission } from "../../hooks/hasPermissions";
-import { motion } from "framer-motion";
 
 interface Props {
   jobs: Job[];
@@ -29,44 +28,18 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
 
   if (jobs.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center justify-center h-40 text-red-500 text-lg font-bold"
-      >
+      <div className="flex items-center justify-center h-40 text-red-500 text-lg font-bold">
         No jobs found!
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
-      initial="hidden"
-      animate="visible"
-      variants={{
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: { staggerChildren: 0.15 },
-        },
-      }}
-    >
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
       {jobs.map((job, i) => (
-        <motion.div
+        <div
           key={i}
-          className="bg-white shadow-md rounded-xl p-5 flex flex-col"
-          variants={{
-            hidden: { opacity: 0, x: -50 },
-            visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
-          }}
-          whileHover={{
-            scale: 1.03,
-            boxShadow: "0px 8px 24px rgba(0,0,0,0.15)",
-            zIndex: 10,
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className="bg-white rounded-xl p-5 flex flex-col border border-[#EBEBEB] hover:shadow-md"
         >
           <div className="flex justify-between items-center mb-2">
             <p className="text-gray-500 text-sm">
@@ -82,7 +55,7 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
             </span>
           </div>
 
-          <h3 className="flex gap-4 text-xl md:text-2xl font-bold text-gray-800 mb-1">
+          <h3 className="flex gap-4 text-xl md:text-2xl text-[#000000] mb-1">
             {job.title}
             <img
               src="/icons/edit-icon.svg"
@@ -96,7 +69,7 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
             />
           </h3>
 
-          <p className="text-blue-700 text-base font-medium mb-4">
+          <p className="justify-start text-indigo-800 text-[13px] text-xs font-normal leading-normal mb-4">
             {toTitleCase(job.department)}
           </p>
 
@@ -142,8 +115,8 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
               onClick={() => navigate(`/jobs/${job.id}`)}
             />
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 }

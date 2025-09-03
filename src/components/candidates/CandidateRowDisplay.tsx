@@ -65,7 +65,7 @@ export default function CandidateRowDisplay({ candidates, onView }: Props) {
                   {candidate.currentSalary} PKR - {candidate.expectedSalary} PKR
                 </td>
                 <td className="p-4">{candidate.createdAt}</td>
-                <td className="p-4 flex items-center">
+                <td className="p-4 flex items-center justify-center">
                   <button
                     className="cursor-pointer"
                     onClick={() => onView(candidate)}

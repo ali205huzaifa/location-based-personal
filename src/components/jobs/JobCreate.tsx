@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import Select from "react-select";
+import type { StylesConfig, GroupBase } from "react-select";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import ImageResize from "quill-image-resize-module-react";
@@ -309,15 +311,11 @@ export default function JobCreate({
     toolbar: [
       [{ header: [1, 2, 3, false] }],
       [{ font: [] }],
-      [{ color: [] }, { background: [] }],
-      ["bold", "italic", "underline", "strike"],
+      ["bold", "italic", "underline"],
       [{ script: "sub" }, { script: "super" }],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }],
       [{ align: [] }],
-      ["blockquote", "code-block"],
-      ["link", "image", "video"],
-      ["blockquote", "code-block"],
       ["clean"],
     ],
     imageResize: {
@@ -331,14 +329,9 @@ export default function JobCreate({
     "bold",
     "italic",
     "underline",
-    "strike",
-    "blockquote",
     "list",
     "bullet",
     "indent",
-    "link",
-    "image",
-    "video",
     "color",
     "background",
     "code-block",
@@ -346,38 +339,108 @@ export default function JobCreate({
     "script",
   ];
 
+  const customStyles: StylesConfig<any, false, GroupBase<any>> = {
+    control: (base) => ({
+      ...base,
+      backgroundColor: "white",
+      borderRadius: "0.5rem",
+      borderColor: "#D9D9D9",
+      minHeight: "50px",
+      padding: "4px 8px",
+      boxShadow: "none",
+      "&:hover": {
+        borderColor: "#D9D9D9",
+      },
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "black",
+      fontWeight: 400,
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected
+        ? "#16968F"
+        : state.isFocused
+        ? "#e5f4f2"
+        : "white",
+      color: state.isSelected
+        ? "white"
+        : state.isFocused
+        ? "#16968F"
+        : "#374151",
+    }),
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "black",
+      padding: "4px",
+      "&:hover": {
+        color: "black",
+      },
+    }),
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+  };
+
   return (
     <div className="bg-white mt-4 relative">
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="relative bg-[#FFFFFF] w-[90%] max-w-6xl h-[75vh] rounded-xl shadow-xl border border-[#D9D9D9] overflow-y-auto p-6">
+          <div className="relative bg-white w-full h-full rounded-none shadow-xl border border-[#D9D9D9] overflow-y-auto p-6">
             <button
               onClick={() => {
                 resetForm();
                 setShowModal(false);
               }}
-              className="absolute top-4 right-6 text-2xl font-bold text-gray-500 hover:text-black cursor-pointer"
+              className="absolute top-8 right-6 text-2xl font-bold text-gray-500 hover:text-black cursor-pointer"
             >
               <img
                 src="/icons/cross-icon.svg"
-                alt="Jobs Icon"
-                width={15}
-                height={15}
+                alt="Close"
+                width={20}
+                height={20}
               />
             </button>
 
-            <h2 className="text-2xl font-semibold mb-6 border-b border-gray-400">
-              {isEdit ? "Edit Job" : "New Job"}
-            </h2>
+            {isEdit && jobToEdit ? (
+              <div className="flex items-center justify-between border-b border-gray-400 pb-3 mb-4 pr-10">
+                <h2 className="text-black text-2xl font-normal leading-10 flex items-center gap-2">
+                  Edit Job
+                  <span className="text-gray-500 text-base">
+                    #{jobToEdit.id.slice(-6)}
+                  </span>
+                </h2>
+
+                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <span className="justify-start text-zinc-900 text-sm font-medium urbanist leading-7">
+                    Posted by :
+                  </span>
+                  <img
+                    src="/icons/User.svg"
+                    alt="User"
+                    className="w-4 h-4 text-gray-500"
+                  />
+                  <span>{jobToEdit.createdBy?.name}</span>
+                </div>
+              </div>
+            ) : (
+              <h2 className="text-black text-2xl font-normal leading-10 mb-4 border-b border-gray-400">
+                New Job
+              </h2>
+            )}
 
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <label className="block mb-4 font-bold">Job title</label>
+                <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
+                  Job title
+                </label>
                 <div className="mb-4">
                   <input
                     type="text"
                     placeholder="Enter Job Title"
-                    className="border border-gray-300 rounded-md px-4 py-4 w-full"
+                    className="border border-gray-300 rounded-md px-4 py-3 w-full"
                     value={designation}
                     onChange={(e) => {
                       setDesignation(e.target.value);
@@ -392,13 +455,13 @@ export default function JobCreate({
                 </div>
 
                 <div className="mb-6">
-                  <label className="block mb-4 font-bold">
+                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                     Job Description
                   </label>
-                  <div className="border border-gray-300 rounded-md p-2 bg-white">
+                  <div className="border border-gray-300 rounded-md bg-white">
                     <ReactQuill
                       theme="snow"
-                      className="h-[250px] overflow-y-auto"
+                      className="h-[220px] [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-toolbar]:bg-white overflow-hidden"
                       value={jobDescription}
                       onChange={(value) => {
                         setJobDescription(value);
@@ -415,7 +478,7 @@ export default function JobCreate({
                   )}
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-4 font-bold">
+                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                     Required Skills
                   </label>
                   <div className="border border-gray-300 rounded-md p-4">
@@ -455,7 +518,7 @@ export default function JobCreate({
                 </div>
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-4">
-                    <label className="block font-bold">
+                    <label className="block justify-start text-zinc-900 text-base font-normal leading-loose">
                       Questions{" "}
                       <span className="text-[10px] text-gray-500">
                         for candidates
@@ -562,33 +625,43 @@ export default function JobCreate({
                 onChange={(e) => setEndDate(e.target.value)}
               />
 
-              <div>
+              <div className="border-l border-gray-300 pl-8">
                 <div className="mb-8">
-                  <label className="block mb-6 font-bold">Job Department</label>
-                  <select
-                    className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
-                    value={department}
-                    onChange={(e) => {
-                      setDepartment(e.target.value);
+                  <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    Job Department
+                  </label>
+                  <Select
+                    value={
+                      department
+                        ? { value: department, label: department }
+                        : null
+                    }
+                    onChange={(option) => {
+                      setDepartment(option?.value || "");
                       clearError("department");
                     }}
-                  >
-                    <option value="">Select Department</option>
-                    <option value="MOBILE_APP_DEVELOPMENT">
-                      Mobile Development
-                    </option>
-                    <option value="HUMAN_RESOURCE">Human Resource</option>
-                    <option value="WEB_DEVELOPMENT">Web Development</option>
-                    <option value="MARKETING">Marketing</option>
-                    <option value="ARTIFICIAL_INTELLIGENCE">
-                      Artificial Intelligence
-                    </option>
-                    <option value="BUSINESS_DEVELOPMENT">
-                      Business Development
-                    </option>
-                    <option value="UI/UX">UI/UX</option>
-                    <option value="GAME_DEVELOPMENT">Game Development</option>
-                  </select>
+                    options={[
+                      {
+                        value: "MOBILE_APP_DEVELOPMENT",
+                        label: "Mobile Development",
+                      },
+                      { value: "HUMAN_RESOURCE", label: "Human Resource" },
+                      { value: "WEB_DEVELOPMENT", label: "Web Development" },
+                      { value: "MARKETING", label: "Marketing" },
+                      {
+                        value: "ARTIFICIAL_INTELLIGENCE",
+                        label: "Artificial Intelligence",
+                      },
+                      {
+                        value: "BUSINESS_DEVELOPMENT",
+                        label: "Business Development",
+                      },
+                      { value: "UI/UX", label: "UI/UX" },
+                      { value: "GAME_DEVELOPMENT", label: "Game Development" },
+                    ]}
+                    styles={customStyles}
+                    placeholder="Select Department"
+                  />
 
                   {errors.department && (
                     <p className="text-red-500 text-sm mt-1">
@@ -599,24 +672,27 @@ export default function JobCreate({
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div>
-                    <label className="block mb-6 font-bold">
+                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
                       No. of Positions
                     </label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
-                      value={openings}
-                      onChange={(e) => {
-                        setOpenings(e.target.value);
+                    <Select
+                      value={
+                        openings ? { value: openings, label: openings } : null
+                      }
+                      onChange={(option) => {
+                        setOpenings(option?.value || "");
                         clearError("openings");
                       }}
-                    >
-                      <option value="">Select Job Openings</option>
-                      <option value="2">1-2</option>
-                      <option value="4">2-4</option>
-                      <option value="6">5-6</option>
-                      <option value="8">6-8</option>
-                      <option value="10">8-10</option>
-                    </select>
+                      options={[
+                        { value: "2", label: "1-2" },
+                        { value: "4", label: "2-4" },
+                        { value: "6", label: "5-6" },
+                        { value: "8", label: "6-8" },
+                        { value: "10", label: "8-10" },
+                      ]}
+                      styles={customStyles}
+                      placeholder="Select Job Openings"
+                    />
 
                     {errors.openings && (
                       <p className="text-red-500 text-sm mt-1">
@@ -626,14 +702,14 @@ export default function JobCreate({
                   </div>
 
                   <div>
-                    <label className="block mb-6 font-bold">
+                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Gender Preference
                     </label>
-                    <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md px-4 py-3 justify-center">
+                    <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md px-4 py-2 justify-center">
                       {[
+                        { label: "Both", value: "OTHER" },
                         { label: "Male", value: "MALE" },
                         { label: "Female", value: "FEMALE" },
-                        { label: "Both", value: "OTHER" },
                       ].map(({ label, value }) => (
                         <button
                           key={value}
@@ -664,21 +740,28 @@ export default function JobCreate({
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div>
-                    <label className="block mb-6 font-bold">Job Type</label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
-                      value={jobType}
-                      onChange={(e) => {
-                        setJobType(e.target.value);
+                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                      Job Type
+                    </label>
+                    <Select
+                      value={
+                        jobType
+                          ? { value: jobType, label: jobType.replace("_", " ") }
+                          : null
+                      }
+                      onChange={(option) => {
+                        setJobType(option?.value || "");
                         clearError("jobType");
                       }}
-                    >
-                      <option value="">Select Job Type</option>
-                      <option value="FULL_TIME">Full Time</option>
-                      <option value="PART_TIME">Part Time</option>
-                      <option value="CONTRACT">Contract Based</option>
-                      <option value="INTERNSHIP">Internship</option>
-                    </select>
+                      options={[
+                        { value: "FULL_TIME", label: "Full Time" },
+                        { value: "PART_TIME", label: "Part Time" },
+                        { value: "CONTRACT", label: "Contract Based" },
+                        { value: "INTERNSHIP", label: "Internship" },
+                      ]}
+                      styles={customStyles}
+                      placeholder="Select Job Type"
+                    />
                     {errors.jobType && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.jobType}
@@ -686,23 +769,28 @@ export default function JobCreate({
                     )}
                   </div>
                   <div>
-                    <label className="block mb-6 font-bold">
+                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Experience Level
                     </label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
-                      value={experience}
-                      onChange={(e) => {
-                        setExperience(e.target.value);
+                    <Select
+                      value={
+                        experience
+                          ? { value: experience, label: experience }
+                          : null
+                      }
+                      onChange={(option) => {
+                        setExperience(option?.value || "");
                         clearError("experience");
                       }}
-                    >
-                      <option>Select Experience</option>
-                      <option value="0">No Previous Experience</option>
-                      <option value="0-1">0-1 years</option>
-                      <option value="1-3">1-3 years</option>
-                      <option value="3-5">3-5 years</option>
-                    </select>
+                      options={[
+                        { value: "0", label: "No Previous Experience" },
+                        { value: "0-1", label: "0-1 years" },
+                        { value: "1-3", label: "1-3 years" },
+                        { value: "3-5", label: "3-5 years" },
+                      ]}
+                      styles={customStyles}
+                      placeholder="Select Experience"
+                    />
                     {errors.experience && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.experience}
@@ -713,22 +801,30 @@ export default function JobCreate({
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div>
-                    <label className="block mb-6 font-bold">
+                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Workplace Type
                     </label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
-                      value={workplace}
-                      onChange={(e) => {
-                        setWorkplace(e.target.value);
+                    <Select
+                      value={
+                        workplace
+                          ? {
+                              value: workplace,
+                              label: workplace.replace("_", "-"),
+                            }
+                          : null
+                      }
+                      onChange={(option) => {
+                        setWorkplace(option?.value || "");
                         clearError("workplace");
                       }}
-                    >
-                      <option value="">Select Job Workplace</option>
-                      <option value="REMOTE">Remote</option>
-                      <option value="HYBRID">Hybrid</option>
-                      <option value="ON_SITE">On-Site</option>
-                    </select>
+                      options={[
+                        { value: "REMOTE", label: "Remote" },
+                        { value: "HYBRID", label: "Hybrid" },
+                        { value: "ON_SITE", label: "On-Site" },
+                      ]}
+                      styles={customStyles}
+                      placeholder="Select Job Workplace"
+                    />
                     {errors.workplace && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.workplace}
@@ -736,18 +832,21 @@ export default function JobCreate({
                     )}
                   </div>
                   <div>
-                    <label className="block mb-6 font-bold">Job Location</label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md px-4 py-4 custom-select"
-                      value={location}
-                      onChange={(e) => {
-                        setLocation(e.target.value);
+                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                      Job Location
+                    </label>
+                    <Select
+                      value={
+                        location ? { value: location, label: location } : null
+                      }
+                      onChange={(option) => {
+                        setLocation(option?.value || "");
                         clearError("location");
                       }}
-                    >
-                      <option>Select location</option>
-                      <option value="Islamabad">Islamabad</option>
-                    </select>
+                      options={[{ value: "Islamabad", label: "Islamabad" }]}
+                      styles={customStyles}
+                      placeholder="Select Location"
+                    />
                     {errors.location && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.location}
@@ -757,7 +856,9 @@ export default function JobCreate({
                 </div>
 
                 <div className="mb-4">
-                  <label className="block mb-4 font-bold">Job Status</label>
+                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    Job Status
+                  </label>
                   <div className="flex gap-4">
                     {[
                       { label: "Active", value: "Active" },
@@ -786,15 +887,15 @@ export default function JobCreate({
                   )}
                 </div>
 
-                <div className="flex justify-end mt-10">
+                <div className="fixed bottom-10 right-0 w-1/2 p-4">
                   <button
                     type="button"
-                    className={`flex items-center justify-center gap-2 text-white w-full py-3 rounded-md mr-6 cursor-pointer 
-    ${
-      loading
-        ? "bg-gray-400 cursor-not-allowed"
-        : "bg-[#16968F] hover:bg-emerald-700"
-    }`}
+                    className={`flex items-center justify-center gap-2 text-white w-full py-3 rounded-md cursor-pointer 
+      ${
+        loading
+          ? "bg-gray-400 cursor-not-allowed"
+          : "bg-[#16968F] hover:bg-emerald-700"
+      }`}
                     onClick={handleSubmit}
                     disabled={loading}
                   >
@@ -808,7 +909,7 @@ export default function JobCreate({
                           width={20}
                           height={20}
                         />
-                        {jobToEdit ? "Update Job" : "Post Job"}
+                        {jobToEdit ? "Save changes" : "Post Job"}
                       </>
                     )}
                   </button>
@@ -853,7 +954,7 @@ export default function JobCreate({
                 <div className="flex justify-left">
                   <button
                     onClick={addQuestion}
-                    className="bg-[#16968F] text-white px-4 py-2 rounded-md cursor-pointer"
+                    className="bg-[#16968F] text-white px-8 py-2 rounded-md cursor-pointer"
                   >
                     Add Question
                   </button>

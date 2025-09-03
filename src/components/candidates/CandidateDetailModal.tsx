@@ -6,6 +6,9 @@ interface Props {
   isOpen: boolean;
 }
 
+const truncateWithEllipsis = (str: string, maxLength: number) =>
+  str.length > maxLength ? str.slice(0, maxLength - 3) + "..." : str;
+
 export default function CandidateDetailModal({
   candidate,
   onClose,
@@ -15,7 +18,7 @@ export default function CandidateDetailModal({
 
   return (
     <div className="fixed inset-0 flex justify-center items-center z-50">
-      <div className="bg-white w-[800px] max-w-2xl rounded-lg p-6 relative shadow-lg overflow-y-auto h-[450px]">
+      <div className="bg-white w-[800px] max-w-2xl rounded-lg p-6 relative shadow-lg overflow-y-auto h-[500px]">
         <button
           className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl"
           onClick={onClose}
@@ -24,104 +27,123 @@ export default function CandidateDetailModal({
           <img src="/icons/cross-icon.svg" alt="Close" width={15} height={15} />
         </button>
 
-        <h2 className="text-2xl text-[#0E0E2C] mb-2">{candidate.fullName}</h2>
+        <h2 className="text-2xl text-Black mb-2">{candidate.fullName}</h2>
 
-        <div className="flex gap-20 mb-2">
-          <div className="flex items-center gap-2 text-sm text-black">
-            <img
-              src="/icons/location-icon.svg"
-              alt="Location"
-              width={14}
-              height={14}
-            />
+        <div className="flex gap-14 mb-2">
+          <div className="flex items-center gap-2 text-sm text-[#0C0C0C] w-[160px]">
+            <span className="w-4 flex-shrink-0 flex justify-center">
+              <img
+                src="/icons/location2-icon.svg"
+                alt="Location"
+                width={12}
+                height={12}
+              />
+            </span>
             <span>{candidate.location}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-black">
-            <img
-              src="/icons/mail-icon.svg"
-              alt="Email"
-              width={14}
-              height={14}
-            />
-            <span>{candidate.email}</span>
+
+          <div className="flex items-center gap-2 text-sm text-black w-[350px]">
+            <span className="w-4 flex-shrink-0 flex justify-center">
+              <img
+                src="/icons/mail-icon.svg"
+                alt="Email"
+                width={14}
+                height={14}
+                className="max-w-[350px]"
+              />
+            </span>
+            <span className="truncate max-w-[200px]">{candidate.email}</span>
           </div>
         </div>
 
         <div className="flex gap-14 mb-4">
-          <div className="flex items-center gap-2 text-sm text-black">
-            <img
-              src="/icons/phone-icon.svg"
-              alt="Phone"
-              width={14}
-              height={14}
-            />
-            <span>{candidate.phoneNumber}</span>
+          <div className="flex items-center gap-2 text-sm text-black w-[160px]">
+            <span className="w-4 flex-shrink-0 flex justify-center">
+              <img
+                src="/icons/phone-icon.svg"
+                alt="Phone"
+                width={14}
+                height={14}
+              />
+            </span>
+            <span>+{candidate.phoneNumber}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-black">
-            <img
-              src="/icons/linkedin-icon.svg"
-              alt="LinkedIn"
-              width={14}
-              height={14}
-            />
+
+          <div className="flex items-center gap-2 text-sm text-black w-[350px]">
+            <span className="w-4 flex-shrink-0 flex justify-center">
+              <img
+                src="/icons/linkedin-icon.svg"
+                alt="LinkedIn"
+                width={16}
+                height={16}
+              />
+            </span>
             <a
               href={candidate.linkedinProfile}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:underline"
+              className="hover:underline truncate max-w-[350px]"
             >
               {candidate.linkedinProfile}
             </a>
           </div>
         </div>
 
-        <div className="flex items-center text-sm justify-between text-black mb-4">
-          <div className="flex items-center gap-2">
-            <img src="/icons/cv-icon.svg" alt="CV" width={16} height={16} />
-            <span className="text-gray-600">
-              Candidate's CV:&nbsp;&nbsp;&nbsp;&nbsp;
-              <span className="text-black">
-                {candidate.cvUrl.split("/").pop()}
-              </span>
-            </span>
+        <div className="bg-white font-sans text-gray-900 flex">
+          <div className="w-full max-w-5xl bg-white p-2 rounded-xl">
+            <div className="flex text-lg mb-4">
+              <div className="flex items-center gap-4">
+                <img src="/icons/cv-icon.svg" alt="CV" width={20} />
+                <span className="text-neutral-500 text-base font-normal leading-snug">
+                  Candidate's CV:
+                </span>
+              </div>
+              <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-16">
+                <span className="text-sm font-medium text-gray-800 truncate">
+                  {candidate.cvUrl?.split("/").pop()}
+                </span>
+                <a
+                  href={candidate.cvUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-black text-white flex items-center justify-center rounded-md w-[85px] py-2 text-xs font-normal"
+                >
+                  View CV
+                </a>
+              </div>
+            </div>
+
+            <div className="flex text-lg">
+              <div className="flex items-center gap-4">
+                <img
+                  src="/icons/link-icon.svg"
+                  alt="Portfolio"
+                  width={20}
+                  height={20}
+                />
+                <span className="text-neutral-500 text-base font-normal leading-snug">
+                  Portfolio Link:
+                </span>
+              </div>
+
+              <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
+                <span className="text-sm font-medium text-gray-800 truncate">
+                  {truncateWithEllipsis(candidate.portfolio, 40)}
+                </span>
+                <a
+                  href={candidate.portfolio}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-black flex items-center justify-center text-white rounded-md w-[85px] py-2 text-xs font-normal"
+                >
+                  View Link
+                </a>
+              </div>
+            </div>
           </div>
-          <a
-            href={candidate.cvUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/90 border rounded-lg bg-black py-2 px-3 text-[11.55px]"
-          >
-            View CV
-          </a>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-black mb-4">
-          <div className="flex items-center gap-2">
-            <img
-              src="/icons/link-icon.svg"
-              alt="Portfolio"
-              width={16}
-              height={16}
-            />
-            <span className="text-gray-600">
-              Portfolio
-              Link:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              <span className="break-words text-black">
-                {candidate.portfolio}
-              </span>
-            </span>
-          </div>
-          <a
-            href={candidate.portfolio}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/90 border rounded-lg bg-black py-2 px-3 text-[11px]"
-          >
-            View Link
-          </a>
-        </div>
-
-        <div className="flex gap-10 text-sm text-black mb-6">
+        <div className="flex gap-10 text-sm text-black mb-2 mt-4 p-2">
           <div className="flex items-center gap-2">
             <img
               src="/icons/salary-icon.svg"
@@ -129,7 +151,7 @@ export default function CandidateDetailModal({
               width={16}
               height={16}
             />
-            <span className="text-gray-600">
+            <span className="text-neutral-500 text-base font-normal leading-snug pl-4">
               Current Salary:&nbsp;&nbsp;&nbsp;
               <span className="text-black ml-2">
                 {candidate.currentSalary} PKR{" "}
@@ -137,7 +159,7 @@ export default function CandidateDetailModal({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">
+            <span className="text-neutral-500 text-base font-normal leading-snug">
               Expected Salary:&nbsp;&nbsp;&nbsp;{" "}
               <span className="text-black">
                 {candidate.expectedSalary} PKR{" "}
@@ -146,20 +168,22 @@ export default function CandidateDetailModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-black mb-4">
+        <div className="flex items-center gap-2 text-sm text-black mb-2 p-2">
           <img
             src="/icons/timer-icon.svg"
             alt="Notice Period"
             width={16}
             height={16}
           />
-          <span className="text-gray-600 flex items-center">
+          <span className="flex items-center text-neutral-500 text-base font-normal font-['Product_Sans'] leading-snug pl-4">
             Notice Period:
-            <span className="text-black ml-6">{candidate.noticePeriod}</span>
+            <span className="text-[#000000] ml-6">
+              {candidate.noticePeriod}
+            </span>
           </span>
         </div>
 
-        <div className="text-sm text-black mb-2">
+        <div className="text-sm text-black mb-2 mt-4">
           <div className="flex items-start gap-2 mb-1">
             <img
               src="/icons/questions-icon.svg"
@@ -167,9 +191,8 @@ export default function CandidateDetailModal({
               width={16}
               height={16}
             />
-            Application Questions:
           </div>
-          <ul className="ml-6 list-disc text-gray-600">
+          <ol className="ml-6 list-disc justify-start text-neutral-500 text-base font-normal leading-snug">
             {Array.isArray(candidate.applicationQuestions) ? (
               candidate.applicationQuestions.map((q, index) => (
                 <li key={index}>{q.label}</li>
@@ -177,7 +200,7 @@ export default function CandidateDetailModal({
             ) : (
               <li>{candidate.applicationQuestions}</li>
             )}
-          </ul>
+          </ol>
         </div>
       </div>
     </div>

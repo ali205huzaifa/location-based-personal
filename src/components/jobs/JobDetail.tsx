@@ -1,23 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
+import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
 import ClipLoader from "react-spinners/ClipLoader";
+import Swal from "sweetalert2";
 import JobProfileTab from "./JobProfileTab";
 import JobAssesmentForm from "./JobAssesmentForm";
 import JobEvaluationForm from "./JobEvaluationForm";
-import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
-import Swal from "sweetalert2";
-
 import { motion, AnimatePresence } from "framer-motion";
+import { Pagination } from "antd";
+import "antd/dist/reset.css";
 
 const listVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const itemVariants = {
@@ -29,49 +25,52 @@ const itemVariants = {
 export default function JobDetailView() {
   const navigate = useNavigate();
   const { id } = useParams();
+
   const [job, setJob] = useState<any>(null);
   const [candidates, setCandidates] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("");
-  const [activeTab, setActiveTab] = useState("Candidate Profile");
-  const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
+
+  const [activeTab, setActiveTab] = useState("Candidate Profile");
+  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 5;
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("");
+
+  const [statusFilter, setStatusFilter] = useState("");
+  const [genderFilter, setGenderFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+
+  const [tempStatus, setTempStatus] = useState("");
+  const [tempGender, setTempGender] = useState("");
+  const [tempLocation, setTempLocation] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [genderFilter, setGenderFilter] = useState<string>("");
-  const [locationFilter, setLocationFilter] = useState<string>("");
-
-  const resetFilters = () => {
-    setStatusFilter("");
-    setGenderFilter("");
-    setLocationFilter("");
-  };
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!id) return;
 
-    const fetchData = async () => {
+    const fetchJob = async () => {
       setLoading(true);
       try {
-        const [jobRes, applicationsRes] = await Promise.all([
+        const [jobRes, unreadRes] = await Promise.all([
           JobsAPI.getById(id),
-          JobsAPI.getApplicationsByJob(id),
+          JobsAPI.readUnreadCount(id),
         ]);
-
         setJob(jobRes.data);
-        setCandidates(applicationsRes.data.data);
+        setUnreadCount(unreadRes.data?.unread || 0);
       } catch (err: any) {
-        console.error("Failed to load job/candidates", err);
-
+        console.error(err);
         Swal.fire({
           icon: "error",
-          title: "Failed to Load Data",
-          text:
-            err?.response?.data?.message ||
-            err?.message ||
-            "Something went wrong while fetching job details or candidates.",
+          title: "Failed to load job",
+          text: err?.message || "Something went wrong.",
           confirmButtonColor: "#16968F",
         });
       } finally {
@@ -79,38 +78,39 @@ export default function JobDetailView() {
       }
     };
 
-    fetchData();
+    fetchJob();
   }, [id]);
 
-  const fetchCandidates = async () => {
+  const fetchCandidates = async (page: number = currentPage) => {
+    if (!id) return;
     try {
       setListLoading(true);
 
       const params: Record<string, any> = {
         jobId: id,
+        page,
+        limit: pageSize,
       };
 
       if (searchTerm.trim()) params.candidateName = searchTerm;
       if (statusFilter) params.status = statusFilter;
       if (genderFilter) params.candidateGender = genderFilter;
       if (locationFilter) params.candidateLocation = locationFilter;
-
-      params.sort = sortOption ? Number(sortOption) : -1;
+      if (sortOption) params.sort = Number(sortOption);
 
       const res = await CandidatesAPI.getAll(params);
-      const arr = Array.isArray(res.data.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-        ? res.data
-        : [];
+      const data = Array.isArray(res.data.data) ? res.data.data : [];
+      setCandidates(data);
 
-      setCandidates(arr);
+      setCurrentPage(res.data.currentPage || page);
+      setTotalPages(res.data.totalPages || 1);
+      setTotalItems(res.data.totalItems || data.length);
     } catch (err) {
-      console.error("Error fetching candidates:", err);
+      console.error(err);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to fetch candidates. Please try again.",
+        text: "Failed to fetch candidates",
         confirmButtonColor: "#16968F",
       });
       setCandidates([]);
@@ -120,29 +120,36 @@ export default function JobDetailView() {
   };
 
   useEffect(() => {
-    if (!searchTerm.trim()) return;
+    fetchCandidates(currentPage);
+  }, [currentPage, statusFilter, genderFilter, locationFilter, sortOption]);
 
-    const delayDebounce = setTimeout(() => {
-      fetchCandidates();
-    }, 1000);
-
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => setCurrentPage(1), 500);
     return () => clearTimeout(delayDebounce);
   }, [searchTerm]);
 
-  useEffect(() => {
-    if (!searchTerm.trim()) return;
+  const handleSelectCandidate = async (app: any) => {
+    setSelectedApplication(app);
+    setActiveTab("Candidate Profile");
 
-    const delayDebounce = setTimeout(() => {
-      fetchCandidates();
-    }, 1000);
+    if (!app.isRead) {
+      try {
+        await JobsAPI.UpdateUnreadCountByJobId(app._id, {
+          isRead: true,
+          readAt: new Date().toISOString(),
+        });
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+      } catch (err) {
+        console.error("Failed to mark as read", err);
+      }
+    }
+  };
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    if (!sortOption) return;
-    fetchCandidates();
-  }, [sortOption]);
+  const resetFilters = () => {
+    setTempStatus("");
+    setTempGender("");
+    setTempLocation("");
+  };
 
   if (loading) {
     return (
@@ -162,7 +169,6 @@ export default function JobDetailView() {
         <div className="text-sm text-blue-600 ml-10 capitalize">
           {job.department?.replace(/_/g, " ").toLowerCase()}
         </div>
-
         <div className="flex flex-wrap justify-between items-start mt-1">
           <div className="flex items-center gap-2">
             <button
@@ -182,8 +188,7 @@ export default function JobDetailView() {
               #{job._id.slice(-6)}
             </span>
           </div>
-
-          <div className="ml-auto flex items-center gap-4 text-sm text-gray-700">
+          <div className="ml-auto flex items-center gap-8 text-sm text-gray-700">
             <span>Status: {job.status}</span>
             <span className="flex items-center gap-1">
               Posted By:
@@ -192,19 +197,66 @@ export default function JobDetailView() {
             </span>
           </div>
         </div>
-
         <div className="flex flex-wrap gap-4 ml-10 text-sm mt-3 text-gray-900">
-          <span className="capitalize">
+          <span className="capitalize text-slate-900 text-base font-normal">
             {job.jobType.replace(/_/g, " ").toLowerCase()}
-          </span>{" "}
-          |<span>{job.experienceLevel} Level</span> |
-          <span className="capitalize">{job.workplaceType.toLowerCase()}</span>{" "}
-          |<span>{job.totalPositions} Positions</span> |
-          <span>{job.location}</span>
+          </span>
+
+          <img
+            src="/icons/line.svg"
+            alt="separator"
+            className="w-px h-4 bg-slate-900 mt-1"
+          />
+
+          <span className=" capitalize text-slate-900 text-base font-normal">
+            {job.experienceLevel} Yrs Experience
+          </span>
+
+          <img
+            src="/icons/line.svg"
+            alt="separator"
+            className="w-px h-4 bg-slate-900 mt-1"
+          />
+
+          <span className="capitalize text-slate-900 text-base font-normal">
+            {job.workplaceType.toLowerCase()}
+          </span>
+
+          <img
+            src="/icons/line.svg"
+            alt="separator"
+            className="w-px h-4 bg-slate-900 mt-1"
+          />
+
+          <span className="text-slate-900 text-base font-normal">
+            {job.totalPositions} Positions
+          </span>
+
+          <img
+            src="/icons/line.svg"
+            alt="separator"
+            className="w-px h-4 bg-slate-900 mt-1"
+          />
+
+          <span className="text-slate-900 text-base font-normal">
+            {job.location}
+          </span>
+
+          <img
+            src="/icons/line.svg"
+            alt="separator"
+            className="w-px h-4 bg-slate-900 mt-1"
+          />
+
+          <span className="capitalize text-slate-900 text-base font-normal">
+            {job.gender.toLowerCase() === "other"
+              ? "Both genders"
+              : job.gender.toLowerCase()}
+          </span>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+      <div className="flex flex-1 overflow-hidden p-4 gap-8">
         <div className="w-[340px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
           <div className="flex items-center justify-between border rounded-lg px-4 py-2 mb-4">
             <div className="flex gap-2 w-full max-w-sm">
@@ -221,7 +273,6 @@ export default function JobDetailView() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-
             <div className="flex items-center gap-4 text-sm">
               <img
                 src="/icons/filtering-icon.svg"
@@ -241,10 +292,14 @@ export default function JobDetailView() {
             </div>
           </div>
 
-          <div className="text-sm mb-2 py-2 border-t border-b border-gray-300">
-            Total {candidates.length} Applicants
+          <div className="flex justify-between items-center text-sm mb-2 py-2 border-t border-b border-gray-300">
+            <span>Total {totalItems} Applicants</span>
+            <span className="justify-start text-neutral-600 text-xs font-normal leading-snug">
+              Unread ( {unreadCount} )
+            </span>
           </div>
-          <div className="h-[400px] overflow-y-auto pr-1">
+
+          <div className="h-[600px] overflow-y-auto pr-1">
             {listLoading ? (
               <div className="flex justify-center items-center py-10">
                 <ClipLoader size={35} color="#16968F" loading />
@@ -266,15 +321,12 @@ export default function JobDetailView() {
                     return (
                       <motion.li
                         key={app._id}
-                        onClick={() => {
-                          setSelectedApplication(app);
-                          setActiveTab("Candidate Profile");
-                        }}
-                        className={`bg-white p-3 shadow-sm cursor-pointer border-b border-gray-300 ${
+                        onClick={() => handleSelectCandidate(app)}
+                        className={`p-3 cursor-pointer border-b border-gray-300 ${
                           selectedApplication?._id === app._id
-                            ? "bg-blue-50"
+                            ? "opacity-10 bg-stone-100"
                             : "hover:bg-gray-100"
-                        }`}
+                        } ${!app.isRead ? "border-l-4 border-teal-600" : ""}`}
                         variants={itemVariants}
                         whileHover={{
                           scale: 1.02,
@@ -287,23 +339,32 @@ export default function JobDetailView() {
                             {new Date(app.appliedAt).toLocaleDateString()}
                           </div>
                           <div
-                            className={`font-semibold ${
-                              app.status === "Interviewed"
-                                ? "text-green-600"
-                                : app.status === "Rejected"
-                                ? "text-red-500"
+                            className={`text-xs font-normal ${
+                              app.status === "INTERVIEW_SCHEDULED"
+                                ? "text-[#16968F]"
+                                : app.status === "REJECTED"
+                                ? "text-[#961616]"
                                 : app.status === "SHORTLISTED"
-                                ? "text-yellow-600"
-                                : app.status === "Send Offer Letter"
-                                ? "text-purple-600"
-                                : "text-gray-500"
+                                ? "text-[#A37302]"
+                                : app.status === "REVIEWED"
+                                ? "text-[#000000]"
+                                : app.status === "APPLIED"
+                                ? "text-[#000000]"
+                                : app.status === "SELECTED"
+                                ? "text-[#000000]"
+                                : "text-[#000000]"
                             }`}
                           >
-                            {app.status}
+                            {app.status
+                              .toLowerCase()
+                              .replace(/_/g, " ")
+                              .replace(/^\w/, (c: string) => c.toUpperCase())}
                           </div>
                         </div>
-                        <div className="text-sm font-medium">{c?.fullName}</div>
-                        <div className="text-xs text-blue-600 mt-2">
+                        <div className="text-black text-base font-medium">
+                          {c?.fullName}
+                        </div>
+                        <div className="text-indigo-700 text-sm">
                           {c?.currentLocation || "No City"}
                         </div>
                         <div className="flex items-center gap-1 mt-2">
@@ -313,8 +374,10 @@ export default function JobDetailView() {
                             width={15}
                             height={15}
                           />
-                          <div className="text-xs text-gray-700">
-                            {app.recruiterComment || "No comment"}
+                          <div className="justify-start text-neutral-500 text-xs font-medium urbanist leading-tight">
+                            {app.comments?.length > 0
+                              ? app.comments[app.comments.length - 1].text
+                              : "No comment"}
                           </div>
                         </div>
                       </motion.li>
@@ -323,6 +386,16 @@ export default function JobDetailView() {
                 </AnimatePresence>
               </motion.ul>
             )}
+          </div>
+
+          <div className="mt-4 flex justify-center">
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalItems}
+              onChange={(page) => setCurrentPage(page)}
+              className="mt-2"
+            />
           </div>
         </div>
 
@@ -338,12 +411,11 @@ export default function JobDetailView() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-5 py-2 rounded-t-md border-t border-l border-r text-sm font-medium transition-colors
-        ${
-          activeTab === tab
-            ? "border-teal-600 text-teal-600 bg-white"
-            : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
-        }`}
+                    className={`px-5 py-2 rounded-t-md text-sm font-medium transition-colors ${
+                      activeTab === tab
+                        ? "border-teal-600 text-teal-600 bg-white border"
+                        : "border-gray-300 text-gray-600 hover:border-teal-500 hover:text-teal-600"
+                    }`}
                   >
                     {tab}
                   </button>
@@ -357,10 +429,19 @@ export default function JobDetailView() {
                 />
               )}
               {activeTab === "Assessment Form" && (
-                <JobAssesmentForm applicationId={selectedApplication._id} />
+                <JobAssesmentForm
+                  applicationId={selectedApplication._id}
+                  assessmentData={selectedApplication.applicationAssessmentData}
+                  AssessmentDate={selectedApplication.applicationAssessmentDate}
+                />
               )}
               {activeTab === "Evaluation Form" && (
-                <JobEvaluationForm applicationId={selectedApplication._id} />
+                <JobEvaluationForm
+                  applicationId={selectedApplication._id}
+                  interviewerEvaluations={
+                    selectedApplication.interviewerEvaluations
+                  }
+                />
               )}
             </>
           ) : (
@@ -370,18 +451,27 @@ export default function JobDetailView() {
           )}
         </div>
       </div>
+
       {isFilterOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg p-6 w-[750px]">
-            <div className="flex justify-between items-center mb-4 border-b border-gray-400">
-              <h2 className="text-lg font-semibold">Filters</h2>
+            <div className="flex justify-between items-center mb-4 border-b outline-black/75">
+              <h2 className="justify-center text-slate-900 text-2xl font-normal leading-normal mb-2">
+                Filters
+              </h2>
               <button
                 onClick={() => {
                   setIsFilterOpen(false);
-                  fetchCandidates();
+                  setTempStatus("");
+                  setTempGender("");
+                  setTempLocation("");
+                  setStatusFilter("");
+                  setGenderFilter("");
+                  setLocationFilter("");
+                  setCurrentPage(1);
+                  fetchCandidates(1);
                 }}
               >
-                {" "}
                 <img
                   src="/icons/cross-icon.svg"
                   alt="List"
@@ -391,42 +481,42 @@ export default function JobDetailView() {
               </button>
             </div>
 
-            <h3 className="font-medium mb-4">Status Filter</h3>
+            <h3 className="justify-center text-neutral-600 text-lg font-normal leading-none mb-4">
+              Status Filter
+            </h3>
             <div className="grid grid-cols-3 gap-4 text-sm mb-6">
               {[
-                "APPLICANTS",
+                "APPLIED",
                 "REVIEWED",
                 "SHORTLISTED",
                 "INTERVIEW_SCHEDULED",
                 "SELECTED",
                 "REJECTED",
-              ].map((status) => {
-                const label = status
-                  .replace(/_/g, " ")
-                  .toLowerCase()
-                  .replace(/^\w/, (c) => c.toUpperCase());
-
-                return (
-                  <label
-                    key={status}
-                    className="flex items-center gap-4 accent-[#16968F]"
-                  >
-                    <input
-                      type="checkbox"
-                      value={status}
-                      checked={statusFilter === status}
-                      onChange={(e) =>
-                        setStatusFilter(e.target.checked ? e.target.value : "")
-                      }
-                    />
-                    {label}
-                  </label>
-                );
-              })}
+              ].map((status) => (
+                <label
+                  key={status}
+                  className="flex items-center gap-4 accent-[#16968F]"
+                >
+                  <input
+                    type="checkbox"
+                    value={status}
+                    checked={tempStatus === status}
+                    onChange={(e) =>
+                      setTempStatus(e.target.checked ? e.target.value : "")
+                    }
+                  />
+                  {status
+                    .replace(/_/g, " ")
+                    .toLowerCase()
+                    .replace(/^\w/, (c) => c.toUpperCase())}
+                </label>
+              ))}
             </div>
-            <div className="border-b border-gray-400" />
+            <div className="border-b outline-black/75" />
 
-            <h3 className="font-medium mb-4 mt-4">Gender</h3>
+            <h3 className="justify-center text-neutral-600 text-lg font-normal leading-none mb-4 mt-4">
+              Gender
+            </h3>
             <div className="flex gap-10 text-sm mb-6">
               {["MALE", "FEMALE", "OTHER"].map((gender) => (
                 <label
@@ -436,18 +526,20 @@ export default function JobDetailView() {
                   <input
                     type="checkbox"
                     value={gender}
-                    checked={genderFilter === gender}
+                    checked={tempGender === gender}
                     onChange={(e) =>
-                      setGenderFilter(e.target.checked ? e.target.value : "")
+                      setTempGender(e.target.checked ? e.target.value : "")
                     }
                   />
                   {gender.charAt(0) + gender.slice(1).toLowerCase()}
                 </label>
               ))}
             </div>
-            <div className="border-b border-gray-400" />
+            <div className="border-b outline-black/75" />
 
-            <h3 className="font-medium mb-4 mt-4">Location</h3>
+            <h3 className="justify-center text-neutral-600 text-lg font-normal leading-none mb-4 mt-4">
+              Location
+            </h3>
             <div className="flex gap-4 text-sm mb-6">
               {["Islamabad", "Rawalpindi"].map((loc) => (
                 <label
@@ -457,25 +549,30 @@ export default function JobDetailView() {
                   <input
                     type="checkbox"
                     value={loc}
-                    checked={locationFilter === loc}
+                    checked={tempLocation === loc}
                     onChange={(e) =>
-                      setLocationFilter(e.target.checked ? e.target.value : "")
+                      setTempLocation(e.target.checked ? e.target.value : "")
                     }
                   />
                   {loc}
                 </label>
               ))}
             </div>
-            <div className="border-b border-gray-400" />
 
-            <div className="flex justify-end gap-4 mt-4">
-              <button className="text-gray-600" onClick={resetFilters}>
+            <div className="flex justify-end gap-8 mt-4">
+              <button
+                className="justify-start text-black text-sm font-normal underline"
+                onClick={resetFilters}
+              >
                 Clear Filters
               </button>
               <button
-                className="bg-teal-600 text-white px-4 py-1 rounded"
+                className="bg-teal-600 text-white text-sm font-normal px-8 py-2 rounded"
                 onClick={() => {
-                  fetchCandidates();
+                  setStatusFilter(tempStatus);
+                  setGenderFilter(tempGender);
+                  setLocationFilter(tempLocation);
+                  setCurrentPage(1);
                   setIsFilterOpen(false);
                 }}
               >
