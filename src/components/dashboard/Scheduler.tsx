@@ -376,8 +376,11 @@ const ScheduleCard: React.FC = () => {
             Reset date
           </div>
         </div>
-        <div className="w-12 h-12 bg-indigo-500/10 rounded-[9.75px] inline-flex justify-center items-center">
-          <button onClick={() => setShowPopup(true)}>
+        <div
+          className="w-12 h-12 bg-indigo-500/10 rounded-[9.75px] inline-flex justify-center items-center cursor-pointer"
+          onClick={() => setShowPopup(true)}
+        >
+          <button>
             <img src="/icons/plus-icon.svg" alt="add" className="w-3 h-3" />
           </button>
         </div>
@@ -636,14 +639,14 @@ const ScheduleCard: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <label className="text-[#1C1C1C] text-sm font-normal w-[100px]">
-                Short Tagline:
+                Description:
               </label>
-              <input
-                type="text"
-                className="border rounded px-2 py-2 flex-1 border-zinc-400"
-                placeholder="Enter tagline"
+              <textarea
+                className="border rounded px-2 py-2 flex-1 border-zinc-400 resize-none"
+                placeholder="Enter descripton..."
                 value={formTagline}
                 onChange={(e) => setFormTagline(e.target.value)}
+                rows={3}
               />
             </div>
 

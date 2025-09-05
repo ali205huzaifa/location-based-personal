@@ -203,36 +203,14 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
       [{ font: [] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ script: "sub" }, { script: "super" }],
-      [{ list: "ordered" }, { list: "bullet" }],
-      [{ indent: "-1" }, { indent: "+1" }],
-      [{ align: [] }],
-      ["blockquote", "code-block"],
-      ["clean"],
+      ["bold", "italic", "underline"],
     ],
     imageResize: {
       parchment: Quill.import("parchment"),
     },
   };
 
-  const quillFormats = [
-    "header",
-    "font",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "list",
-    "bullet",
-    "indent",
-    "color",
-    "background",
-    "code-block",
-    "align",
-    "script",
-  ];
+  const quillFormats = ["header", "font", "bold", "italic", "underline"];
 
   return (
     <div className="mt-6 relative">

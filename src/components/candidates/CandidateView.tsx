@@ -21,7 +21,10 @@ export interface Candidate {
   cvUrl: string;
   portfolio: string;
   noticePeriod: string;
-  applicationQuestions: string;
+  applicationQuestions: {
+    label: string;
+    answer: string | null;
+  }[];
 }
 
 function buildCandidateFilters({
@@ -143,21 +146,62 @@ export default function CandidateView() {
 
       const res = await CandidatesAPI.getAll(params);
 
-      const transformed = res.data.data.map((app: any) => ({
-        fullName: app.candidate.fullName,
-        email: app.candidate.email,
-        location: app.candidate.currentLocation,
-        currentSalary: app.candidate.currentSalary,
-        expectedSalary: app.candidate.expectedSalary,
-        createdAt: new Date(app.createdAt).toLocaleDateString(),
-        jobTitle: app.job.title,
-        phoneNumber: app.candidate.phoneNumber,
-        linkedinProfile: app.candidate.linkedinProfile,
-        cvUrl: app.candidate.cvUrl,
-        portfolio: app.candidate.portfolio,
-        noticePeriod: app.candidate.noticePeriod,
-        applicationQuestions: app.job.applicationQuestions,
-      }));
+      const SKIPPED_LABELS = [
+        "Current Salary",
+        "Expected Salary",
+        "Notice Period",
+      ];
+
+      const transformed = res.data.data.map((app: any) => {
+        const jobQA = app.job.applicationQuestions.map((q: any) => {
+          let answer = null;
+
+          switch (q.label) {
+            case "Current Salary":
+              answer = app.candidate.currentSalary;
+              break;
+            case "Expected Salary":
+              answer = app.candidate.expectedSalary;
+              break;
+            case "Notice Period":
+              answer = app.candidate.noticePeriod;
+              break;
+            case "Reason for switching":
+              answer = app.candidate.whySwitch;
+              break;
+            default:
+              answer = null;
+          }
+
+          return { label: q.label, answer };
+        });
+
+        const additionalQA =
+          app.additionalQuestions?.map((q: any) => ({
+            label: q.question,
+            answer: q.answer,
+          })) || [];
+
+        const qa = [...jobQA, ...additionalQA].filter(
+          (q) => q.answer && !SKIPPED_LABELS.includes(q.label)
+        );
+
+        return {
+          fullName: app.candidate.fullName,
+          email: app.candidate.email,
+          location: app.candidate.currentLocation,
+          currentSalary: app.candidate.currentSalary,
+          expectedSalary: app.candidate.expectedSalary,
+          createdAt: new Date(app.createdAt).toLocaleDateString(),
+          jobTitle: app.job.title,
+          phoneNumber: app.candidate.phoneNumber,
+          linkedinProfile: app.candidate.linkedinProfile,
+          cvUrl: app.candidate.cvUrl,
+          portfolio: app.candidate.portfolio,
+          noticePeriod: app.candidate.noticePeriod,
+          applicationQuestions: qa,
+        };
+      });
 
       setCandidates(transformed);
       setTotalPages(res.data.totalPages || 1);
@@ -257,6 +301,7 @@ export default function CandidateView() {
   const handlePrevPage = () => {
     if (currentPage > 1) fetchCandidates(currentPage - 1, candidateName);
   };
+
   return (
     <div className="">
       <div className="px-6">

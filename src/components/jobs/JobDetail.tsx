@@ -138,6 +138,15 @@ export default function JobDetailView() {
           isRead: true,
           readAt: new Date().toISOString(),
         });
+
+        setCandidates((prev: any[]) =>
+          prev.map((candidate) =>
+            candidate._id === app._id
+              ? { ...candidate, isRead: true, readAt: new Date().toISOString() }
+              : candidate
+          )
+        );
+
         setUnreadCount((prev) => Math.max(prev - 1, 0));
       } catch (err) {
         console.error("Failed to mark as read", err);
@@ -219,7 +228,7 @@ export default function JobDetailView() {
           />
 
           <span className="capitalize text-slate-900 text-base font-normal">
-            {job.workplaceType.toLowerCase()}
+            {job.workplaceType.replace(/_/g, "-").toLowerCase()}
           </span>
 
           <img
@@ -326,7 +335,7 @@ export default function JobDetailView() {
                           selectedApplication?._id === app._id
                             ? "opacity-10 bg-stone-100"
                             : "hover:bg-gray-100"
-                        } ${!app.isRead ? "border-l-4 border-teal-600" : ""}`}
+                        } ${!app.isRead ? "border-l-2 border-teal-600" : ""}`}
                         variants={itemVariants}
                         whileHover={{
                           scale: 1.02,
@@ -428,13 +437,23 @@ export default function JobDetailView() {
                   onStatusChange={fetchCandidates}
                 />
               )}
-              {activeTab === "Assessment Form" && (
+              {activeTab === "Assessment Form" && selectedApplication && (
                 <JobAssesmentForm
                   applicationId={selectedApplication._id}
                   assessmentData={selectedApplication.applicationAssessmentData}
                   AssessmentDate={selectedApplication.applicationAssessmentDate}
+                  candidateDetails={{
+                    name: selectedApplication?.candidate?.fullName || "—",
+                    email: selectedApplication?.candidate?.email || "—",
+                    phone: selectedApplication?.candidate?.phoneNumber || "—",
+                    gender: selectedApplication?.candidate?.gender || "—",
+                    location:
+                      selectedApplication?.candidate?.currentLocation || "—",
+                    positionApplied: selectedApplication?.job?.title || "—",
+                  }}
                 />
               )}
+
               {activeTab === "Evaluation Form" && (
                 <JobEvaluationForm
                   applicationId={selectedApplication._id}

@@ -8,17 +8,17 @@ interface Props {
 
 export default function CandidateRowDisplay({ candidates, onView }: Props) {
   return (
-    <div className="bg-white rounded-b-lg shadow overflow-auto p-4">
+    <div className="bg-white rounded-b-lg shadow overflow-auto">
       <table className="w-full text-left border-collapse">
-        <thead className="bg-gray-100 text-gray-400">
+        <thead className="bg-gray-100 text-[#8B8B8B] text-zinc-500 text-base leading-relaxed border-b border-[#D0D0D0]">
           <tr>
-            <th className="p-4">Candidate Name</th>
-            <th className="p-4">Job Applied</th>
-            <th className="p-4">Email Address</th>
-            <th className="p-4">Location</th>
-            <th className="p-4">Current - Expected Salary</th>
-            <th className="p-4">Applied Date</th>
-            <th className="p-4">Action</th>
+            <th className="p-4 font-normal">Candidate Name</th>
+            <th className="p-4 font-normal">Job Applied</th>
+            <th className="p-4 font-normal">Email Address</th>
+            <th className="p-4 font-normal">Location</th>
+            <th className="p-4 font-normal">Current - Expected Salary</th>
+            <th className="p-4 font-normal">Applied Date</th>
+            <th className="p-4 font-normal">Action</th>
           </tr>
         </thead>
 
@@ -51,7 +51,6 @@ export default function CandidateRowDisplay({ candidates, onView }: Props) {
                 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 whileHover={{
-                  scale: 1.01,
                   boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
                   zIndex: 5,
                 }}
@@ -62,12 +61,13 @@ export default function CandidateRowDisplay({ candidates, onView }: Props) {
                 <td className="p-4">{candidate.email}</td>
                 <td className="p-4">{candidate.location}</td>
                 <td className="p-4">
-                  {candidate.currentSalary} PKR - {candidate.expectedSalary} PKR
+                  {(candidate.currentSalary ?? 0).toLocaleString()} PKR -{" "}
+                  {(candidate.expectedSalary ?? 0).toLocaleString()} PKR
                 </td>
                 <td className="p-4">{candidate.createdAt}</td>
-                <td className="p-4 flex items-center justify-center">
+                <td className="px-6">
                   <button
-                    className="cursor-pointer"
+                    className="flex items-center justify-center cursor-pointer"
                     onClick={() => onView(candidate)}
                   >
                     <img

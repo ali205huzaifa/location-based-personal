@@ -37,9 +37,11 @@ const JobEvaluationForm: React.FC<JobEvaluationFormProps> = ({
   interviewerEvaluations,
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const handleSendForm = async () => {
     try {
+      setIsSending(true);
       const payload = {
         interviewerEvaluationDate: new Date().toISOString(),
       };
@@ -59,6 +61,8 @@ const JobEvaluationForm: React.FC<JobEvaluationFormProps> = ({
         text: err?.response?.data?.message?.message || "Failed to send form.",
         confirmButtonColor: "#16968F",
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -183,7 +187,7 @@ const JobEvaluationForm: React.FC<JobEvaluationFormProps> = ({
         </h2>
         <div className="flex gap-2">
           <button
-            className="flex items-center gap-2 px-3 py-2 bg-[#16968F] text-white text-sm rounded hover:bg-indigo-700 transition"
+            className="flex items-center gap-2 px-3 py-2 bg-[#16968F] text-white text-sm rounded hover:bg-teal-700 transition"
             onClick={() => setShowModal(true)}
           >
             <img
@@ -196,14 +200,15 @@ const JobEvaluationForm: React.FC<JobEvaluationFormProps> = ({
           <button
             className="flex items-center gap-2 py-2 px-4 bg-[#16968F] text-white text-sm rounded hover:bg-teal-700 transition"
             onClick={handleSendForm}
+            disabled={isSending}
           >
             <img
               src="/icons/mail-icon2.svg"
               alt="Export"
-              width={20}
-              height={20}
+              width={16}
+              height={16}
             />
-            Send Form
+            <span>{isSending ? "Sending..." : "Send Form"}</span>
           </button>
           <button
             className="flex items-center gap-2 py-2 px-4 bg-[#16968F] text-white text-sm rounded hover:bg-teal-700 transition"

@@ -112,15 +112,15 @@ const UserRowDisplay: React.FC<Props> = ({
           <ClipLoader color="#16968F" size={50} />
         </div>
       ) : (
-        <div className="bg-white rounded-b-lg shadow-lg overflow-auto p-4">
+        <div className="bg-white rounded-b-lg shadow-lg overflow-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 text-[#8B8B8B] text-sm border-b border-gray-300">
+            <thead className="bg-gray-100 text-[#8B8B8B] text-zinc-500 text-base leading-relaxed border-b border-[#D0D0D0]">
               <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Role</th>
-                <th className="p-4">Last Updated</th>
-                <th className="p-4 text-center">Action</th>
+                <th className="p-4 font-normal">Name</th>
+                <th className="p-4 font-normal">Email</th>
+                <th className="p-4 font-normal">Role</th>
+                <th className="p-4 font-normal">Last Updated</th>
+                <th className="p-4 font-normal text-center">Action</th>
               </tr>
             </thead>
             <tbody>

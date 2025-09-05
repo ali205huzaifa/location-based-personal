@@ -26,6 +26,13 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
     return new Date(value).toLocaleDateString("en-GB");
   };
 
+  function toSlug(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
   if (jobs.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-red-500 text-lg font-bold">
@@ -39,7 +46,8 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
       {jobs.map((job, i) => (
         <div
           key={i}
-          className="bg-white rounded-xl p-5 flex flex-col border border-[#EBEBEB] hover:shadow-md"
+          className="bg-white rounded-xl p-5 flex flex-col border border-[#EBEBEB] hover:shadow-md cursor-pointer"
+          onClick={() => navigate(`/jobs/${job.id}`)}
         >
           <div className="flex justify-between items-center mb-2">
             <p className="text-gray-500 text-sm">
@@ -65,7 +73,10 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
               className={`${
                 canEditJob ? "cursor-pointer" : "opacity-50 cursor-not-allowed"
               }`}
-              onClick={() => canEditJob && onEditJob(job)}
+              onClick={(e) => {
+                e.stopPropagation();
+                canEditJob && onEditJob(job);
+              }}
             />
           </h3>
 
@@ -107,12 +118,20 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
             </div>
 
             <img
-              src="/icons/grid-arrow.svg"
-              alt="Arrow Icon"
-              width={20}
-              height={20}
-              className="text-gray-500 cursor-pointer"
-              onClick={() => navigate(`/jobs/${job.id}`)}
+              src="/icons/link-icon.svg"
+              alt="Public Link Icon"
+              width={24}
+              height={24}
+              className="cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                const slug = toSlug(job.title);
+                const jobId = job.id;
+                window.open(
+                  `https://careers-sandbox.irsolutions.tech/careers/${slug}?id=${jobId}&tab=overview`,
+                  "_blank"
+                );
+              }}
             />
           </div>
         </div>

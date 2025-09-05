@@ -6,7 +6,6 @@ import { useHasPermission } from "../../hooks/hasPermissions";
 import EmailModal from "./JobEmailModal";
 
 const actions = [
-  { label: "Applied", value: "APPLIED" },
   { label: "Reviewed", value: "REVIEWED" },
   { label: "Shortlisted", value: "SHORTLISTED" },
   { label: "Interview Scheduled", value: "INTERVIEW_SCHEDULED" },
@@ -34,8 +33,8 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
   );
 
   const handleSelect = async (option: any) => {
+    if (!option || option.value === selected?.value) return;
     setSelected(option);
-    if (!option) return;
 
     try {
       await JobsAPI.UpdateApplicantStatusById(application._id, {
@@ -71,12 +70,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
     setSelected(actions.find((a) => a.value === application.status) || null);
   }, [application]);
 
-  const excludedLabels = [
-    "Current Salary",
-    "Expected Salary",
-    "Notice Period",
-    "Reason for switching",
-  ];
+  const excludedLabels = ["Current Salary", "Expected Salary", "Notice Period"];
 
   return (
     <div className="text-sm text-black space-y-4">
@@ -99,7 +93,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
               options={actions}
               isDisabled={!canEditJob}
               isSearchable={false}
-              placeholder="Select status..."
+              placeholder="Select status"
               styles={{
                 control: (base, state) => ({
                   ...base,
@@ -110,6 +104,11 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
                   cursor: canEditJob ? "pointer" : "not-allowed",
                   minHeight: "38px",
                   outline: "none",
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  color: "white",
+                  fontWeight: 500,
                 }),
                 singleValue: (base) => ({
                   ...base,
@@ -143,6 +142,8 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
             <EmailModal
               candidateEmail={candidate.email}
               candidateName={candidate.fullName}
+              applicationId={application._id}
+              jobTitle={application.job.title}
               onClose={() => setShowEmailModal(false)}
             />
           )}
@@ -226,7 +227,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
                 href={candidate.cvUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-black text-white rounded-md py-2 px-4 text-xs font-semibold hover:bg-gray-800 transition-colors duration-200"
+                className="bg-black text-white flex items-center justify-center rounded-md w-[85px] py-2 text-xs font-normal"
               >
                 View CV
               </a>
@@ -247,7 +248,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
                 href={`${candidate.portfolio}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-black text-white rounded-md py-2 px-4 text-xs font-semibold hover:bg-gray-800 transition-colors duration-200"
+                className="bg-black text-white flex items-center justify-center rounded-md w-[85px] py-2 text-xs font-normal"
               >
                 View Link
               </a>
@@ -285,29 +286,57 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
       </div>
 
       {application.job?.applicationQuestions?.length > 0 && (
-        <div>
-          <div className="flex items-start gap-4 text-lg p-2">
-            <img
-              src="/icons/questions-icon.svg"
-              alt="Application Questions"
-              width={20}
-              height={20}
-            />
-          </div>
-          <ol className="ml-6 list-disc text-gray-600 space-y-2 mt-2 text-lg">
-            {application.job.applicationQuestions
-              .filter((q: any) => !excludedLabels.includes(q.label))
-              .map((q: any, index: number) => (
-                <li key={index}>
-                  <span className="font-medium text-black">{q.label}</span>
-                  {application.answers?.[index] && (
-                    <div className="ml-4 mt-1 text-gray-700">
-                      Answer: {application.answers[index]}
-                    </div>
+        <div className="space-y-4 mt-3">
+          {application.job.applicationQuestions
+            .filter((q: any) => !excludedLabels.includes(q.label))
+            .map((q: any, index: number) => {
+              let answer: string | null = null;
+
+              switch (q.label) {
+                case "Current Salary":
+                  answer = application.candidate?.currentSalary;
+                  break;
+                case "Expected Salary":
+                  answer = application.candidate?.expectedSalary;
+                  break;
+                case "Notice Period":
+                  answer = application.candidate?.noticePeriod;
+                  break;
+                case "Reason for switching":
+                  answer = application.candidate?.whySwitch;
+                  break;
+                default:
+                  const additional = application.additionalQuestions?.find(
+                    (a: any) => a.question === q.label
+                  );
+                  answer = additional?.answer || null;
+                  break;
+              }
+
+              return (
+                <div key={index} className="flex items-start gap-3">
+                  {index === 0 && (
+                    <img
+                      src="/icons/questions-icon.svg"
+                      alt="Application Questions"
+                      width={20}
+                      height={20}
+                      className="mt-1"
+                    />
                   )}
-                </li>
-              ))}
-          </ol>
+                  {index !== 0 && <div className="w-5" />}
+
+                  <div>
+                    <p className="text-neutral-500 text-base font-normal leading-snug">
+                      {q.label}
+                    </p>
+                    <p className="text-black text-base font-normal leading-tight">
+                      {answer || "—"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
         </div>
       )}
 

@@ -441,6 +441,7 @@ export default function JobCreate({
                     type="text"
                     placeholder="Enter Job Title"
                     className="border border-gray-300 rounded-md px-4 py-3 w-full"
+                    maxLength={25}
                     value={designation}
                     onChange={(e) => {
                       setDesignation(e.target.value);
@@ -461,7 +462,15 @@ export default function JobCreate({
                   <div className="border border-gray-300 rounded-md bg-white">
                     <ReactQuill
                       theme="snow"
-                      className="h-[220px] [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-toolbar]:bg-white overflow-hidden"
+                      className="
+    [&_.ql-toolbar]:sticky 
+    [&_.ql-toolbar]:top-0 
+    [&_.ql-toolbar]:z-10 
+    [&_.ql-toolbar]:bg-white 
+    overflow-hidden 
+    [&_.ql-container]:max-h-[220px] 
+    [&_.ql-container]:overflow-y-auto
+  "
                       value={jobDescription}
                       onChange={(value) => {
                         setJobDescription(value);
@@ -633,7 +642,13 @@ export default function JobCreate({
                   <Select
                     value={
                       department
-                        ? { value: department, label: department }
+                        ? {
+                            value: department,
+                            label: department
+                              .replace(/_/g, " ")
+                              .toLowerCase()
+                              .replace(/\b\w/g, (char) => char.toUpperCase()),
+                          }
                         : null
                     }
                     onChange={(option) => {
@@ -684,11 +699,11 @@ export default function JobCreate({
                         clearError("openings");
                       }}
                       options={[
-                        { value: "2", label: "1-2" },
-                        { value: "4", label: "2-4" },
-                        { value: "6", label: "5-6" },
-                        { value: "8", label: "6-8" },
-                        { value: "10", label: "8-10" },
+                        { value: "1", label: "1" },
+                        { value: "2", label: "2" },
+                        { value: "3", label: "3" },
+                        { value: "4", label: "4" },
+                        { value: "5", label: "5" },
                       ]}
                       styles={customStyles}
                       placeholder="Select Job Openings"
@@ -746,7 +761,13 @@ export default function JobCreate({
                     <Select
                       value={
                         jobType
-                          ? { value: jobType, label: jobType.replace("_", " ") }
+                          ? {
+                              value: jobType,
+                              label: jobType
+                                .replace(/_/g, " ")
+                                .toLowerCase()
+                                .replace(/\b\w/g, (char) => char.toUpperCase()),
+                            }
                           : null
                       }
                       onChange={(option) => {
@@ -762,6 +783,7 @@ export default function JobCreate({
                       styles={customStyles}
                       placeholder="Select Job Type"
                     />
+
                     {errors.jobType && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.jobType}
@@ -775,7 +797,13 @@ export default function JobCreate({
                     <Select
                       value={
                         experience
-                          ? { value: experience, label: experience }
+                          ? {
+                              value: experience,
+                              label: experience
+                                .replace(/_/g, " ")
+                                .toLowerCase()
+                                .replace(/\b\w/g, (char) => char.toUpperCase()),
+                            }
                           : null
                       }
                       onChange={(option) => {
@@ -809,7 +837,10 @@ export default function JobCreate({
                         workplace
                           ? {
                               value: workplace,
-                              label: workplace.replace("_", "-"),
+                              label: workplace
+                                .replace(/_/g, "-")
+                                .toLowerCase()
+                                .replace(/\b\w/g, (char) => char.toUpperCase()),
                             }
                           : null
                       }
@@ -887,7 +918,7 @@ export default function JobCreate({
                   )}
                 </div>
 
-                <div className="fixed bottom-10 right-0 w-1/2 p-4">
+                <div className="fixed bottom-10 right-0 w-1/2 px-8">
                   <button
                     type="button"
                     className={`flex items-center justify-center gap-2 text-white w-full py-3 rounded-md cursor-pointer 

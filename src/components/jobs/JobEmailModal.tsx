@@ -7,22 +7,28 @@ import JobsAPI from "../../api/jobsApi/JobsAPI";
 
 interface EmailModalProps {
   candidateEmail?: string;
+  applicationId?: string;
   candidateName?: string;
+  jobTitle?: string;
   onClose: () => void;
 }
 
 const EmailModal: React.FC<EmailModalProps> = ({
   candidateEmail,
+  applicationId,
   candidateName,
+  jobTitle,
   onClose,
 }) => {
   const [emailTo, setEmailTo] = useState(candidateEmail || "");
-  const [emailType, setEmailType] = useState("INTERVIEW_SCHEDULED");
+  const [emailType, setEmailType] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [body, setBody] = useState(`
     <p>Dear <strong>${candidateName || "[Candidate Name]"}</strong>,</p>
-    <p>We are pleased to invite you for an interview for the <strong>[Job Title]</strong> position at IR Solutions.</p>
+    <p>We are pleased to invite you for an interview for the <strong>${
+      jobTitle || ["Job Title"]
+    }</strong> position at IR Solutions.</p>
     <p>📅 Date: [${date || "Select Date"}]</p>
     <p>🕒 Time: [${time || "Select Time"}]</p>
     <p>📍 Mode: [Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.]</p>
@@ -70,6 +76,15 @@ const EmailModal: React.FC<EmailModalProps> = ({
     );
   };
 
+  const updateBodyWithMode = (newMode: string) => {
+    const modeText =
+      newMode === "ONLINE"
+        ? "Online via Zoom (Paste Meeting Link here)."
+        : "Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.";
+
+    setBody((prev) => prev.replace(/📍 Mode:[^<]*/i, `📍 Mode: ${modeText}`));
+  };
+
   const handleSendEmail = async () => {
     if (!emailTo || selectedInterviewers.length === 0) {
       Swal.fire(
@@ -80,19 +95,24 @@ const EmailModal: React.FC<EmailModalProps> = ({
       return;
     }
 
+    if (!applicationId) {
+      Swal.fire("Error", "Missing application ID!", "error");
+      return;
+    }
+
     try {
       setLoading(true);
 
       const payload = {
         email: emailTo,
-        emailType,
+        emailType: "INTERVIEW_SCHEDULED",
         interviewerIds: selectedInterviewers.map((i) => i.id),
         interviewDate: date,
         interviewTime: time,
         body,
       };
 
-      await JobsAPI.SendCandidateEmail(payload);
+      await JobsAPI.SendCandidateEmail(applicationId, payload);
 
       Swal.fire("Success", "Email sent successfully!", "success");
       onClose();
@@ -109,7 +129,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
-      <div className="bg-white w-[850px] rounded-lg p-6 relative">
+      <div className="bg-white w-[900px] rounded-lg p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-black"
@@ -133,18 +153,19 @@ const EmailModal: React.FC<EmailModalProps> = ({
         </div>
 
         <div className="mb-4 flex items-center gap-4">
-          <label className="w-28 font-medium">Email Type:</label>
+          <label className="w-28 font-medium">Interview Mode:</label>
           <select
             value={emailType}
-            onChange={(e) => setEmailType(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2"
+            onChange={(e) => {
+              const newType = e.target.value;
+              setEmailType(newType);
+              updateBodyWithMode(newType);
+            }}
+            className="border border-gray-300 rounded px-8 py-2"
           >
-            <option value="APPLICANTS">Applicants</option>
-            <option value="REVIEWED">Reviewed</option>
-            <option value="SHORTLISTED">Shortlisted</option>
-            <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
-            <option value="SELECTED">Selected</option>
-            <option value="REJECTED">Rejected</option>
+            <option value="">Select Mode</option>
+            <option value="ON_SITE">On-Site</option>
+            <option value="ONLINE">Online</option>
           </select>
 
           <button
@@ -168,7 +189,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                 setDate(e.target.value);
                 updateBodyWithDateTime(e.target.value, time);
               }}
-              className="border border-gray-300 rounded px-3 py-2 pr-10"
+              className="border border-gray-300 rounded px-6 py-2 pr-10 p-1"
             />
             <img
               src="/icons/calender-icon.svg"
@@ -192,7 +213,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                 setTime(e.target.value);
                 updateBodyWithDateTime(date, e.target.value);
               }}
-              className="border border-gray-300 rounded px-3 py-2 pr-10"
+              className="border border-gray-300 rounded px-12 py-2 pr-10 p-1"
             />
             <img
               src="/icons/timer-icon.svg"
@@ -220,7 +241,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
         </div>
 
         {selectedInterviewers.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-4 text-black text-sm font-normal">
             <strong>Selected Interviewers:</strong>{" "}
             {selectedInterviewers.map((i) => i.name).join(", ")}
           </div>

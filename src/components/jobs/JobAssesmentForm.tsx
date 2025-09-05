@@ -1,6 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import Swal from "sweetalert2";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
+import jsPDF from "jspdf";
+
+interface CandidateDetails {
+  name: string;
+  email: string;
+  phone?: string;
+  gender?: string;
+  location?: string;
+  positionApplied?: string;
+}
 
 interface JobAssessmentFormProps {
   applicationId: string;
@@ -10,15 +20,21 @@ interface JobAssessmentFormProps {
     answer: string;
     _id: string;
   }[];
+  candidateDetails?: CandidateDetails;
 }
 
 const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
   applicationId,
+  candidateDetails,
   AssessmentDate,
   assessmentData,
 }) => {
+  const [isSending, setIsSending] = useState(false);
+
   const handleSendForm = async () => {
     try {
+      setIsSending(true);
+
       await JobsAPI.SendAssessmentForm(applicationId, {});
 
       const payload = {
@@ -30,15 +46,90 @@ const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
         icon: "success",
         title: "Form Sent",
         text: "The assessment form has been sent to the candidate successfully!",
-        showConfirmButton: true,
+        confirmButtonColor: "#16968F",
       });
     } catch (err: any) {
       Swal.fire({
         icon: "error",
         title: "Error",
         text: err?.response?.data?.message || "Failed to send form.",
+        confirmButtonColor: "#16968F",
       });
+    } finally {
+      setIsSending(false);
     }
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    let y = 20;
+
+    if (candidateDetails) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text(`Candidate Name: ${candidateDetails.name}`, 14, y);
+      y += 7;
+      doc.text(`Email: ${candidateDetails.email}`, 14, y);
+      y += 7;
+      doc.text(`Phone: ${candidateDetails.phone || "—"}`, 14, y);
+      y += 7;
+      doc.text(`Gender: ${candidateDetails.gender || "—"}`, 14, y);
+      y += 7;
+      doc.text(`Location: ${candidateDetails.location || "—"}`, 14, y);
+      y += 7;
+      doc.text(
+        `Position Applied: ${candidateDetails.positionApplied || "—"}`,
+        14,
+        y
+      );
+      y += 10;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Applicant Assessment Form", 14, y);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Application ID: ${applicationId}`, 14, y);
+    y += 8;
+
+    doc.text(
+      `Form Send Date: ${
+        AssessmentDate ? new Date(AssessmentDate).toLocaleString() : "—"
+      }`,
+      14,
+      y
+    );
+    y += 15;
+
+    if (assessmentData && assessmentData.length > 0) {
+      assessmentData.forEach((item, index) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${index + 1}. ${item.question}`, 14, y);
+        y += 7;
+
+        doc.setFont("helvetica", "normal");
+        const answer =
+          item.answer && item.answer.trim() !== ""
+            ? item.answer
+            : "No answer provided";
+
+        const splitAnswer = doc.splitTextToSize(answer, 180);
+        doc.text(splitAnswer, 20, y);
+        y += splitAnswer.length * 7 + 5;
+
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+    } else {
+      doc.text("No assessment data available.", 14, y);
+    }
+
+    doc.save("Assessment_Form.pdf");
   };
 
   const isFilled =
@@ -50,13 +141,33 @@ const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
     <div className="p-4 bg-white rounded-md">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Applicant Assessment Form</h2>
-        <button
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition"
-          onClick={handleSendForm}
-        >
-          <img src="/icons/mail-icon2.svg" alt="Send" width={15} height={15} />
-          <span>Send Form</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="flex items-center gap-2 px-4 py-3 rounded bg-[#16968F] text-white text-sm rounded hover:bg-teal-700 transition"
+            onClick={handleSendForm}
+            disabled={isSending}
+          >
+            <img
+              src="/icons/mail-icon2.svg"
+              alt="Send"
+              width={15}
+              height={15}
+            />
+            <span>{isSending ? "Sending..." : "Send Form"}</span>
+          </button>
+          <button
+            className="flex items-center gap-2 py-2 px-4 bg-[#16968F] text-white text-sm rounded hover:bg-teal-700 transition"
+            onClick={handleExportPDF}
+          >
+            <img
+              src="/icons/export-icon.svg"
+              alt="Export"
+              width={20}
+              height={20}
+            />
+            Export PDF
+          </button>
+        </div>
       </div>
 
       <div className="flex justify-between items-center border-b border-gray-400 pb-2 mb-4">

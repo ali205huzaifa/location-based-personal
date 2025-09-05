@@ -66,7 +66,7 @@ export default function InterviewerRowDisplay({
   }
 
   return (
-    <div className="bg-white rounded-b-lg shadow-lg overflow-auto p-4">
+    <div className="bg-white rounded-b-lg shadow-lg overflow-auto">
       {data.length === 0 ? (
         <div className="flex justify-center items-center min-h-[150px]">
           <p className="text-red-500 font-medium text-lg">
@@ -75,12 +75,12 @@ export default function InterviewerRowDisplay({
         </div>
       ) : (
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 text-[#8B8B8B] uppercase text-sm">
+          <thead className="bg-gray-100 text-[#8B8B8B] text-zinc-500 text-base leading-relaxed border-b border-[#D0D0D0]">
             <tr>
-              <th className="p-4 font-medium">Interviewer Name</th>
-              <th className="p-4 font-medium">Email</th>
-              <th className="p-4 font-medium">Department</th>
-              <th className="p-4 font-medium text-center">Action</th>
+              <th className="p-4 font-normal">Interviewer Name</th>
+              <th className="p-4 font-normal">Email</th>
+              <th className="p-4 font-normal">Department</th>
+              <th className="p-4 font-normal text-center">Action</th>
             </tr>
           </thead>
 

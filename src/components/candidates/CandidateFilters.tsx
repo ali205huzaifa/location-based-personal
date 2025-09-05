@@ -182,21 +182,21 @@ export default function CandidateFilters({
           placeholder="By Gender"
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
           <span className="justify-start text-zinc-900 text-base font-normal leading-none">
             Current Salary
           </span>
 
-          <div className="relative w-[150px] sm:w-[200px] mt-2">
-            <div className="flex justify-between text-sm text-gray-700 mb-1 px-1">
+          <div className="relative w-[150px] sm:w-[200px]">
+            <div className="flex justify-between text-sm text-gray-700">
               <span>{currentSalary.toLocaleString()}</span>
               <span>{expectedSalary.toLocaleString()}</span>
             </div>
 
-            <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded" />
+            <div className="absolute top-6 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded" />
 
             <div
-              className="absolute top-1/2 transform -translate-y-1/2 h-1 bg-teal-600 rounded"
+              className="absolute top-6 transform -translate-y-1/2 h-1 bg-teal-600 rounded"
               style={{
                 left: `${
                   ((currentSalary - salaryMin) / (salaryMax - salaryMin)) * 100
@@ -219,7 +219,7 @@ export default function CandidateFilters({
                   Math.min(Number(e.target.value), expectedSalary - 1000)
                 )
               }
-              className="absolute w-full pointer-events-auto z-10"
+              className="absolute w-full pointer-events-auto z-10 mt-4"
             />
             <input
               type="range"
@@ -232,13 +232,8 @@ export default function CandidateFilters({
                   Math.max(Number(e.target.value), currentSalary + 1000)
                 )
               }
-              className="absolute w-full pointer-events-auto z-10"
+              className="absolute w-full pointer-events-auto z-10 mt-4"
             />
-
-            <div className="flex justify-between text-xs text-teal-600 mt-8">
-              <span>{salaryMin.toLocaleString()}</span>
-              <span>{salaryMax.toLocaleString()}</span>
-            </div>
           </div>
 
           <span className="justify-start text-zinc-900 text-base font-normal leading-none">

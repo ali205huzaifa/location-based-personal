@@ -183,24 +183,32 @@ export default function CandidateDetailModal({
           </span>
         </div>
 
-        <div className="text-sm text-black mb-2 mt-4">
-          <div className="flex items-start gap-2 mb-1">
-            <img
-              src="/icons/questions-icon.svg"
-              alt="Application Questions"
-              width={16}
-              height={16}
-            />
-          </div>
-          <ol className="ml-6 list-disc justify-start text-neutral-500 text-base font-normal leading-snug">
-            {Array.isArray(candidate.applicationQuestions) ? (
-              candidate.applicationQuestions.map((q, index) => (
-                <li key={index}>{q.label}</li>
-              ))
-            ) : (
-              <li>{candidate.applicationQuestions}</li>
-            )}
-          </ol>
+        <div className="space-y-4">
+          {candidate.applicationQuestions.map((q, i) => (
+            <div key={i} className="flex items-start gap-3">
+              {i === 0 ? (
+                <div className="flex-shrink-0 text-blue-500 mt-1">
+                  <img
+                    src="/icons/questions-icon.svg"
+                    alt="Application Questions"
+                    width={16}
+                    height={16}
+                  />
+                </div>
+              ) : (
+                <div className="w-4" />
+              )}
+
+              <div>
+                <p className="text-neutral-500 text-base font-normal leading-snug">
+                  {q.label}
+                </p>
+                <p className="text-black text-base font-normal leading-tight">
+                  {q.answer || "—"}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

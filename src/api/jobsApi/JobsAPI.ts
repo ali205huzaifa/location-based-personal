@@ -61,15 +61,18 @@ class JobsAPI {
     return axiosClient.post(`/applications/${id}/send-assessment-interviewers`, payload);
   }
 
-  static SendCandidateEmail(data: {
+  static SendCandidateEmail(
+    id: string,
+    data: {
       email: string;
       emailType: string;
       interviewerIds: string[];
       interviewDate: string;
       interviewTime: string;
       body: string;
-    }) {
-    return axiosClient.post(`/applications/send-email`, data);
+    }
+  ) {
+    return axiosClient.post(`/applications/${id}/send-email`, data);
   }
 
   static readUnreadCount(jobId: string) {

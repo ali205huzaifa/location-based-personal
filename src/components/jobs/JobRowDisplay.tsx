@@ -29,6 +29,13 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
     );
   }
 
+  function toSlug(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
   return (
     <div className="bg-white rounded-b-lg shadow overflow-auto">
       <table className="font-normal w-full text-left border-collapse">
@@ -98,14 +105,19 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
                     />
 
                     <img
-                      src="/icons/grid-arrow.svg"
-                      alt="Arrow Icon"
-                      width={16}
-                      height={16}
+                      src="/icons/link-icon.svg"
+                      alt="Public Link Icon"
+                      width={24}
+                      height={24}
                       className="cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/jobs/${job.id}`);
+                        const slug = toSlug(job.title);
+                        const jobId = job.id;
+                        window.open(
+                          `https://careers-sandbox.irsolutions.tech/careers/${slug}?id=${jobId}&tab=overview`,
+                          "_blank"
+                        );
                       }}
                     />
                   </div>
