@@ -265,8 +265,8 @@ export default function JobDetailView() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-4 gap-8">
-        <div className="w-[340px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
+      <div className="flex flex-1 p-4 gap-8">
+        <div className="w-[340px] h-[800px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
           <div className="flex items-center justify-between border rounded-lg px-4 py-2 mb-4">
             <div className="flex gap-2 w-full max-w-sm">
               <img
@@ -408,7 +408,7 @@ export default function JobDetailView() {
           </div>
         </div>
 
-        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg">
+        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg max-h-[800px]">
           {selectedApplication ? (
             <>
               <div className="flex gap-2 mb-4 border-b border-gray-400">

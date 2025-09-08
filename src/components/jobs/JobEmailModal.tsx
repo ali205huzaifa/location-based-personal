@@ -28,13 +28,13 @@ const EmailModal: React.FC<EmailModalProps> = ({
     <p>Dear <strong>${candidateName || "[Candidate Name]"}</strong>,</p>
     <p>We are pleased to invite you for an interview for the <strong>${
       jobTitle || ["Job Title"]
-    }</strong> position at IR Solutions.</p>
+    }</strong> position at IR Solutions.</p> <br>
     <p>📅 Date: [${date || "Select Date"}]</p>
     <p>🕒 Time: [${time || "Select Time"}]</p>
-    <p>📍 Mode: [Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.]</p>
-    <p>Please confirm your availability by replying to this email.</p>
+    <p>📍 Mode: [Select Interview Mode]</p> <br>
+    <p>Please confirm your availability by replying to this email.</p> <br>
     <p>Best regards,<br />IR Solutions HR Team.</p>
-  `);
+`);
 
   const [loading, setLoading] = useState(false);
   const [showSelectModal, setShowSelectModal] = useState(false);
@@ -77,12 +77,24 @@ const EmailModal: React.FC<EmailModalProps> = ({
   };
 
   const updateBodyWithMode = (newMode: string) => {
-    const modeText =
-      newMode === "ONLINE"
-        ? "Online via Zoom (Paste Meeting Link here)."
-        : "Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.";
+    let newModeContent;
+    let newCoordinatesContent = "";
 
-    setBody((prev) => prev.replace(/📍 Mode:[^<]*/i, `📍 Mode: ${modeText}`));
+    if (newMode === "ON_SITE") {
+      newModeContent = `📍 Mode: Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.`;
+      newCoordinatesContent = `<p>Location: <a href="https://www.google.com/maps?q=33.669322,72.999939" target="_blank">View on Google Maps</a></p>`;
+    } else if (newMode === "ONLINE") {
+      newModeContent = `📍 Mode: Online via Zoom (Paste Meeting Link here).`;
+    } else {
+      newModeContent = `📍 Mode: [Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.]`;
+    }
+
+    setBody((prev) =>
+      prev.replace(
+        /<p>📍 Mode:.*?<\/p>(?:<p>Location:.*?<\/p>)?/is,
+        `<p>${newModeContent}</p>${newCoordinatesContent}`
+      )
+    );
   };
 
   const handleSendEmail = async () => {
@@ -153,7 +165,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
         </div>
 
         <div className="mb-4 flex items-center gap-4">
-          <label className="w-28 font-medium">Interview Mode:</label>
+          <label className="w-28 font-medium ">Interview Mode:</label>
           <select
             value={emailType}
             onChange={(e) => {

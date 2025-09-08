@@ -1,15 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import NoteAPI from "../../api/notesApi/NotesAPI";
-import ReactQuill, { Quill } from "react-quill";
-import "react-quill/dist/quill.snow.css";
-import ImageResize from "quill-image-resize-module-react";
 import ClipLoader from "react-spinners/ClipLoader";
-
-Quill.register("modules/imageResize", ImageResize);
-const FontWeightStyle = Quill.import("attributors/style/font");
-FontWeightStyle.whitelist = ["normal", "medium", "semibold", "bold"];
-Quill.register(FontWeightStyle, true);
 
 interface NotesSectionProps {
   userId: string;
@@ -50,11 +42,15 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
   const handleSaveNote = async () => {
     if (!content.trim()) {
       Swal.fire({
-        title: "Error",
-        text: "Note content is empty!",
+        toast: true,
+        position: "top-right",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        title: "Note content is empty!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
+
       return;
     }
     try {
@@ -138,10 +134,13 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
   const handleUpdateNote = async () => {
     if (!editContent.trim()) {
       Swal.fire({
-        title: "Error",
-        text: "Note content is empty",
+        toast: true,
+        position: "top-right",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        title: "Note content is empty!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
       return;
     }
@@ -199,19 +198,6 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
     }
   };
 
-  const quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      [{ font: [] }],
-      ["bold", "italic", "underline"],
-    ],
-    imageResize: {
-      parchment: Quill.import("parchment"),
-    },
-  };
-
-  const quillFormats = ["header", "font", "bold", "italic", "underline"];
-
   return (
     <div className="mt-6 relative">
       {loading && (
@@ -223,20 +209,20 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
       <h2 className="text-[19.5px] mb-2">Notes</h2>
 
       <div className="rounded bg-white mb-3">
-        <ReactQuill
-          theme="snow"
-          className="h-[250px] w-full"
+        <textarea
+          aria-label="Note content"
+          className="h-[250px] w-full resize-none rounded border border-gray-200 p-3 focus:outline-none"
+          placeholder="Type your note"
           value={content}
-          onChange={setContent}
-          modules={quillModules}
-          formats={quillFormats}
+          onChange={(e) => setContent(e.target.value)}
         />
       </div>
+
       <div className="flex justify-end">
         <button
           onClick={handleSaveNote}
           disabled={loading}
-          className="px-12 py-3 bg-[#16968F] text-white rounded hover:bg-teal-700 mt-16 xl:mt-10 disabled:opacity-50 rounded-lg"
+          className="px-12 py-3 bg-[#16968F] text-white hover:bg-teal-700 disabled:opacity-50 rounded-lg"
         >
           Add a Note
         </button>
@@ -308,17 +294,16 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
 
       {isEditModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white rounded-lg w-[700px] h-[450px] p-4 relative">
+          <div className="bg-white rounded-lg w-[700px] h-[400px] p-4 relative">
             <h3 className="text-lg font-semibold mb-3">Edit Note</h3>
-            <ReactQuill
-              theme="snow"
+            <textarea
+              aria-label="Note content"
+              className="h-[250px] w-full resize-none rounded border border-gray-200 p-3 focus:outline-none"
+              placeholder="Type your note"
               value={editContent}
-              onChange={setEditContent}
-              modules={quillModules}
-              formats={quillFormats}
-              className="h-[250px] mb-4"
+              onChange={(e) => setEditContent(e.target.value)}
             />
-            <div className="flex justify-end gap-4 mt-20">
+            <div className="flex justify-end gap-4 mt-4">
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="px-4 py-2 border border-gray-300 text-black rounded hover:bg-gray-300"

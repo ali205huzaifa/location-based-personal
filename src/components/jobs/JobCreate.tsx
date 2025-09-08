@@ -433,7 +433,7 @@ export default function JobCreate({
 
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
+                <label className="block mb-2 justify-start text-zinc-900 text-base font-normal leading-loose">
                   Job title
                 </label>
                 <div className="mb-4">
@@ -455,8 +455,8 @@ export default function JobCreate({
                   )}
                 </div>
 
-                <div className="mb-6">
-                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
+                <div className="mb-4">
+                  <label className="block mb-2 justify-start text-zinc-900 text-base font-normal leading-loose">
                     Job Description
                   </label>
                   <div className="border border-gray-300 rounded-md bg-white">
@@ -470,6 +470,7 @@ export default function JobCreate({
     overflow-hidden 
     [&_.ql-container]:max-h-[220px] 
     [&_.ql-container]:overflow-y-auto
+    [&_.ql-editor]:min-h-[150px]
   "
                       value={jobDescription}
                       onChange={(value) => {
@@ -635,8 +636,8 @@ export default function JobCreate({
               />
 
               <div className="border-l border-gray-300 pl-8">
-                <div className="mb-8">
-                  <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                <div className="mb-6">
+                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                     Job Department
                   </label>
                   <Select
@@ -685,9 +686,9 @@ export default function JobCreate({
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-10">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       No. of Positions
                     </label>
                     <Select
@@ -717,7 +718,7 @@ export default function JobCreate({
                   </div>
 
                   <div>
-                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Gender Preference
                     </label>
                     <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md px-4 py-2 justify-center">
@@ -753,9 +754,9 @@ export default function JobCreate({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-10">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Job Type
                     </label>
                     <Select
@@ -791,7 +792,7 @@ export default function JobCreate({
                     )}
                   </div>
                   <div>
-                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Experience Level
                     </label>
                     <Select
@@ -827,9 +828,9 @@ export default function JobCreate({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-10">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Workplace Type
                     </label>
                     <Select
@@ -863,7 +864,7 @@ export default function JobCreate({
                     )}
                   </div>
                   <div>
-                    <label className="block mb-6 justify-start text-zinc-900 text-base font-normal leading-loose">
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Job Location
                     </label>
                     <Select

@@ -190,24 +190,26 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
           <span>+{candidate.phoneNumber}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-black w-[350px]">
-          <span className="w-4 flex-shrink-0 flex justify-center">
-            <img
-              src="/icons/linkedin-icon.svg"
-              alt="LinkedIn"
-              width={16}
-              height={16}
-            />
-          </span>
-          <a
-            href={candidate.linkedinProfile}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline truncate max-w-[350px]"
-          >
-            {candidate.linkedinProfile}
-          </a>
-        </div>
+        {candidate.linkedinProfile && (
+          <div className="flex items-center gap-2 text-sm text-black w-[350px]">
+            <span className="w-4 flex-shrink-0 flex justify-center">
+              <img
+                src="/icons/linkedin-icon.svg"
+                alt="LinkedIn"
+                width={16}
+                height={16}
+              />
+            </span>
+            <a
+              href={candidate.linkedinProfile}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline truncate max-w-[350px]"
+            >
+              {candidate.linkedinProfile}
+            </a>
+          </div>
+        )}
       </div>
 
       <div className="border-b border-gray-400"></div>
@@ -234,26 +236,28 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
             </div>
           </div>
 
-          <div className="flex text-lg">
-            <div className="flex items-center gap-4">
-              <img src="/icons/link-icon.svg" alt="Portfolio" width={20} />
-              <span>Portfolio Link:</span>
-            </div>
+          {candidate.portfolio && (
+            <div className="flex text-lg mt-3">
+              <div className="flex items-center gap-4">
+                <img src="/icons/link-icon.svg" alt="Portfolio" width={20} />
+                <span>Portfolio Link:</span>
+              </div>
 
-            <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
-              <span className="text-sm font-medium text-gray-800 truncate">
-                {candidate.portfolio}
-              </span>
-              <a
-                href={`${candidate.portfolio}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-black text-white flex items-center justify-center rounded-md w-[85px] py-2 text-xs font-normal"
-              >
-                View Link
-              </a>
+              <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
+                <span className="text-sm font-medium text-gray-800 truncate">
+                  {candidate.portfolio}
+                </span>
+                <a
+                  href={candidate.portfolio}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-black text-white flex items-center justify-center rounded-md w-[85px] py-2 text-xs font-normal"
+                >
+                  View Link
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

@@ -118,17 +118,17 @@ export default function JobGridDisplay({ jobs, onEditJob }: Props) {
             </div>
 
             <img
-              src="/icons/link-icon.svg"
+              src="/icons/redirect-icon.svg"
               alt="Public Link Icon"
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               className="cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 const slug = toSlug(job.title);
                 const jobId = job.id;
                 window.open(
-                  `https://careers-sandbox.irsolutions.tech/careers/${slug}?id=${jobId}&tab=overview`,
+                  `https://careers.irsolutions.tech/careers/${slug}?id=${jobId}&tab=overview`,
                   "_blank"
                 );
               }}
