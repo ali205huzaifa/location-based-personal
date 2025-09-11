@@ -80,3 +80,39 @@ export type Filters = {
   endDate: Date | null;
   status: string;
 };
+
+export type Country = {
+  _id: string;
+  name: string;
+  code: string;
+};
+
+export interface City {
+  _id: string;
+  name: string;
+  countryId?: string | Country;
+  country?: Country;            
+}
+
+export type ModalMode = "create" | "edit";
+
+export type Department = {
+  _id: string;
+  name: string;
+  description: string;
+};
+
+export type Skill = {
+  _id: string;
+  name: string;
+  departmentId: string;
+  department?: Department;
+};
+
+export type PageMeta = {
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export const defaultPageMeta: PageMeta = { page: 1, pageSize: 10, total: 0 };

@@ -24,10 +24,13 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
       setNotes(data);
     } catch {
       Swal.fire({
-        title: "Error",
         text: "Failed to fetch notes",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
       setNotes([]);
     } finally {
@@ -57,19 +60,25 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
       setLoading(true);
       await NoteAPI.CreateNote({ content });
       Swal.fire({
-        title: "Added",
         text: "Note added successfully!",
         icon: "success",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
       setContent("");
       await fetchNotes();
     } catch {
       Swal.fire({
-        title: "Error",
         text: "Failed to save note!",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);
@@ -89,18 +98,24 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
         });
       } else {
         Swal.fire({
-          title: "Not found",
           text: "Note not found",
           icon: "info",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
     } catch {
       Swal.fire({
-        title: "Error",
         text: "Failed to Fetch note!",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     }
   };
@@ -115,18 +130,24 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
         setIsEditModalOpen(true);
       } else {
         Swal.fire({
-          title: "Not found",
           text: "Note not found",
           icon: "info",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
     } catch {
       Swal.fire({
-        title: "Error",
         text: "Failed to Fetch note!",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     }
   };
@@ -147,17 +168,28 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
     try {
       setLoading(true);
       await NoteAPI.UpdateNote(editNoteId!, { content: editContent });
-      Swal.fire("Updated", "Note updated successfully!", "success");
+      Swal.fire({
+        text: "Note Updated successfully!",
+        icon: "success",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
       setIsEditModalOpen(false);
       setEditNoteId(null);
       setEditContent("");
       await fetchNotes();
     } catch {
       Swal.fire({
-        title: "Error",
         text: "Failed to delete note",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);
@@ -179,18 +211,24 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
         setLoading(true);
         await NoteAPI.DeleteNote(noteId);
         Swal.fire({
-          title: "Deleted",
           text: "Note deleted successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
         await fetchNotes();
       } catch {
         Swal.fire({
-          title: "Error",
           text: "Failed to delete note",
           icon: "error",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } finally {
         setLoading(false);

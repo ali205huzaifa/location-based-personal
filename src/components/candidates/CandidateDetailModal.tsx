@@ -6,8 +6,13 @@ interface Props {
   isOpen: boolean;
 }
 
-const truncateWithEllipsis = (str: string, maxLength: number) =>
-  str.length > maxLength ? str.slice(0, maxLength - 3) + "..." : str;
+const truncateWithEllipsis = (
+  str: string | undefined | null,
+  maxLength: number
+) => {
+  if (!str) return "";
+  return str.length > maxLength ? str.slice(0, maxLength - 3) + "..." : str;
+};
 
 export default function CandidateDetailModal({
   candidate,
@@ -69,24 +74,26 @@ export default function CandidateDetailModal({
             <span>+{candidate.phoneNumber}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-black w-[350px]">
-            <span className="w-4 flex-shrink-0 flex justify-center">
-              <img
-                src="/icons/linkedin-icon.svg"
-                alt="LinkedIn"
-                width={16}
-                height={16}
-              />
-            </span>
-            <a
-              href={candidate.linkedinProfile}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline truncate max-w-[350px]"
-            >
-              {candidate.linkedinProfile}
-            </a>
-          </div>
+          {candidate.linkedinProfile && (
+            <div className="flex items-center gap-2 text-sm text-black w-[350px]">
+              <span className="w-4 flex-shrink-0 flex justify-center">
+                <img
+                  src="/icons/linkedin-icon.svg"
+                  alt="LinkedIn"
+                  width={16}
+                  height={16}
+                />
+              </span>
+              <a
+                href={candidate.linkedinProfile}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline truncate max-w-[350px]"
+              >
+                {candidate.linkedinProfile}
+              </a>
+            </div>
+          )}
         </div>
 
         <div className="bg-white font-sans text-gray-900 flex">
@@ -113,33 +120,35 @@ export default function CandidateDetailModal({
               </div>
             </div>
 
-            <div className="flex text-lg">
-              <div className="flex items-center gap-4">
-                <img
-                  src="/icons/link-icon.svg"
-                  alt="Portfolio"
-                  width={20}
-                  height={20}
-                />
-                <span className="text-neutral-500 text-base font-normal leading-snug">
-                  Portfolio Link:
-                </span>
-              </div>
+            {candidate.portfolio && (
+              <div className="flex text-lg">
+                <div className="flex items-center gap-4">
+                  <img
+                    src="/icons/link-icon.svg"
+                    alt="Portfolio"
+                    width={20}
+                    height={20}
+                  />
+                  <span className="text-neutral-500 text-base font-normal leading-snug">
+                    Portfolio Link:
+                  </span>
+                </div>
 
-              <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
-                <span className="text-sm font-medium text-gray-800 truncate">
-                  {truncateWithEllipsis(candidate.portfolio, 40)}
-                </span>
-                <a
-                  href={candidate.portfolio}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-black flex items-center justify-center text-white rounded-md w-[85px] py-2 text-xs font-normal"
-                >
-                  View Link
-                </a>
+                <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
+                  <span className="text-sm font-medium text-gray-800 truncate">
+                    {truncateWithEllipsis(candidate.portfolio, 40)}
+                  </span>
+                  <a
+                    href={candidate.portfolio}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-black flex items-center justify-center text-white rounded-md w-[85px] py-2 text-xs font-normal"
+                  >
+                    View Link
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

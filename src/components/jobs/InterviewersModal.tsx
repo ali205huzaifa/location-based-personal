@@ -85,9 +85,12 @@ const InterviewersModal: React.FC<InterviewersModalProps> = ({
 
     Swal.fire({
       icon: "success",
-      title: "Interviewers Added",
       text: "Interviewers added successfully!",
-      showConfirmButton: true,
+      toast: true,
+      position: "top-right",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
     });
 
     onClose();

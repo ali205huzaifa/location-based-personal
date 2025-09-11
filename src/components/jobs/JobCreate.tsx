@@ -8,6 +8,8 @@ import JobsAPI from "../../api/jobsApi/JobsAPI";
 import Swal from "sweetalert2";
 import type { ApplicationQuestion, JobPayloadType } from "../../types/user";
 import ClipLoader from "react-spinners/ClipLoader";
+import deptSkillsAPI from "../../api/deptSkillsApi/deptSkillsAPI";
+import locationAPI from "../../api/locationApi/locationAPI";
 
 Quill.register("modules/imageResize", ImageResize);
 
@@ -25,7 +27,8 @@ type JobFormErrors = {
   jobType?: string;
   experience?: string;
   workplace?: string;
-  location?: string;
+  country?: string;
+  city?: string;
   jobStatus?: string;
 };
 
@@ -35,6 +38,32 @@ type JobCreateProps = {
   jobToEdit?: JobPayloadType | null;
   isEdit?: boolean;
 };
+
+interface SkillOption {
+  value: string;
+  label: string;
+}
+
+type Option = {
+  value: string;
+  label: string;
+};
+
+interface DepartmentApiResponse {
+  _id: string;
+  name: string;
+  description: string;
+}
+
+interface Country {
+  _id: string;
+  name: string;
+}
+
+interface City {
+  _id: string;
+  name: string;
+}
 
 export default function JobCreate({
   showModal,
@@ -49,21 +78,29 @@ export default function JobCreate({
   const [newQuestion, setNewQuestion] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [jobDescription, setJobDescription] = useState("");
+  const [availableSkills, setAvailableSkills] = useState<Option[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
-  const [department, setDepartment] = useState("");
+  const [departmentOptions, setDepartmentOptions] = useState<Option[]>([]);
+  const [department, setDepartment] = useState<string>("");
   const [openings, setOpenings] = useState("");
   const [jobType, setJobType] = useState("");
   const [experience, setExperience] = useState("");
   const [workplace, setWorkplace] = useState("");
-  const [location, setLocation] = useState("");
   const [jobStatus, setJobStatus] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const [countries, setCountries] = useState<Option[]>([]);
+  const [cities, setCities] = useState<Option[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   const [predefinedQuestions, setPredefinedQuestions] = useState({
     currentSalary: false,
@@ -83,6 +120,7 @@ export default function JobCreate({
 
   const validateForm = () => {
     const newErrors: JobFormErrors = {};
+
     if (!designation) newErrors.designation = "Please select Job Title";
     if (!jobDescription.trim())
       newErrors.jobDescription = "Please enter Job Description";
@@ -95,8 +133,11 @@ export default function JobCreate({
     if (!experience)
       newErrors.experience = "Please select Job Experience Level";
     if (!workplace) newErrors.workplace = "Please select Job Workplace Type";
-    if (!location) newErrors.location = "Please select Job Location";
+    if (!selectedCountry) newErrors.country = "Please select Job Country";
+    if (!selectedCity) newErrors.city = "Please select Job City";
+
     if (!jobStatus) newErrors.jobStatus = "Please select Job Status";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -116,7 +157,6 @@ export default function JobCreate({
     setJobType("");
     setExperience("");
     setWorkplace("");
-    setLocation("");
     setJobStatus("");
     setStartDate(getTodayDate());
     setEndDate(getNextMonthDate());
@@ -127,6 +167,10 @@ export default function JobCreate({
       noticePeriod: false,
       reasonForSwitching: false,
     });
+
+    setSelectedCountry("");
+    setSelectedCity("");
+    setCities([]);
   };
 
   const addQuestion = () => {
@@ -144,20 +188,6 @@ export default function JobCreate({
     }
   };
 
-  const handleSkillAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && skillInput.trim()) {
-      if (!skills.includes(skillInput.trim())) {
-        setSkills([...skills, skillInput.trim()]);
-        clearError("skills");
-      }
-      setSkillInput("");
-    }
-  };
-
-  const handleSkillRemove = (skillToRemove: string) => {
-    setSkills(skills.filter((skill) => skill !== skillToRemove));
-  };
-
   const handleQuestionEdit = (index: number) => {
     setNewQuestion(questions[index]);
     setEditIndex(index);
@@ -173,17 +203,19 @@ export default function JobCreate({
     const payload = {
       title: designation,
       description: jobDescription,
-      department,
+      departmentId: department,
       totalPositions: Number(openings),
       workplaceType: workplace,
       postingStartDate: new Date(startDate).toISOString(),
       postingEndDate: new Date(endDate).toISOString(),
-      requiredSkills: skills,
+      requiredSkillIds: skills,
       experienceLevel: experience,
       jobType,
-      location,
+      countryId: selectedCountry,
+      cityId: selectedCity,
       status: jobStatus,
       gender: selectedGender?.toUpperCase(),
+
       applicationQuestions: [
         ...Object.entries(predefinedQuestions)
           .filter(([_, val]) => val)
@@ -198,28 +230,33 @@ export default function JobCreate({
                 : "Reason for switching",
             fieldType: "TEXT",
             isRequired: true,
+            isDefault: true,
           })),
         ...questions.map((q) => ({
           label: q,
           fieldType: "TEXT",
           isRequired: true,
+          isDefault: false,
         })),
       ],
     };
 
     const apiCall = isEdit
-      ? JobsAPI.UpdateJobById(jobToEdit.id, payload)
+      ? JobsAPI.UpdateJobById(jobToEdit._id, payload)
       : JobsAPI.AddJob(payload);
 
     apiCall
       .then(() => {
         Swal.fire({
-          title: "Success!",
           text: isEdit
             ? "Job updated Successfully!"
             : "Job posted Successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
         }).then(() => {
           setShowModal(false);
           resetForm();
@@ -229,10 +266,13 @@ export default function JobCreate({
       .catch((err) => {
         console.error(err);
         Swal.fire({
-          title: "Error",
           text: "Something went wrong",
           icon: "error",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       })
       .finally(() => {
@@ -251,21 +291,51 @@ export default function JobCreate({
   };
 
   useEffect(() => {
+    if (isEdit && jobToEdit?.countryId?._id) {
+      const countryId = jobToEdit.countryId._id;
+
+      const fetchCountry = async () => {
+        try {
+          const res = await locationAPI.getCountryById(countryId);
+          const country = res.data;
+          const option = { value: country._id, label: country.name };
+          setCountries([option]);
+          setSelectedCountry(country._id);
+
+          setLoadingCities(true);
+          const cityRes = await locationAPI.getAllCities({
+            countryId: country._id,
+          });
+          const cityOptions: Option[] = cityRes.data.data.map((c: any) => ({
+            value: c._id,
+            label: c.name,
+          }));
+          setCities(cityOptions);
+
+          const cityId = jobToEdit.cityId?._id;
+          setSelectedCity(cityId || "");
+        } catch (err) {
+          console.error("Error fetching country or cities:", err);
+        } finally {
+          setLoadingCities(false);
+        }
+      };
+      fetchCountry();
+    }
+  }, [isEdit, jobToEdit]);
+  useEffect(() => {
     if (isEdit && jobToEdit) {
       setDesignation(jobToEdit.title || "");
       setJobDescription(jobToEdit.description || "");
-      setSkills(jobToEdit.requiredSkills || []);
-      setDepartment(jobToEdit.department || "");
-      setOpenings(String(jobToEdit.positions || ""));
+      setOpenings(jobToEdit.totalPositions || "");
       setSelectedGender(jobToEdit.gender || "");
-      setJobType(jobToEdit.type || "");
+      setJobType(jobToEdit.jobType || "");
       setExperience(jobToEdit.experienceLevel || "");
-      setWorkplace(jobToEdit.workArrangement || "");
-      setLocation(jobToEdit.location || "");
+      setWorkplace(jobToEdit.workplaceType || "");
       setJobStatus(jobToEdit.status || "Active");
       setStartDate(jobToEdit.postingStartDate?.split("T")[0] || getTodayDate());
       setEndDate(jobToEdit.postingEndDate?.split("T")[0] || getNextMonthDate());
-
+      setSelectedCountry(jobToEdit?.countryId?.name || "");
       setQuestions(
         (jobToEdit.applicationQuestions || [])
           .filter(
@@ -292,7 +362,6 @@ export default function JobCreate({
         noticePeriod: false,
         reasonForSwitching: false,
       };
-
       (jobToEdit.applicationQuestions || []).forEach(
         (q: ApplicationQuestion) => {
           if (q.label === "Current Salary") predefs.currentSalary = true;
@@ -302,10 +371,188 @@ export default function JobCreate({
             predefs.reasonForSwitching = true;
         }
       );
-
       setPredefinedQuestions(predefs);
     }
   }, [isEdit, jobToEdit]);
+
+  useEffect(() => {
+    if (isEdit && jobToEdit?.departmentId?._id) {
+      const deptId = jobToEdit.departmentId._id;
+
+      const fetchDepartment = async () => {
+        try {
+          const res = await deptSkillsAPI.getDepartmentById(deptId);
+          const dept = res.data;
+          const option = { value: dept._id, label: dept.name };
+
+          setDepartmentOptions((prev) => {
+            const exists = prev.some((d) => d.value === option.value);
+            return exists ? prev : [...prev, option];
+          });
+          console.log(dept);
+          setDepartment(dept._id);
+
+          const skillsRes = await deptSkillsAPI.getAllskills({
+            departmentId: dept._id,
+          });
+          const skillsFromAPI: Option[] = skillsRes.data.data.map(
+            (skill: any) => ({
+              value: skill._id,
+              label: skill.name,
+            })
+          );
+          setAvailableSkills(skillsFromAPI);
+
+          const skillIds = (jobToEdit.requiredSkillIds || []).map(
+            (s: any) => s._id
+          );
+          setSkills(skillIds);
+        } catch (err) {
+          console.error("Error fetching department or skills:", err);
+        }
+      };
+      fetchDepartment();
+    }
+  }, [isEdit, jobToEdit]);
+
+  useEffect(() => {
+    if (isEdit && jobToEdit) {
+      const deptId = jobToEdit.departmentId?._id;
+
+      if (deptId) {
+        const fetchDepartment = async () => {
+          try {
+            const res = await deptSkillsAPI.getDepartmentById(deptId);
+            const dept = res.data;
+            const option = { value: dept._id, label: dept.name };
+            setDepartmentOptions([option]);
+            setDepartment(dept._id);
+
+            const skillsRes = await deptSkillsAPI.getAllskills({
+              departmentId: dept._id,
+            });
+            const skillsFromAPI: Option[] = skillsRes.data.data.map(
+              (skill: any) => ({
+                value: skill._id,
+                label: skill.name,
+              })
+            );
+            setAvailableSkills(skillsFromAPI);
+
+            const skillIds = (jobToEdit.requiredSkillIds || []).map(
+              (s: any) => s._id
+            );
+            setSkills(skillIds);
+          } catch (err) {
+            console.error("Error fetching department or skills:", err);
+          }
+        };
+        fetchDepartment();
+      }
+    }
+  }, [isEdit, jobToEdit]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await deptSkillsAPI.getAlldept();
+        const departments: DepartmentApiResponse[] = res.data.data;
+
+        const options: Option[] = departments.map((dept) => ({
+          value: dept._id,
+          label: dept.name
+            .replace(/_/g, " ")
+            .toLowerCase()
+            .replace(/\b\w/g, (char: string) => char.toUpperCase()),
+        }));
+
+        setDepartmentOptions(options);
+      } catch (err) {
+        console.error("Error fetching departments", err);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (!department) {
+      setAvailableSkills([]);
+      setSkills([]);
+      return;
+    }
+
+    const fetchSkills = async () => {
+      try {
+        const res = await deptSkillsAPI.getAllskills({
+          departmentId: department,
+        });
+        const skillsFromAPI: Option[] = res.data.data.map((skill: any) => ({
+          value: skill._id,
+          label: skill.name,
+        }));
+        setAvailableSkills(skillsFromAPI);
+
+        setSkills((prev) =>
+          prev.filter((s) => skillsFromAPI.some((sk) => sk.value === s))
+        );
+      } catch (err) {
+        console.error("Error fetching skills:", err);
+      }
+    };
+
+    fetchSkills();
+  }, [department]);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setLoadingCountries(true);
+        const res = await locationAPI.getAllCountries();
+        const countriesData: Country[] = res.data.data;
+
+        const countryOptions: Option[] = countriesData.map((c) => ({
+          value: c._id,
+          label: c.name,
+        }));
+
+        setCountries(countryOptions);
+      } catch (err) {
+        console.error("Error fetching countries:", err);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCountry) return;
+
+    const fetchCities = async () => {
+      try {
+        setLoadingCities(true);
+        const res = await locationAPI.getAllCities({
+          countryId: selectedCountry,
+        });
+        const citiesData: City[] = res.data.data;
+
+        const cityOptions: Option[] = citiesData.map((c) => ({
+          value: c._id,
+          label: c.name,
+        }));
+
+        setCities(cityOptions);
+      } catch (err) {
+        console.error("Error fetching cities:", err);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+
+    fetchCities();
+  }, [selectedCountry]);
 
   const quillModules = {
     toolbar: [
@@ -409,7 +656,7 @@ export default function JobCreate({
                 <h2 className="text-black text-2xl font-normal leading-10 flex items-center gap-2">
                   Edit Job
                   <span className="text-gray-500 text-base">
-                    #{jobToEdit.id.slice(-6)}
+                    #{jobToEdit._id.slice(-6)}
                   </span>
                 </h2>
 
@@ -488,40 +735,22 @@ export default function JobCreate({
                   )}
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
+                  <label className="block mb-4 text-zinc-900 text-base font-normal leading-loose">
                     Required Skills
                   </label>
-                  <div className="border border-gray-300 rounded-md p-4">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="inline-flex items-center bg-[#D9D9D9] text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
-                        >
-                          {skill}
-                          <button
-                            type="button"
-                            onClick={() => handleSkillRemove(skill)}
-                            className="ml-2 -mr-1 h-4 w-4 flex items-center justify-center rounded-full hover:bg-gray-300 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-0"
-                          >
-                            <img
-                              src="/icons/Skills-cross-icon.svg"
-                              alt="Remove"
-                              className="h-2 w-2"
-                            />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyDown={handleSkillAdd}
-                      placeholder="Type Skill & press Enter"
-                      className="w-full focus:outline-none text-gray-700"
-                    />
-                  </div>
+                  <Select<SkillOption, true>
+                    isMulti
+                    options={availableSkills}
+                    value={availableSkills.filter((s: SkillOption) =>
+                      skills.includes(s.value)
+                    )}
+                    onChange={(selectedOptions) => {
+                      const selected = selectedOptions.map((o) => o.value);
+                      setSkills(selected);
+                    }}
+                    placeholder="Select Required Skills"
+                    isDisabled={!department}
+                  />
                   {errors.skills && (
                     <p className="text-red-500 text-sm mt-1">{errors.skills}</p>
                   )}
@@ -636,57 +865,36 @@ export default function JobCreate({
               />
 
               <div className="border-l border-gray-300 pl-8">
-                <div className="mb-6">
-                  <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
-                    Job Department
-                  </label>
-                  <Select
-                    value={
-                      department
-                        ? {
-                            value: department,
-                            label: department
-                              .replace(/_/g, " ")
-                              .toLowerCase()
-                              .replace(/\b\w/g, (char) => char.toUpperCase()),
-                          }
-                        : null
-                    }
-                    onChange={(option) => {
-                      setDepartment(option?.value || "");
-                      clearError("department");
-                    }}
-                    options={[
-                      {
-                        value: "MOBILE_APP_DEVELOPMENT",
-                        label: "Mobile Development",
-                      },
-                      { value: "HUMAN_RESOURCE", label: "Human Resource" },
-                      { value: "WEB_DEVELOPMENT", label: "Web Development" },
-                      { value: "MARKETING", label: "Marketing" },
-                      {
-                        value: "ARTIFICIAL_INTELLIGENCE",
-                        label: "Artificial Intelligence",
-                      },
-                      {
-                        value: "BUSINESS_DEVELOPMENT",
-                        label: "Business Development",
-                      },
-                      { value: "UI/UX", label: "UI/UX" },
-                      { value: "GAME_DEVELOPMENT", label: "Game Development" },
-                    ]}
-                    styles={customStyles}
-                    placeholder="Select Department"
-                  />
-
-                  {errors.department && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.department}
-                    </p>
-                  )}
-                </div>
-
                 <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
+                      Job Department
+                    </label>
+                    <Select<Option, false>
+                      value={
+                        department
+                          ? departmentOptions.find(
+                              (opt) => opt.value === department
+                            ) || null
+                          : null
+                      }
+                      onChange={(option) => {
+                        setDepartment(option?.value || "");
+                        clearError("department");
+                      }}
+                      options={departmentOptions}
+                      styles={customStyles}
+                      placeholder="Select Department"
+                      isLoading={departmentOptions.length === 0}
+                      isSearchable={false}
+                    />
+                    {errors.department && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.department}
+                      </p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       No. of Positions
@@ -709,14 +917,15 @@ export default function JobCreate({
                       styles={customStyles}
                       placeholder="Select Job Openings"
                     />
-
                     {errors.openings && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.openings}
                       </p>
                     )}
                   </div>
+                </div>
 
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Gender Preference
@@ -752,9 +961,6 @@ export default function JobCreate({
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Job Type
@@ -791,6 +997,9 @@ export default function JobCreate({
                       </p>
                     )}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Experience Level
@@ -816,6 +1025,8 @@ export default function JobCreate({
                         { value: "0-1", label: "0-1 years" },
                         { value: "1-3", label: "1-3 years" },
                         { value: "3-5", label: "3-5 years" },
+                        { value: "5-7", label: "5-7 years" },
+                        { value: "7-10", label: "7-10 years" },
                       ]}
                       styles={customStyles}
                       placeholder="Select Experience"
@@ -826,9 +1037,6 @@ export default function JobCreate({
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
                       Workplace Type
@@ -863,26 +1071,61 @@ export default function JobCreate({
                       </p>
                     )}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block mb-4 justify-start text-zinc-900 text-base font-normal leading-loose">
-                      Job Location
+                    <label className="block mb-4 text-zinc-900 text-base font-normal leading-loose">
+                      Job Country
                     </label>
-                    <Select
+                    <Select<Option, false>
                       value={
-                        location ? { value: location, label: location } : null
+                        selectedCountry
+                          ? countries.find(
+                              (opt) => opt.value === selectedCountry
+                            ) || null
+                          : null
                       }
                       onChange={(option) => {
-                        setLocation(option?.value || "");
-                        clearError("location");
+                        setSelectedCountry(option?.value || "");
+                        setSelectedCity("");
+                        clearError("country");
                       }}
-                      options={[{ value: "Islamabad", label: "Islamabad" }]}
+                      options={countries}
                       styles={customStyles}
-                      placeholder="Select Location"
+                      placeholder="Select Country"
+                      isLoading={loadingCountries}
                     />
-                    {errors.location && (
+                    {errors.country && (
                       <p className="text-red-500 text-sm mt-1">
-                        {errors.location}
+                        {errors.country}
                       </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block mb-4 text-zinc-900 text-base font-normal leading-loose">
+                      Job City
+                    </label>
+                    <Select<Option, false>
+                      value={
+                        selectedCity
+                          ? cities.find((opt) => opt.value === selectedCity) ||
+                            null
+                          : null
+                      }
+                      onChange={(option) => {
+                        setSelectedCity(option?.value || "");
+                        clearError("city");
+                      }}
+                      options={cities}
+                      styles={customStyles}
+                      placeholder="Select City"
+                      isLoading={loadingCities}
+                      isDisabled={!selectedCountry}
+                    />
+                    {errors.city && (
+                      <p className="text-red-500 text-sm mt-1">{errors.city}</p>
                     )}
                   </div>
                 </div>
@@ -919,9 +1162,9 @@ export default function JobCreate({
                   )}
                 </div>
 
-                <div className="fixed bottom-10 right-0 w-1/2 px-8">
+                <div className="mt-20 w-full px-2 hidden md:block">
                   <button
-                    type="button"
+                    type="submit"
                     className={`flex items-center justify-center gap-2 text-white w-full py-3 rounded-md cursor-pointer 
       ${
         loading

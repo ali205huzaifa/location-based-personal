@@ -41,23 +41,30 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
         status: option.value,
       });
 
-      Swal.fire({
-        icon: "success",
-        title: "Status Updated",
-        text: `Application status has been updated to ${option.label}.`,
-        showConfirmButton: true,
-      }).then(() => {
-        if (option.value === "INTERVIEW_SCHEDULED") {
-          setShowEmailModal(true);
-        }
-      });
+      if (option.value === "INTERVIEW_SCHEDULED") {
+        setShowEmailModal(true);
+      } else {
+        Swal.fire({
+          icon: "success",
+          text: `Application status has been updated to ${option.label}.`,
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      }
 
       if (onStatusChange) onStatusChange();
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
         text: "Failed to update status.",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     }
   };
@@ -448,8 +455,12 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
                   if (!newComment.trim()) {
                     Swal.fire({
                       icon: "warning",
-                      title: "Empty Comment",
                       text: "Please enter a comment before submitting.",
+                      toast: true,
+                      position: "top-right",
+                      showConfirmButton: false,
+                      timer: 3000,
+                      timerProgressBar: true,
                     });
                     return;
                   }
@@ -460,9 +471,12 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
 
                     Swal.fire({
                       icon: "success",
-                      title: "Comment Added",
                       text: "Your comment has been successfully added!",
-                      showConfirmButton: true,
+                      toast: true,
+                      position: "top-right",
+                      showConfirmButton: false,
+                      timer: 3000,
+                      timerProgressBar: true,
                     });
 
                     const response = await JobsAPI.getApplicationById(

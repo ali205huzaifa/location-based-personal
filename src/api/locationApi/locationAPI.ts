@@ -1,20 +1,40 @@
 import axiosClient from '../axiosClient';
 
 class locationAPI {
-  static Createlocation(data: {name: string; email: string; designation:string;}){
+  static CreateCountry(data: {code: string; name: string;}){
     return axiosClient.post('/countries', data);
   }
 
-  static Updatelocation(id: string, data: { code: string; name: string; }) {
-    return axiosClient.patch(`/interviewers/${id}`, data);
+  static UpdateCountry(_id: string, data: { code: string; name: string; }) {
+    return axiosClient.patch(`/countries/${_id}`, data);
   }
 
-  static getAll(params = {}) {
+  static getAllCountries(params = {}) {
     return axiosClient.get("/countries", { params });
   }
 
-  static Deletelocation(id: string) {
+  static getCountryById(id: string) {
+    return axiosClient.get(`/countries/${id}`);
+  }
+
+  static DeleteCountry(id: string) {
     return axiosClient.delete(`/countries/${id}`);
+  }
+
+  static CreateCity(data: { countryId: string; name: string; }) { 
+    return axiosClient.post('/cities', data); 
+  }
+
+  static UpdateCity(id: string, data: { countryId: string; name: string; }) { 
+    return axiosClient.patch(`/cities/${id}`, data); 
+  }
+
+  static getAllCities(params = {}) { 
+    return axiosClient.get("/cities", { params }); 
+  }
+
+  static DeleteCity(id: string) { 
+    return axiosClient.delete(`/cities/${id}`); 
   }
 }
 

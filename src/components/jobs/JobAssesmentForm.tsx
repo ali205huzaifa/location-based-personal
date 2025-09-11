@@ -44,16 +44,22 @@ const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
 
       Swal.fire({
         icon: "success",
-        title: "Form Sent",
         text: "The assessment form has been sent to the candidate successfully!",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } catch (err: any) {
       Swal.fire({
         icon: "error",
-        title: "Error",
         text: err?.response?.data?.message || "Failed to send form.",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setIsSending(false);
@@ -117,8 +123,9 @@ const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
             : "No answer provided";
 
         const splitAnswer = doc.splitTextToSize(answer, 180);
+        const lineHeight = 6;
         doc.text(splitAnswer, 20, y);
-        y += splitAnswer.length * 7 + 5;
+        y += splitAnswer.length * lineHeight + 5;
 
         if (y > 270) {
           doc.addPage();
@@ -143,9 +150,15 @@ const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
         <h2 className="text-lg font-semibold">Applicant Assessment Form</h2>
         <div className="flex gap-2">
           <button
-            className="flex items-center gap-2 px-4 py-3 rounded bg-[#16968F] text-white text-sm rounded hover:bg-teal-700 transition"
+            className={`flex items-center gap-2 px-4 py-3 rounded text-sm transition
+    ${
+      isSending || isFilled
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : "bg-[#16968F] text-white hover:bg-teal-700"
+    }`}
             onClick={handleSendForm}
-            disabled={isSending}
+            disabled={isSending || isFilled}
+            title={isFilled ? "Form already filled" : ""}
           >
             <img
               src="/icons/mail-icon2.svg"

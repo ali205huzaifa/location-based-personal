@@ -6,6 +6,7 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import CandidateFilterListbox from "./CandidateFiltersListbox";
 import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
+import locationAPI from "../../api/locationApi/locationAPI";
 
 interface CandidateFiltersProps {
   candidateName: string;
@@ -55,6 +56,28 @@ export default function CandidateFilters({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
   const [titles, setTitles] = useState<{ value: string; label: string }[]>([]);
+  const [locations, setLocations] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  useEffect(() => {
+    async function fetchLocations() {
+      try {
+        const response = await locationAPI.getAllCities();
+        if (Array.isArray(response.data.data)) {
+          setLocations(
+            response.data.data.map((city: { _id: string; name: string }) => ({
+              value: city.name,
+              label: city.name,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching locations:", err);
+      }
+    }
+    fetchLocations();
+  }, []);
 
   const salaryMin = 0;
   const salaryMax = 200000;
@@ -163,11 +186,7 @@ export default function CandidateFilters({
         <CandidateFilterListbox
           value={candidateLocation}
           onChange={setCandidateLocation}
-          options={[
-            { value: "Islamabad", label: "Islamabad" },
-            { value: "Rawalpindi", label: "Rawalpindi" },
-            { value: "Lahore", label: "Lahore" },
-          ]}
+          options={locations}
           placeholder="By Location"
         />
 
@@ -193,10 +212,10 @@ export default function CandidateFilters({
               <span>{expectedSalary.toLocaleString()}</span>
             </div>
 
-            <div className="absolute top-6 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded" />
+            <div className="absolute top-8 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded" />
 
             <div
-              className="absolute top-6 transform -translate-y-1/2 h-1 bg-teal-600 rounded"
+              className="absolute top-8 transform -translate-y-1/2 h-1 bg-teal-600 rounded"
               style={{
                 left: `${
                   ((currentSalary - salaryMin) / (salaryMax - salaryMin)) * 100
@@ -219,7 +238,7 @@ export default function CandidateFilters({
                   Math.min(Number(e.target.value), expectedSalary - 1000)
                 )
               }
-              className="absolute w-full pointer-events-auto z-10 mt-4"
+              className="absolute w-full pointer-events-auto z-10 mt-5"
             />
             <input
               type="range"
@@ -232,7 +251,7 @@ export default function CandidateFilters({
                   Math.max(Number(e.target.value), currentSalary + 1000)
                 )
               }
-              className="absolute w-full pointer-events-auto z-10 mt-4"
+              className="absolute w-full pointer-events-auto z-10 mt-5"
             />
           </div>
 

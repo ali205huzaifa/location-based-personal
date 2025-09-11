@@ -215,9 +215,12 @@ const ScheduleCard: React.FC = () => {
       await SchedularAPI.deleteSchedule(editId);
       Swal.fire({
         icon: "success",
-        title: "Deleted",
         text: "Schedule has been deleted.",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
 
       setShowPopup(false);
@@ -227,9 +230,12 @@ const ScheduleCard: React.FC = () => {
     } catch (err) {
       Swal.fire({
         icon: "error",
-        title: "Delete Failed",
         text: "Could not delete the schedule.",
-        confirmButtonColor: "#d33",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);
@@ -240,9 +246,12 @@ const ScheduleCard: React.FC = () => {
     if (!formDate || !formTime || !formTitle || !formTagline) {
       Swal.fire({
         icon: "warning",
-        title: "Missing fields",
         text: "Please fill all fields before saving.",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
       return;
     }
@@ -266,9 +275,12 @@ const ScheduleCard: React.FC = () => {
         });
         Swal.fire({
           icon: "success",
-          title: "Schedule updated",
           text: "Your schedule has been updated successfully.",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } else {
         await SchedularAPI.CreateSchedule({
@@ -279,9 +291,12 @@ const ScheduleCard: React.FC = () => {
         });
         Swal.fire({
           icon: "success",
-          title: "Schedule created",
           text: "Your new schedule has been added successfully.",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
 
@@ -299,9 +314,12 @@ const ScheduleCard: React.FC = () => {
       console.error("Failed to save schedule", error);
       Swal.fire({
         icon: "error",
-        title: "Error",
         text: "Failed to save the schedule. Please try again.",
-        confirmButtonColor: "#d33",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setSaving(false);
@@ -646,7 +664,8 @@ const ScheduleCard: React.FC = () => {
                 placeholder="Enter descripton..."
                 value={formTagline}
                 onChange={(e) => setFormTagline(e.target.value)}
-                rows={3}
+                rows={2}
+                maxLength={100}
               />
             </div>
 

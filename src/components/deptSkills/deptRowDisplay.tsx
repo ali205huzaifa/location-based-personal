@@ -1,11 +1,11 @@
-import type { City, Country } from "../../types/user";
+import type { Department, Skill } from "../../types/user";
 
-export function CountryRow({
+export function DeptRow({
   item,
   onEdit,
   onDelete,
 }: {
-  item: Country;
+  item: Department;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -15,7 +15,7 @@ export function CountryRow({
         {item.name}
       </td>
       <td className="px-4 py-3 justify-start text-black text-base font-normal leading-loose">
-        {item.code}
+        {item.description}
       </td>
       <td className="px-4 py-3 w-24 text-right flex gap-4 mr-2">
         <button
@@ -42,12 +42,12 @@ export function CountryRow({
   );
 }
 
-export function CityRow({
+export function SkillRow({
   item,
   onEdit,
   onDelete,
 }: {
-  item: City;
+  item: Skill;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -57,9 +57,9 @@ export function CityRow({
         {item.name}
       </td>
       <td className="px-4 py-3 justify-start text-black text-base font-normal leading-loose">
-        {item.country?.name || "—"}
+        {item.department?.name || "—"}
       </td>
-      <td className="px-4 py-3 w-24 text-right">
+      <td className="px-4 py-3 w-24 text-right flex gap-4 mr-2">
         <button
           onClick={onEdit}
           className="mr-3 text-gray-700 hover:text-emerald-600"

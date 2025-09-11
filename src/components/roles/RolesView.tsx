@@ -99,10 +99,13 @@ const RolesView = () => {
 
       await fetchRoles(currentPage, searchQuery);
       Swal.fire({
-        title: "Deleted!",
         text: "Role has been deleted!",
         icon: "success",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } catch (err: any) {
       const apiError = err?.response?.data?.error;
@@ -138,26 +141,35 @@ const RolesView = () => {
             await fetchRoles(currentPage, searchQuery);
 
             Swal.fire({
-              title: "Deleted!",
               text: "Role and assigned users have been deleted.",
               icon: "success",
-              confirmButtonColor: "#16968F",
+              toast: true,
+              position: "top-right",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
             });
           }
         } catch (fetchErr) {
           Swal.fire({
-            title: "Error!",
             text: "Failed to fetch assigned users.",
             icon: "error",
-            confirmButtonColor: "#16968F",
+            toast: true,
+            position: "top-right",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
           });
         }
       } else {
         Swal.fire({
-          title: "Error!",
           text: "Failed to delete role",
           icon: "error",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
     }

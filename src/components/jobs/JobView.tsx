@@ -28,22 +28,13 @@ export default function JobsView() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const getMonthStartAndEnd = () => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { start, end };
-  };
-
-  const { start, end } = getMonthStartAndEnd();
-
   const [filters, setFilters] = useState<Filters>({
     department: "All departments",
     location: "All locations",
     jobType: "Job Type",
     experienceLevel: "Job Experience",
-    startDate: start,
-    endDate: end,
+    startDate: null,
+    endDate: null,
     status: "Job Status",
   });
 
@@ -81,14 +72,14 @@ export default function JobsView() {
         const formattedJobs = res.data.data.map((item: any) => ({
           id: item._id,
           title: item.title,
-          department: item.department,
+          department: item.departmentId?.name,
           type: item.jobType,
           experience: item.experienceLevel,
           posted: item.postingStartDate,
           status: item.status,
           positions: item.totalPositions,
           workArrangement: item.workplaceType,
-          location: item.location,
+          location: item.cityId?.name,
           requiredSkills: item.requiredSkills,
           description: item.description,
           experienceLevel: item.experienceLevel,
@@ -106,8 +97,12 @@ export default function JobsView() {
 
         Swal.fire({
           icon: "error",
-          title: "Error",
           text: "Failed to load jobs",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       })
       .finally(() => setLoading(false));
@@ -131,30 +126,7 @@ export default function JobsView() {
       .then((res) => {
         const jobData = res.data;
 
-        const formattedJob: JobPayloadType = {
-          id: jobData._id,
-          title: jobData.title,
-          department: jobData.department,
-          type: jobData.jobType,
-          gender: jobData.gender,
-          experienceLevel: jobData.experienceLevel,
-          posted: jobData.postingStartDate,
-          status: jobData.status,
-          positions: jobData.totalPositions,
-          workArrangement: jobData.workplaceType,
-          location: jobData.location,
-          requiredSkills: jobData.requiredSkills,
-          description: jobData.description,
-          employmentType: jobData.employmentType,
-          postingStartDate: jobData.postingStartDate,
-          postingEndDate: jobData.postingEndDate,
-          salaryRange: jobData.salaryRange,
-          skills: jobData.skills,
-          applicationQuestions: jobData.applicationQuestions,
-          createdBy: jobData.createdBy,
-        };
-
-        setJobToEdit(formattedJob);
+        setJobToEdit(jobData);
         setShowModal(true);
       })
       .catch((err) => {

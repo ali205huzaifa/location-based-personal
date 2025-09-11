@@ -24,6 +24,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
   const [emailType, setEmailType] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [onlineLink, setOnlineLink] = useState("");
   const [body, setBody] = useState(`
     <p>Dear <strong>${candidateName || "[Candidate Name]"}</strong>,</p>
     <p>We are pleased to invite you for an interview for the <strong>${
@@ -77,22 +78,39 @@ const EmailModal: React.FC<EmailModalProps> = ({
   };
 
   const updateBodyWithMode = (newMode: string) => {
-    let newModeContent;
+    let newModeContent = "";
     let newCoordinatesContent = "";
 
     if (newMode === "ON_SITE") {
       newModeContent = `📍 Mode: Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.`;
       newCoordinatesContent = `<p>Location: <a href="https://www.google.com/maps?q=33.669322,72.999939" target="_blank">View on Google Maps</a></p>`;
+      setOnlineLink("");
     } else if (newMode === "ONLINE") {
-      newModeContent = `📍 Mode: Online via Zoom (Paste Meeting Link here).`;
-    } else {
-      newModeContent = `📍 Mode: [Onsite, IR Solutions, Al-Rehman Plaza, 3rd floor, G-11 Markaz, Islamabad.]`;
+      newModeContent = `📍 Mode: Online via Zoom`;
+      setBody((prev) =>
+        prev.replace(
+          /<p>📍 Mode:.*?<\/p>(?:<p>Location:.*?<\/p>)?(?:<p>🔗 Interview Link:.*?<\/p>)?/is,
+          `<p>${newModeContent}</p><p>🔗 Interview Link: [Paste Meeting Link]</p>`
+        )
+      );
+      return;
     }
 
     setBody((prev) =>
       prev.replace(
-        /<p>📍 Mode:.*?<\/p>(?:<p>Location:.*?<\/p>)?/is,
-        `<p>${newModeContent}</p>${newCoordinatesContent}`
+        /<p>📍 Mode:.*?<\/p>(?:<p>Location:.*?<\/p>)?(?:<p>🔗 Interview Link:.*?<\/p>)?/is,
+        newModeContent ? `<p>${newModeContent}</p>${newCoordinatesContent}` : ""
+      )
+    );
+  };
+
+  const updateBodyWithLink = (link: string) => {
+    setBody((prev) =>
+      prev.replace(
+        /<p>🔗 Interview Link:.*?<\/p>/i,
+        link
+          ? `<p>🔗 Interview Link: <a href="${link}" target="_blank">${link}</a></p>`
+          : `<p>🔗 Interview Link: [Paste Meeting Link]</p>`
       )
     );
   };
@@ -241,8 +259,20 @@ const EmailModal: React.FC<EmailModalProps> = ({
             />
           </div>
         </div>
+        {emailType === "ONLINE" && (
+          <input
+            type="url"
+            value={onlineLink}
+            onChange={(e) => {
+              setOnlineLink(e.target.value);
+              updateBodyWithLink(e.target.value);
+            }}
+            placeholder="Paste Interview Link"
+            className="border border-gray-300 rounded px-4 py-2 w-full"
+          />
+        )}
 
-        <div className="mb-4">
+        <div className="mb-4 mt-4">
           <ReactQuill
             theme="snow"
             value={body}

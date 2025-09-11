@@ -41,9 +41,9 @@ export default function ArchivedJobs({ onClose }: ArchivedJobsProps) {
         const formattedJobs = res.data.data.map((item: any) => ({
           id: item._id,
           title: item.title,
-          department: item.department,
+          department: item.departmentId?.name,
           type: item.jobType,
-          location: item.location,
+          location: item.countryId?.name,
           experience: item.experienceLevel,
           posted: new Date(item.postingStartDate).toLocaleDateString(),
         }));
@@ -77,9 +77,12 @@ export default function ArchivedJobs({ onClose }: ArchivedJobsProps) {
 
         Swal.fire({
           icon: "success",
-          title: "Job Unarchived",
           text: "The job has been successfully moved back to active.",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       })
       .catch((err) => {
@@ -87,8 +90,12 @@ export default function ArchivedJobs({ onClose }: ArchivedJobsProps) {
 
         Swal.fire({
           icon: "error",
-          title: "Error",
           text: "Failed to unarchive the job. Please try again.",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       });
   };

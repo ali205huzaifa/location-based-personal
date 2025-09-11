@@ -57,6 +57,18 @@ const Sidebar = () => {
       icon: "/icons/roles-icon.svg",
       permission: "view-accessRole",
     },
+    {
+      label: "Locations",
+      href: "/locations",
+      icon: "/icons/route-location-icon.svg",
+      permission: "view-locations",
+    },
+    {
+      label: "Jobs Details",
+      href: "/deptSkills",
+      icon: "/icons/deptSkills-icon.svg",
+      permission: "view-deptSkills",
+    },
   ];
 
   return (
@@ -97,10 +109,20 @@ const Sidebar = () => {
                   <img
                     src={item.icon}
                     alt={item.label}
-                    width={20}
-                    height={20}
+                    width={
+                      item.icon.includes("route-location-icon.svg") ? 16 : 24
+                    }
+                    height={
+                      item.icon.includes("route-location-icon.svg") ? 16 : 24
+                    }
                   />
-                  <h3 className="product font-Regular">{item.label}</h3>
+                  <h3
+                    className={`product font-Regular ${
+                      item.label === "Locations" ? "ml-2" : ""
+                    }`}
+                  >
+                    {item.label}
+                  </h3>
                 </Link>
               ))}
           </nav>

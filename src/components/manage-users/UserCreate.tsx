@@ -125,19 +125,25 @@ export default function UserCreate({
       if (userToEdit) {
         await UsersAPI.UpdateUser(userToEdit._id, formData);
         Swal.fire({
-          title: "Updated!",
           text: "User updated successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } else {
         formData["password"] = password;
         await UsersAPI.signup(formData);
         Swal.fire({
-          title: "Created!",
           text: "User created successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
 
@@ -150,10 +156,13 @@ export default function UserCreate({
       refreshUsers?.();
     } catch (err: any) {
       Swal.fire({
-        title: "Error",
         text: "Something went wrong",
         icon: "error",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);

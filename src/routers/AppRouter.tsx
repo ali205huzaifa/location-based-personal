@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import LoginPage from "../components/Auth/login";
 import Dashboard from "../components/dashboard/DashboardView";
@@ -12,6 +17,14 @@ import JobDetail from "../components/jobs/JobDetail";
 import ProtectedRoute from "./ProtectedRoutes";
 import ProfileView from "../components/profile/profileView";
 import RolesView from "../components/roles/RolesView";
+
+import LocationView from "../components/locations/locationView";
+import CountriesPage from "../components/locations/CountriesPage";
+import CitiesPage from "../components/locations/CitiesPage";
+
+import DeptView from "../components/deptSkills/deptView";
+import DepartmentsPage from "../components/deptSkills/DepartmentsPage";
+import SkillsPage from "../components/deptSkills/SkillsPage";
 
 const AppRouter: React.FC = () => {
   return (
@@ -85,6 +98,46 @@ const AppRouter: React.FC = () => {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/locations" element={<LocationView />}>
+            <Route index element={<Navigate to="countries" replace />} />
+            <Route
+              path="countries"
+              element={
+                <ProtectedRoute requiredPermission="view-locations">
+                  <CountriesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="cities"
+              element={
+                <ProtectedRoute requiredPermission="view-locations">
+                  <CitiesPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          <Route path="/deptSkills" element={<DeptView />}>
+            <Route index element={<Navigate to="departments" replace />} />
+            <Route
+              path="departments"
+              element={
+                <ProtectedRoute requiredPermission="view-deptSkills">
+                  <DepartmentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="skills"
+              element={
+                <ProtectedRoute requiredPermission="view-deptSkills">
+                  <SkillsPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
         </Route>
       </Routes>
     </Router>

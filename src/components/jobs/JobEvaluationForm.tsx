@@ -50,16 +50,22 @@ const JobEvaluationForm: React.FC<JobEvaluationFormProps> = ({
 
       Swal.fire({
         icon: "success",
-        title: "Form Sent",
         text: "The Evaluation Form has been sent successfully!",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } catch (err: any) {
       Swal.fire({
         icon: "error",
-        title: "Error",
         text: err?.response?.data?.message?.message || "Failed to send form.",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setIsSending(false);
@@ -151,20 +157,26 @@ const JobEvaluationForm: React.FC<JobEvaluationFormProps> = ({
 
       Swal.fire({
         icon: "success",
-        title: "Interviewers Updated",
         text: "Interviewers have been updated successfully!",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
 
       setShowModal(false);
     } catch (err: any) {
       Swal.fire({
         icon: "error",
-        title: "Error",
         text:
           err?.response?.data?.message?.message ||
           "Failed to update interviewers.",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     }
   };

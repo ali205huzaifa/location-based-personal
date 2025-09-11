@@ -69,9 +69,12 @@ export default function JobDetailView() {
         console.error(err);
         Swal.fire({
           icon: "error",
-          title: "Failed to load job",
-          text: err?.message || "Something went wrong.",
-          confirmButtonColor: "#16968F",
+          text: "Something went wrong.",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } finally {
         setLoading(false);
@@ -109,9 +112,12 @@ export default function JobDetailView() {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Error",
         text: "Failed to fetch candidates",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
       setCandidates([]);
     } finally {
@@ -238,7 +244,7 @@ export default function JobDetailView() {
           />
 
           <span className="text-slate-900 text-base font-normal">
-            {job.totalPositions} Positions
+            0{job.totalPositions} Positions
           </span>
 
           <img
@@ -248,7 +254,7 @@ export default function JobDetailView() {
           />
 
           <span className="text-slate-900 text-base font-normal">
-            {job.location}
+            {job.cityId?.name}
           </span>
 
           <img
@@ -266,7 +272,7 @@ export default function JobDetailView() {
       </div>
 
       <div className="flex flex-1 p-4 gap-8">
-        <div className="w-[340px] h-[800px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
+        <div className="w-[360px] max-h-[900px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
           <div className="flex items-center justify-between border rounded-lg px-4 py-2 mb-4">
             <div className="flex gap-2 w-full max-w-sm">
               <img
@@ -308,7 +314,7 @@ export default function JobDetailView() {
             </span>
           </div>
 
-          <div className="h-[600px] overflow-y-auto pr-1">
+          <div className="max-h-[700px] overflow-y-auto pr-1">
             {listLoading ? (
               <div className="flex justify-center items-center py-10">
                 <ClipLoader size={35} color="#16968F" loading />
@@ -331,7 +337,7 @@ export default function JobDetailView() {
                       <motion.li
                         key={app._id}
                         onClick={() => handleSelectCandidate(app)}
-                        className={`p-3 cursor-pointer border-b border-gray-300 ${
+                        className={`p-4 cursor-pointer border-b border-gray-300 ${
                           selectedApplication?._id === app._id
                             ? "opacity-10 bg-stone-100"
                             : "hover:bg-gray-100"
@@ -404,11 +410,15 @@ export default function JobDetailView() {
               total={totalItems}
               onChange={(page) => setCurrentPage(page)}
               className="mt-2"
+              showSizeChanger={false}
+              showQuickJumper={false}
+              hideOnSinglePage={true}
+              showLessItems={true}
             />
           </div>
         </div>
 
-        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg max-h-[800px]">
+        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg max-h-[900px]">
           {selectedApplication ? (
             <>
               <div className="flex gap-2 mb-4 border-b border-gray-400">

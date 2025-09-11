@@ -30,16 +30,23 @@ export default function InterviewerRowDisplay({
         await InterviewerAPI.DeleteInterviewer(id);
         await fetchInterviewers();
         Swal.fire({
-          title: "Deleted!",
           text: "Interviewer has been Deleted!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } catch (err: any) {
         Swal.fire({
           icon: "error",
-          title: "Error deleting interviewer",
           text: "Something went wrong.",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
     }

@@ -83,18 +83,24 @@ export default function InterviewerCreate({
       if (editData) {
         await InterviewerAPI.UpdateInterviewer(editData._id, formData);
         Swal.fire({
-          title: "Updated!",
           text: "Interviewer updated successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } else {
         await InterviewerAPI.CreateInterviewer(formData);
         Swal.fire({
-          title: "Created!",
           text: "Interviewer created successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
 
@@ -104,10 +110,13 @@ export default function InterviewerCreate({
     } catch (err: any) {
       console.error("API Error:", err);
       Swal.fire({
-        icon: "error",
         title: "Error!",
         text: "Something went wrong.",
-        confirmButtonColor: "#16968F",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);

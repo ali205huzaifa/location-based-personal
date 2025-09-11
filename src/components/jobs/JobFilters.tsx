@@ -8,19 +8,8 @@ import "react-date-range/dist/theme/default.css";
 
 import { Listbox } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-
-const departments = [
-  { value: "MOBILE_APP_DEVELOPMENT", label: "Mobile Development" },
-  { value: "HUMAN_RESOURCE", label: "Human Resource" },
-  { value: "WEB_DEVELOPMENT", label: "Web Development" },
-  { value: "MARKETING", label: "Marketing" },
-  { value: "ARTIFICIAL_INTELLIGENCE", label: "Artificial Intelligence" },
-  { value: "BUSINESS_DEVELOPMENT", label: "Business Development" },
-  { value: "UI/UX", label: "UI/UX Designer" },
-  { value: "GAME_DEVELOPMENT", label: "Game Development" },
-];
-
-const locationOptions = [{ value: "Islamabad", label: "Islamabad" }];
+import deptSkillsAPI from "../../api/deptSkillsApi/deptSkillsAPI";
+import locationAPI from "../../api/locationApi/locationAPI";
 
 const jobTypeOptions = [
   { value: "FULL_TIME", label: "Full Time" },
@@ -43,7 +32,44 @@ interface JobFiltersProps {
 
 export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [departments, setDepartments] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [locations, setLocations] = useState<
+    { value: string; label: string }[]
+  >([]);
   const dateModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await deptSkillsAPI.getAlldept();
+        const formatted = res.data.data.map((d: any) => ({
+          value: d._id,
+          label: d.name,
+        }));
+        setDepartments(formatted);
+      } catch (err) {
+        console.error("Failed to fetch departments:", err);
+      }
+    };
+
+    const fetchLocations = async () => {
+      try {
+        const res = await locationAPI.getAllCities();
+        const formatted = res.data.data.map((c: any) => ({
+          value: c._id,
+          label: c.name,
+        }));
+        setLocations(formatted);
+      } catch (err) {
+        console.error("Failed to fetch locations:", err);
+      }
+    };
+
+    fetchDepartments();
+    fetchLocations();
+  }, []);
 
   const handleDateChange = (item: { selection: any }) => {
     setFilters((prev) => ({
@@ -54,18 +80,14 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
   };
 
   const handleReset = () => {
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
     setFilters({
       department: "All departments",
       location: "All locations",
       jobType: "Job Type",
       experienceLevel: "Job Experience",
       status: "Job Status",
-      startDate,
-      endDate,
+      startDate: null,
+      endDate: null,
     });
   };
 
@@ -163,8 +185,8 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
         <div className="relative">
           <Listbox.Button className="relative w-full cursor-pointer bg-white py-2 pl-4 pr-10 text-left focus:outline-none text-zinc-900 text-base font-normal leading-relaxed">
             <span>
-              {locationOptions.find((d) => d.value === filters.location)
-                ?.label || "All Locations"}
+              {locations.find((d) => d.value === filters.location)?.label ||
+                "All Locations"}
             </span>
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <ChevronDownIcon className="h-5 w-5 text-gray-400" />
@@ -172,7 +194,7 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
           </Listbox.Button>
 
           <Listbox.Options className="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none">
-            {locationOptions.map((d) => (
+            {locations.map((d) => (
               <Listbox.Option
                 key={d.value}
                 value={d.value}
@@ -257,20 +279,6 @@ export default function JobFilters({ filters, setFilters }: JobFiltersProps) {
           </Listbox.Options>
         </div>
       </Listbox>
-
-      {/*
-      <select
-        value={filters.status}
-        onChange={(e) =>
-          setFilters((prev) => ({ ...prev, status: e.target.value }))
-        }
-        className="font-Regular text-sm border-none outline-none bg-transparent cursor-pointer"
-      >
-        <option value="">Job Status</option>
-        <option value="Active">Active</option>
-        <option value="InActive">Archived</option>
-      </select>
-    */}
 
       <button
         onClick={handleReset}

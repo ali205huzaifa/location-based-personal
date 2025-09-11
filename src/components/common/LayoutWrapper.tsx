@@ -13,6 +13,14 @@ function getTitleFromPath(pathname: string): string {
   if (pathname.includes("/jobs/create")) return "Create Job";
   if (pathname.includes("/roles")) return "Access Roles";
 
+  if (pathname.includes("/countries") || pathname.includes("/cities")) {
+    return "Locations";
+  }
+
+  if (pathname.includes("/dept") || pathname.includes("/skills")) {
+    return "Job Details";
+  }
+
   const isLikelyId =
     segments.length > 1 &&
     /^[a-zA-Z0-9]{12,}$/.test(segments[segments.length - 1]);

@@ -81,10 +81,13 @@ const UserRowDisplay: React.FC<Props> = ({
       try {
         await UsersAPI.DeleteUser(userId);
         Swal.fire({
-          title: "Deleted!",
           text: "User has been deleted!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
         refreshUsers();
       } catch {

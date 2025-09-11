@@ -1,38 +1,32 @@
 import { NavLink, Outlet } from "react-router-dom";
 
-export default function LocationView() {
-  const tabBase =
+export default function DeptView() {
+  const tab =
     "flex-1 text-center inline-flex items-center justify-center gap-2 border-b-2 px-8 py-4 text-lg font-medium";
-
   return (
     <div className="p-4">
       <div className="mb-6 flex border border-[#E6E6E6] rounded-t-lg">
         <NavLink
-          to="countries"
+          to="departments"
           className={({ isActive }) =>
-            `${tabBase} ${
-              isActive
-                ? "border-black text-black"
-                : "border-transparent text-gray-500"
+            `${tab} ${
+              isActive ? "border-black" : "border-transparent text-gray-500"
             }`
           }
         >
-          Countries
+          Departments
         </NavLink>
         <NavLink
-          to="cities"
+          to="skills"
           className={({ isActive }) =>
-            `${tabBase} ${
-              isActive
-                ? "border-black text-black"
-                : "border-transparent text-gray-500"
+            `${tab} ${
+              isActive ? "border-black" : "border-transparent text-gray-500"
             }`
           }
         >
-          Cities
+          Skills
         </NavLink>
       </div>
-
       <Outlet />
     </div>
   );

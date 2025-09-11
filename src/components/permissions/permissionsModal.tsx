@@ -62,6 +62,8 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     { label: "Schedule Interview", name: "schedule-interview" },
     { label: "Send Form", name: "send-form" },
     { label: "Archived Jobs", name: "archived-jobs" },
+    { label: "View Locations", name: "view-locations" },
+    { label: "View Department", name: "view-deptSkills" },
   ];
 
   const handleCheckboxChange = (perm: string) => {
@@ -100,18 +102,24 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
       if (role?.id) {
         await RoleAPI.UpdateRole(role.id, payload);
         Swal.fire({
-          title: "Success",
           text: "Role updated successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       } else {
         await RoleAPI.AddRole(payload.name, payload.permissions);
         Swal.fire({
-          title: "Success",
           text: "Role created successfully!",
           icon: "success",
-          confirmButtonColor: "#16968F",
+          toast: true,
+          position: "top-right",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
         });
       }
 
