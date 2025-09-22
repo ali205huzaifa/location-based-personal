@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import { useHasPermission } from "../../hooks/hasPermissions";
 import EmailModal from "./JobEmailModal";
+import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
 
 const actions = [
   { label: "Reviewed", value: "REVIEWED" },
@@ -22,6 +23,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const canEditJob = useHasPermission("schedule-interview");
   const canSendEmail = useHasPermission("send-email");
+  const [isSendingNDA, setIsSendingNDA] = useState(false);
   const candidate = application.candidate;
   const [selected, setSelected] = useState(
     actions.find((a) => a.value === application.status) || null
@@ -31,6 +33,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
   const [localComments, setLocalComments] = useState(
     application.comments || []
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSelect = async (option: any) => {
     if (!option || option.value === selected?.value) return;
@@ -69,6 +72,82 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
     }
   };
 
+  const handleSendNDA = async () => {
+    try {
+      setIsSendingNDA(true);
+      await CandidatesAPI.SendNDAForm(candidate._id);
+
+      Swal.fire({
+        icon: "success",
+        title: "NDA sent successfully!",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to send NDA",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } finally {
+      setIsSendingNDA(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) {
+      Swal.fire({
+        icon: "warning",
+        text: "Please enter a comment before submitting.",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const payload = { text: newComment };
+      await JobsAPI.AddComment(application._id, payload);
+
+      Swal.fire({
+        icon: "success",
+        text: "Your comment has been successfully added!",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+
+      const response = await JobsAPI.getApplicationById(application._id);
+      setLocalComments(response.data.comments);
+
+      setNewComment("");
+      setShowCommentModal(false);
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to add comment. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     setLocalComments(application.comments || []);
   }, [application._id]);
@@ -85,6 +164,18 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
         <h2 className="text-2xl text-[#0E0E2C] mt-2 ">{candidate.fullName}</h2>
 
         <div className="flex gap-2">
+          <button
+            className={`px-4 py-2 text-xs rounded-lg text-white 
+        ${
+          isSendingNDA
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-[#16968F] hover:bg-emerald-700"
+        }`}
+            onClick={handleSendNDA}
+            disabled={isSendingNDA}
+          >
+            {isSendingNDA ? "Sending..." : "Send NDA"}
+          </button>
           <button
             className={`px-4 py-2 text-xs rounded-lg bg-[#16968F] text-white 
     ${canSendEmail ? "hover:bg-emerald-700" : "opacity-50 cursor-not-allowed"}`}
@@ -208,7 +299,11 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
               />
             </span>
             <a
-              href={candidate.linkedinProfile}
+              href={
+                candidate.linkedinProfile.startsWith("http")
+                  ? candidate.linkedinProfile
+                  : `https://${candidate.linkedinProfile}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline truncate max-w-[350px]"
@@ -230,10 +325,10 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
             </div>
             <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-16">
               <span className="text-sm font-medium text-gray-800 truncate">
-                {candidate.cvUrl?.split("/").pop()}
+                {application.cvUrl?.split("/").pop()}
               </span>
               <a
-                href={candidate.cvUrl}
+                href={application.cvUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-black text-white flex items-center justify-center rounded-md w-[85px] py-2 text-xs font-normal"
@@ -252,7 +347,9 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
 
               <div className="flex items-center flex-grow justify-between border border-gray-300 rounded-md p-2 pl-4 ml-20">
                 <span className="text-sm font-medium text-gray-800 truncate">
-                  {candidate.portfolio}
+                  {candidate.portfolio.length > 50
+                    ? candidate.portfolio.slice(0, 50) + "..."
+                    : candidate.portfolio}
                 </span>
                 <a
                   href={candidate.portfolio}
@@ -274,7 +371,10 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
           <span className="text-gray-600">
             Current Salary:&nbsp;
             <span className="text-black ml-16">
-              {candidate.currentSalary} PKR
+              {application.currentSalary
+                ? application.currentSalary.toLocaleString()
+                : "—"}{" "}
+              PKR
             </span>
           </span>
         </div>
@@ -282,7 +382,10 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
           <span className="text-gray-600">
             Expected Salary:&nbsp;
             <span className="text-black ml-8">
-              {candidate.expectedSalary} PKR
+              {application.expectedSalary
+                ? application.expectedSalary.toLocaleString()
+                : "—"}{" "}
+              PKR
             </span>
           </span>
         </div>
@@ -292,7 +395,7 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
         <img src="/icons/timer-icon.svg" alt="Notice Period" width={20} />
         <span className="text-gray-600">
           Notice Period:&nbsp;
-          <span className="text-black ml-16">{candidate.noticePeriod}</span>
+          <span className="text-black ml-16">{application.noticePeriod}</span>
         </span>
       </div>
 
@@ -305,16 +408,16 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
 
               switch (q.label) {
                 case "Current Salary":
-                  answer = application.candidate?.currentSalary;
+                  answer = application.currentSalary;
                   break;
                 case "Expected Salary":
-                  answer = application.candidate?.expectedSalary;
+                  answer = application.expectedSalary;
                   break;
                 case "Notice Period":
-                  answer = application.candidate?.noticePeriod;
+                  answer = application.noticePeriod;
                   break;
                 case "Reason for switching":
-                  answer = application.candidate?.whySwitch;
+                  answer = application.whySwitch;
                   break;
                 default:
                   const additional = application.additionalQuestions?.find(
@@ -451,53 +554,15 @@ const JobProfileTab: React.FC<Props> = ({ application, onStatusChange }) => {
 
             <div className="mt-4 flex justify-end">
               <button
-                onClick={async () => {
-                  if (!newComment.trim()) {
-                    Swal.fire({
-                      icon: "warning",
-                      text: "Please enter a comment before submitting.",
-                      toast: true,
-                      position: "top-right",
-                      showConfirmButton: false,
-                      timer: 3000,
-                      timerProgressBar: true,
-                    });
-                    return;
-                  }
-
-                  try {
-                    const payload = { text: newComment };
-                    await JobsAPI.AddComment(application._id, payload);
-
-                    Swal.fire({
-                      icon: "success",
-                      text: "Your comment has been successfully added!",
-                      toast: true,
-                      position: "top-right",
-                      showConfirmButton: false,
-                      timer: 3000,
-                      timerProgressBar: true,
-                    });
-
-                    const response = await JobsAPI.getApplicationById(
-                      application._id
-                    );
-                    setLocalComments(response.data.comments);
-
-                    setNewComment("");
-                    setShowCommentModal(false);
-                  } catch (error) {
-                    console.error("Error posting comment:", error);
-                    Swal.fire({
-                      icon: "error",
-                      title: "Error",
-                      text: "Failed to add comment. Please try again.",
-                    });
-                  }
-                }}
-                className="text-white px-4 py-2 rounded-md text-sm bg-[#16968F] hover:bg-emerald-700"
+                onClick={handleAddComment}
+                disabled={isSubmitting}
+                className={`text-white px-4 py-2 rounded-md text-sm ${
+                  isSubmitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#16968F] hover:bg-emerald-700"
+                }`}
               >
-                Add Comment
+                {isSubmitting ? "Adding..." : "Add Comment"}
               </button>
             </div>
           </div>

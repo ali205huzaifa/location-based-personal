@@ -25,6 +25,7 @@ import CitiesPage from "../components/locations/CitiesPage";
 import DeptView from "../components/deptSkills/deptView";
 import DepartmentsPage from "../components/deptSkills/DepartmentsPage";
 import SkillsPage from "../components/deptSkills/SkillsPage";
+import SignedNdaList from "../components/signedNDA/signedNdaList";
 
 const AppRouter: React.FC = () => {
   return (
@@ -138,6 +139,14 @@ const AppRouter: React.FC = () => {
               }
             />
           </Route>
+          <Route
+            path="/SignedNDA"
+            element={
+              <ProtectedRoute requiredPermission="view-signedNDA">
+                <SignedNdaList />
+              </ProtectedRoute>
+            }
+          />
         </Route>
       </Routes>
     </Router>

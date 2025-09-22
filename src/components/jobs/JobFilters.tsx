@@ -23,6 +23,8 @@ const experienceOptions = [
   { value: "0-1", label: "0-1 years" },
   { value: "1-3", label: "1-3 years" },
   { value: "3-5", label: "3-5 years" },
+  { value: "5-7", label: "5-7 years" },
+  { value: "7-10", label: "5-10 years" },
 ];
 
 interface JobFiltersProps {

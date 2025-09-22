@@ -48,6 +48,7 @@ export interface Job {
   status: string;
   positions?: string;
   workArrangement?: string;
+  TotalCount?:string;
 }
 
 export type JobPayloadType = {
@@ -116,3 +117,11 @@ export type PageMeta = {
 };
 
 export const defaultPageMeta: PageMeta = { page: 1, pageSize: 10, total: 0 };
+
+export interface NdaDocument {
+  _id: string;
+  candidateName: string;
+  email: string;
+  signedDate?: string;
+  [key: string]: any;
+};

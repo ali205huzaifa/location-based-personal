@@ -47,6 +47,7 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
             <th className="p-4 font-normal">Location</th>
             <th className="p-4 font-normal">Experience</th>
             <th className="p-4 font-normal">Posted</th>
+            <th className="p-4 font-normal">Total Count</th>
             <th className="p-4 font-normal">Status</th>
             <th className="p-4"></th>
           </tr>
@@ -54,7 +55,6 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
         <tbody>
           {jobs.map((job, i) => {
             const postedDate = job.posted || job.postedDate;
-
             return (
               <tr
                 key={i}
@@ -75,6 +75,7 @@ export default function JobRowDisplay({ jobs, onEditJob }: Props) {
                     ? new Date(postedDate).toLocaleDateString()
                     : "N/A"}
                 </td>
+                <td className="p-4 text-[#000000]">{job.TotalCount}</td>
                 <td className="p-4">
                   <span
                     className={`font-medium ${

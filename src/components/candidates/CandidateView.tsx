@@ -119,6 +119,7 @@ export default function CandidateView() {
   };
 
   const fetchCandidates = async (page = 1, query = "") => {
+    if (loading) return;
     setLoading(true);
     try {
       const filters = filtersTouched
@@ -158,16 +159,16 @@ export default function CandidateView() {
 
           switch (q.label) {
             case "Current Salary":
-              answer = app.candidate.currentSalary;
+              answer = app.currentSalary;
               break;
             case "Expected Salary":
-              answer = app.candidate.expectedSalary;
+              answer = app.expectedSalary;
               break;
             case "Notice Period":
-              answer = app.candidate.noticePeriod;
+              answer = app.noticePeriod;
               break;
             case "Reason for switching":
-              answer = app.candidate.whySwitch;
+              answer = app.whySwitch;
               break;
             default:
               answer = null;
@@ -190,15 +191,15 @@ export default function CandidateView() {
           fullName: app.candidate.fullName,
           email: app.candidate.email,
           location: app.candidate.currentLocation,
-          currentSalary: app.candidate.currentSalary,
-          expectedSalary: app.candidate.expectedSalary,
+          currentSalary: app.currentSalary,
+          expectedSalary: app.expectedSalary,
           createdAt: new Date(app.createdAt).toLocaleDateString(),
           jobTitle: app.job.title,
           phoneNumber: app.candidate.phoneNumber,
           linkedinProfile: app.candidate.linkedinProfile,
-          cvUrl: app.candidate.cvUrl,
+          cvUrl: app.cvUrl,
           portfolio: app.candidate.portfolio,
-          noticePeriod: app.candidate.noticePeriod,
+          noticePeriod: app.noticePeriod,
           applicationQuestions: qa,
         };
       });
@@ -294,12 +295,19 @@ export default function CandidateView() {
   ]);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages)
-      fetchCandidates(currentPage + 1, candidateName);
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchCandidates(nextPage, candidateName);
+    }
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) fetchCandidates(currentPage - 1, candidateName);
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      setCurrentPage(prevPage);
+      fetchCandidates(prevPage, candidateName);
+    }
   };
 
   return (

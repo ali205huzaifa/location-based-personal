@@ -10,6 +10,7 @@ interface CandidateDetails {
   gender?: string;
   location?: string;
   positionApplied?: string;
+  positionType?: string;
 }
 
 interface JobAssessmentFormProps {
@@ -66,77 +67,121 @@ const JobAssesmentForm: React.FC<JobAssessmentFormProps> = ({
     }
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    let y = 20;
+  type JobType =
+    | "FULL_TIME"
+    | "PART_TIME"
+    | "CONTRACT"
+    | "INTERNSHIP"
+    | undefined;
 
-    if (candidateDetails) {
+  const formatJobType = (type: JobType): string => {
+    switch (type) {
+      case "FULL_TIME":
+        return "Full Time";
+      case "PART_TIME":
+        return "Part Time";
+      case "CONTRACT":
+        return "Contract";
+      case "INTERNSHIP":
+        return "Internship";
+      default:
+        return "—";
+    }
+  };
+
+  const handleExportPDF = () => {
+    const logoUrl = "/images/Solutions.png";
+    const img = new Image();
+    img.src = logoUrl;
+
+    img.onload = () => {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let y = 20;
+
+      doc.addImage(img, "PNG", 14, 10, 18, 18);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Applicant Assessment Form", pageWidth / 2, 20, {
+        align: "center",
+      });
+
+      y = 40;
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
-      doc.text(`Candidate Name: ${candidateDetails.name}`, 14, y);
-      y += 7;
-      doc.text(`Email: ${candidateDetails.email}`, 14, y);
-      y += 7;
-      doc.text(`Phone: ${candidateDetails.phone || "—"}`, 14, y);
-      y += 7;
-      doc.text(`Gender: ${candidateDetails.gender || "—"}`, 14, y);
-      y += 7;
-      doc.text(`Location: ${candidateDetails.location || "—"}`, 14, y);
-      y += 7;
+
+      const leftX = 14;
+      const rightX = 120;
+
+      doc.text(`Name:     ${candidateDetails?.name || "—"}`, leftX, y);
+      doc.text(`Phone:   +${candidateDetails?.phone || "—"}`, rightX, y);
+      y += 8;
+
+      doc.text(`Address:  ${candidateDetails?.location || "—"}`, leftX, y);
+      y += 8;
+
+      doc.text(`Email:     ${candidateDetails?.email || "—"}`, leftX, y);
+      y += 8;
+
       doc.text(
-        `Position Applied: ${candidateDetails.positionApplied || "—"}`,
-        14,
+        `Position:  ${candidateDetails?.positionApplied || "—"}`,
+        leftX,
         y
       );
+      doc.text(
+        `Job Type: ${formatJobType(candidateDetails?.positionType as JobType)}`,
+        rightX,
+        y
+      );
+      y += 8;
+
+      doc.setDrawColor(0);
+      doc.line(leftX, y, pageWidth - 14, y);
       y += 10;
-    }
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Applicant Assessment Form", 14, y);
-    y += 10;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Application ID: ${applicationId}`, 14, y);
-    y += 8;
-
-    doc.text(
-      `Form Send Date: ${
-        AssessmentDate ? new Date(AssessmentDate).toLocaleString() : "—"
-      }`,
-      14,
-      y
-    );
-    y += 15;
-
-    if (assessmentData && assessmentData.length > 0) {
-      assessmentData.forEach((item, index) => {
+      if (assessmentData && assessmentData.length > 0) {
         doc.setFont("helvetica", "bold");
-        doc.text(`${index + 1}. ${item.question}`, 14, y);
-        y += 7;
+        doc.setFontSize(12);
 
-        doc.setFont("helvetica", "normal");
-        const answer =
-          item.answer && item.answer.trim() !== ""
-            ? item.answer
-            : "No answer provided";
+        assessmentData.forEach((item) => {
+          const splitQuestion = doc.splitTextToSize(
+            `Q: ${item.question}`,
+            pageWidth - 28
+          );
+          doc.text(splitQuestion, leftX, y);
+          y += splitQuestion.length * 6 + 2;
 
-        const splitAnswer = doc.splitTextToSize(answer, 180);
-        const lineHeight = 6;
-        doc.text(splitAnswer, 20, y);
-        y += splitAnswer.length * lineHeight + 5;
+          doc.setFont("helvetica", "normal");
+          const answer =
+            item.answer && item.answer.trim() !== ""
+              ? item.answer
+              : "No answer provided";
+          const splitAnswer = doc.splitTextToSize(
+            `A: ${answer}`,
+            pageWidth - 28
+          );
+          doc.text(splitAnswer, leftX, y);
+          y += splitAnswer.length * 6 + 6;
 
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
-      });
-    } else {
-      doc.text("No assessment data available.", 14, y);
-    }
+          if (y > 260 && item !== assessmentData[assessmentData.length - 1]) {
+            doc.addPage();
+            y = 20;
+          }
 
-    doc.save("Assessment_Form.pdf");
+          doc.setFont("helvetica", "bold");
+        });
+      } else {
+        doc.text("No assessment data available.", leftX, y);
+      }
+
+      const safeName = candidateDetails?.name
+        ? candidateDetails.name.replace(/\s+/g, "_")
+        : "Candidate";
+
+      doc.save(`${safeName}_Assessment_Form.pdf`);
+    };
   };
 
   const isFilled =

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import JobsAPI from "../../api/jobsApi/JobsAPI";
 import CandidatesAPI from "../../api/candidatesApi/CandidateAPI";
@@ -8,8 +8,6 @@ import JobProfileTab from "./JobProfileTab";
 import JobAssesmentForm from "./JobAssesmentForm";
 import JobEvaluationForm from "./JobEvaluationForm";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pagination } from "antd";
-import "antd/dist/reset.css";
 
 const listVariants = {
   hidden: { opacity: 0 },
@@ -35,11 +33,10 @@ export default function JobDetailView() {
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const pageSize = 5;
 
   const [searchTerm, setSearchTerm] = useState("");
+  const initialLoad = useRef(true);
   const [sortOption, setSortOption] = useState("");
 
   const [statusFilter, setStatusFilter] = useState("");
@@ -50,6 +47,8 @@ export default function JobDetailView() {
   const [tempGender, setTempGender] = useState("");
   const [tempLocation, setTempLocation] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -59,23 +58,14 @@ export default function JobDetailView() {
     const fetchJob = async () => {
       setLoading(true);
       try {
-        const [jobRes, unreadRes] = await Promise.all([
-          JobsAPI.getById(id),
-          JobsAPI.readUnreadCount(id),
-        ]);
+        const jobRes = await JobsAPI.getById(id);
         setJob(jobRes.data);
-        setUnreadCount(unreadRes.data?.unread || 0);
+
+        const counts = jobRes.data.applicationCounts || {};
+        setTotalCount(counts.totalApplications || 0);
+        setUnreadCount(counts.unreadApplications || 0);
       } catch (err: any) {
         console.error(err);
-        Swal.fire({
-          icon: "error",
-          text: "Something went wrong.",
-          toast: true,
-          position: "top-right",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
       } finally {
         setLoading(false);
       }
@@ -84,7 +74,10 @@ export default function JobDetailView() {
     fetchJob();
   }, [id]);
 
-  const fetchCandidates = async (page: number = currentPage) => {
+  const fetchCandidates = async (
+    page: number = currentPage,
+    append = false
+  ) => {
     if (!id) return;
     try {
       setListLoading(true);
@@ -103,11 +96,23 @@ export default function JobDetailView() {
 
       const res = await CandidatesAPI.getAll(params);
       const data = Array.isArray(res.data.data) ? res.data.data : [];
-      setCandidates(data);
+
+      if (append) {
+        setCandidates((prev) => [...prev, ...data]);
+      } else {
+        setCandidates(data);
+      }
 
       setCurrentPage(res.data.currentPage || page);
-      setTotalPages(res.data.totalPages || 1);
-      setTotalItems(res.data.totalItems || data.length);
+
+      if (
+        data.length < pageSize ||
+        res.data.currentPage >= res.data.totalPages
+      ) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
     } catch (err) {
       console.error(err);
       Swal.fire({
@@ -126,13 +131,38 @@ export default function JobDetailView() {
   };
 
   useEffect(() => {
-    fetchCandidates(currentPage);
-  }, [currentPage, statusFilter, genderFilter, locationFilter, sortOption]);
+    if (initialLoad.current) {
+      initialLoad.current = false;
+      return;
+    }
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => setCurrentPage(1), 500);
+    const delayDebounce = setTimeout(() => {
+      setCandidates([]);
+      setCurrentPage(1);
+      fetchCandidates(1, false);
+    }, 500);
+
     return () => clearTimeout(delayDebounce);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (initialLoad.current) return;
+    initialLoad.current = true;
+    setCandidates([]);
+    setCurrentPage(1);
+    fetchCandidates(1, false);
+  }, [statusFilter, genderFilter, locationFilter, sortOption]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (
+      !listLoading &&
+      hasMore &&
+      scrollHeight - scrollTop <= clientHeight + 50
+    ) {
+      fetchCandidates(currentPage + 1, true);
+    }
+  };
 
   const handleSelectCandidate = async (app: any) => {
     setSelectedApplication(app);
@@ -272,7 +302,7 @@ export default function JobDetailView() {
       </div>
 
       <div className="flex flex-1 p-4 gap-8">
-        <div className="w-[360px] max-h-[900px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
+        <div className="w-[360px] max-h-[850px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
           <div className="flex items-center justify-between border rounded-lg px-4 py-2 mb-4">
             <div className="flex gap-2 w-full max-w-sm">
               <img
@@ -308,13 +338,16 @@ export default function JobDetailView() {
           </div>
 
           <div className="flex justify-between items-center text-sm mb-2 py-2 border-t border-b border-gray-300">
-            <span>Total {totalItems} Applicants</span>
+            <span>Total {totalCount} Applicants</span>
             <span className="justify-start text-neutral-600 text-xs font-normal leading-snug">
-              Unread ( {unreadCount} )
+              Unread( {unreadCount} )
             </span>
           </div>
 
-          <div className="max-h-[700px] overflow-y-auto pr-1">
+          <div
+            className="max-h-[700px] overflow-y-auto pr-1"
+            onScroll={handleScroll}
+          >
             {listLoading ? (
               <div className="flex justify-center items-center py-10">
                 <ClipLoader size={35} color="#16968F" loading />
@@ -402,23 +435,9 @@ export default function JobDetailView() {
               </motion.ul>
             )}
           </div>
-
-          <div className="mt-4 flex justify-center">
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={totalItems}
-              onChange={(page) => setCurrentPage(page)}
-              className="mt-2"
-              showSizeChanger={false}
-              showQuickJumper={false}
-              hideOnSinglePage={true}
-              showLessItems={true}
-            />
-          </div>
         </div>
 
-        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg max-h-[900px]">
+        <div className="flex-1 bg-white p-2 overflow-y-auto border rounded-lg max-h-[850px]">
           {selectedApplication ? (
             <>
               <div className="flex gap-2 mb-4 border-b border-gray-400">

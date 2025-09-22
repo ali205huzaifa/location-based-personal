@@ -12,6 +12,14 @@ class CandidatesAPI {
   static titleFilter(params = {}) {
     return axiosClient.get("/jobs", { params });
   }
+
+  static SendNDAForm(id: string) {
+    return axiosClient.post(`/candidates/${id}/send-nda-form`);
+  }
+
+  static SubmitNDAForm(id: string, payload: any) {
+    return axiosClient.patch(`/candidates/${id}`, payload);
+  }
 }
 
 export default CandidatesAPI;

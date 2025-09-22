@@ -69,6 +69,12 @@ const Sidebar = () => {
       icon: "/icons/deptSkills-icon.svg",
       permission: "view-deptSkills",
     },
+    {
+      label: "Signed NDA",
+      href: "/signedNDA",
+      icon: "/icons/deptSkills-icon.svg",
+      permission: "view-signedNDA",
+    },
   ];
 
   return (

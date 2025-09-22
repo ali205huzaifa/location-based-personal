@@ -45,11 +45,11 @@ export default function JobsView() {
       page,
       limit,
       search,
-      department:
+      departmentId:
         filterValues.department !== "All departments"
           ? filterValues.department
           : undefined,
-      location:
+      cityId:
         filterValues.location !== "All locations"
           ? filterValues.location
           : undefined,
@@ -60,7 +60,7 @@ export default function JobsView() {
           ? filterValues.experienceLevel
           : undefined,
       /* status:
-        filterValues.status !== "Job Status" ? filterValues.status : undefined,*/
+      filterValues.status !== "Job Status" ? filterValues.status : undefined,*/
       startDate: filterValues.startDate
         ? filterValues.startDate.toISOString()
         : undefined,
@@ -87,6 +87,8 @@ export default function JobsView() {
           postingStartDate: item.postingStartDate,
           postingEndDate: item.postingEndDate,
           salaryRange: item.salaryRange,
+          TotalCount: item.applicationCounts.totalApplications,
+          UnreadCount: item.applicationCounts.unreadApplications,
         }));
 
         setJobs(formattedJobs);
