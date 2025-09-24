@@ -265,7 +265,7 @@ const NotesSection: React.FC<NotesSectionProps> = ({ userId }) => {
           Add a Note
         </button>
       </div>
-      <div className="h-[380px] overflow-y-auto pr-2 mt-4">
+      <div className="max-h-[380px] overflow-y-auto pr-2 mt-4">
         {notes.map((note) => {
           const tempDiv = document.createElement("div");
           tempDiv.innerHTML = note.content;

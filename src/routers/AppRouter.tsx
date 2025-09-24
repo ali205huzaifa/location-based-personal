@@ -26,12 +26,16 @@ import DeptView from "../components/deptSkills/deptView";
 import DepartmentsPage from "../components/deptSkills/DepartmentsPage";
 import SkillsPage from "../components/deptSkills/SkillsPage";
 import SignedNdaList from "../components/signedNDA/signedNdaList";
+import ForgotPassword from "../components/Auth/ForgotPassword";
+import VerifyOtp from "../components/Auth/VerifyOtp";
 
 const AppRouter: React.FC = () => {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
 
         <Route element={<MainLayout />}>
           <Route

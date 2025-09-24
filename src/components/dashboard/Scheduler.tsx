@@ -493,7 +493,7 @@ const ScheduleCard: React.FC = () => {
         ) : days.length === 0 ? (
           <p className="text-gray-500 text-sm">No schedules found.</p>
         ) : (
-          <div className="h-[600px] overflow-y-auto pr-2">
+          <div className="max-h-[600px] overflow-y-auto pr-2">
             {days.map((day) => (
               <div key={day.dateLabel} className="mb-4">
                 <p className="justify-center text-zinc-900 text-base font-normal leading-normal">

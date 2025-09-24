@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { DateRange } from "react-date-range";
 import { format } from "date-fns";
+import Slider from "@mui/material/Slider";
+import Typography from "@mui/material/Typography";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -78,9 +80,6 @@ export default function CandidateFilters({
     }
     fetchLocations();
   }, []);
-
-  const salaryMin = 0;
-  const salaryMax = 200000;
 
   useEffect(() => {
     async function fetchTitles() {
@@ -201,63 +200,56 @@ export default function CandidateFilters({
           placeholder="By Gender"
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
-          <span className="justify-start text-zinc-900 text-base font-normal leading-none">
-            Current Salary
-          </span>
-
-          <div className="relative w-[150px] sm:w-[200px]">
-            <div className="flex justify-between text-sm text-gray-700">
-              <span>{currentSalary.toLocaleString()}</span>
-              <span>{expectedSalary.toLocaleString()}</span>
-            </div>
-
-            <div className="absolute top-8 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded" />
-
-            <div
-              className="absolute top-8 transform -translate-y-1/2 h-1 bg-teal-600 rounded"
-              style={{
-                left: `${
-                  ((currentSalary - salaryMin) / (salaryMax - salaryMin)) * 100
-                }%`,
-                width: `${
-                  ((expectedSalary - currentSalary) / (salaryMax - salaryMin)) *
-                  100
-                }%`,
+        <div className="flex flex-col sm:flex-row sm:items-center gap-8 w-full sm:w-auto">
+          <div className="flex flex-col w-[150px]">
+            <Typography variant="body1" className="text-zinc-900">
+              Current Salary
+            </Typography>
+            <div className="flex justify-between text-sm text-gray-700"></div>
+            <Slider
+              value={currentSalary}
+              onChange={(_, val) => setCurrentSalary(val as number)}
+              min={0}
+              max={100000}
+              step={1000}
+              valueLabelDisplay="auto"
+              sx={{
+                color: "#0d9488",
+                "& .MuiSlider-rail": {
+                  opacity: 0.5,
+                  backgroundColor: "#d1d5db",
+                },
               }}
             />
-
-            <input
-              type="range"
-              step={1000}
-              min={salaryMin}
-              max={salaryMax}
-              value={currentSalary}
-              onChange={(e) =>
-                setCurrentSalary(
-                  Math.min(Number(e.target.value), expectedSalary - 1000)
-                )
-              }
-              className="absolute w-full pointer-events-auto z-10 mt-5"
-            />
-            <input
-              type="range"
-              step={1000}
-              min={salaryMin}
-              max={salaryMax}
-              value={expectedSalary}
-              onChange={(e) =>
-                setExpectedSalary(
-                  Math.max(Number(e.target.value), currentSalary + 1000)
-                )
-              }
-              className="absolute w-full pointer-events-auto z-10 mt-5"
-            />
+            <span className="text-sm text-gray-700">
+              {currentSalary.toLocaleString()} PKR
+            </span>
           </div>
 
-          <span className="justify-start text-zinc-900 text-base font-normal leading-none">
-            Expected Salary
-          </span>
+          <div className="flex flex-col w-[150px]">
+            <Typography variant="body1" className="text-zinc-900">
+              Expected Salary
+            </Typography>
+            <div className="flex justify-between text-sm text-gray-700"></div>
+            <Slider
+              value={expectedSalary}
+              onChange={(_, val) => setExpectedSalary(val as number)}
+              min={100000}
+              max={200000}
+              step={1000}
+              valueLabelDisplay="auto"
+              sx={{
+                color: "#0d9488",
+                "& .MuiSlider-rail": {
+                  opacity: 0.5,
+                  backgroundColor: "#d1d5db",
+                },
+              }}
+            />
+            <span className="text-sm text-gray-700">
+              {expectedSalary.toLocaleString()} PKR
+            </span>
+          </div>
         </div>
 
         <button

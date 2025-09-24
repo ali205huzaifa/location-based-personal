@@ -165,14 +165,24 @@ const LoginPage: React.FC = () => {
             type="primary"
             htmlType="submit"
             disabled={loading}
-            className="urbanist w-full bg-black text-white py-6 mt-4 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none flex items-center justify-center"
+            className="urbanist w-full bg-black text-white py-6 mt-2 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none flex items-center justify-center"
           >
             {loading ? <ClipLoader size={25} color="#16968F" /> : "Login"}
           </AntButton>
         </Form.Item>
+
+        <div className="w-full flex justify-end">
+          <button
+            type="button"
+            className="text-sm text-white hover:underline"
+            onClick={() => navigate("/forgot-password")}
+          >
+            Forgot Password?
+          </button>
+        </div>
       </Form>
 
-      <footer className="urbanist font-Regular text-white text-xs sm:text-sm absolute bottom-4 sm:bottom-10">
+      <footer className="urbanist font-Regular text-white text-xs sm:text-sm absolute bottom-4 sm:bottom-4">
         Copyright 2025 IR Solutions. All rights reserved.
       </footer>
     </div>

@@ -44,7 +44,8 @@ export default function CandidateRowDisplay({ candidates, onView }: Props) {
             {candidates.map((candidate, i) => (
               <motion.tr
                 key={i}
-                className="border-b border-[#CDCDCD] bg-white"
+                className="border-b border-[#CDCDCD] bg-white cursor-pointer"
+                onClick={() => onView(candidate)}
                 variants={{
                   hidden: { opacity: 0, x: -40 },
                   visible: { opacity: 1, x: 0 },

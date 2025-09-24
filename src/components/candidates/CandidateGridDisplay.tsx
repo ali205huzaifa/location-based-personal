@@ -36,6 +36,7 @@ export default function CandidateGridDisplay({ candidates, onView }: Props) {
           key={i}
           className="bg-white shadow-md rounded-xl p-5 flex flex-col border border-gray-200 
                      transition-shadow duration-300"
+          onClick={() => onView(candidate)}
           variants={{
             hidden: { opacity: 0, x: -40 },
             visible: { opacity: 1, x: 0 },

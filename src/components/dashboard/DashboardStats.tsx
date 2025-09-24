@@ -6,6 +6,10 @@ const iconMap = {
   interviewScheduled: "/icons/is-icon.svg",
   hired: "/icons/ch-icon.svg",
   applied: "/icons/jp-icon.svg",
+  activeJobs: "/icons/jp-icon.svg",
+  activeApplications: "/icons/sc-icon.svg",
+  totalJobs: "/icons/jp-icon.svg",
+  totalApplications: "/icons/sc-icon.svg",
 };
 
 const DashboardStats = () => {
@@ -14,6 +18,10 @@ const DashboardStats = () => {
     interviewScheduled: 0,
     hired: 0,
     applied: 0,
+    activeJobs: 0,
+    activeApplications: 0,
+    totalJobs: 0,
+    totalApplications: 0,
   });
 
   useEffect(() => {
@@ -32,23 +40,27 @@ const DashboardStats = () => {
   const statData = [
     {
       label: "Shortlisted Candidates",
-      count: stats.shortlisted || 0,
+      count: stats.shortlisted,
       icon: iconMap.shortlisted,
     },
     {
       label: "Interviews Scheduled",
-      count: stats.interviewScheduled || 0,
+      count: stats.interviewScheduled,
       icon: iconMap.interviewScheduled,
     },
+    { label: "Candidates Hired", count: stats.hired, icon: iconMap.hired },
+    { label: "Job Applications", count: stats.applied, icon: iconMap.applied },
+    { label: "Active Jobs", count: stats.activeJobs, icon: iconMap.activeJobs },
     {
-      label: "Candidates Hired",
-      count: stats.hired || 0,
-      icon: iconMap.hired,
+      label: "Active Applications",
+      count: stats.activeApplications,
+      icon: iconMap.activeApplications,
     },
+    { label: "Total Jobs", count: stats.totalJobs, icon: iconMap.totalJobs },
     {
-      label: "Job Applications",
-      count: stats.applied || 0,
-      icon: iconMap.applied,
+      label: "Total Applications",
+      count: stats.totalApplications,
+      icon: iconMap.totalApplications,
     },
   ];
 
@@ -65,7 +77,7 @@ const DashboardStats = () => {
             </div>
             <p className="text-[#16151C] text-[19.5px]">{stat.label}</p>
           </div>
-          <p className="text-[#16151C] text-[32.01px]">{stat.count}</p>
+          <p className="text-[#16151C] text-[32.01px]">{stat.count || 0}</p>
         </div>
       ))}
     </div>
