@@ -75,6 +75,12 @@ const Sidebar = () => {
       icon: "/icons/deptSkills-icon.svg",
       permission: "view-signedNDA",
     },
+    {
+      label: "Smtp Config",
+      href: "/SmtpConfig",
+      icon: "/icons/deptSkills-icon.svg",
+      permission: "view-SmtpConfig",
+    },
   ];
 
   return (

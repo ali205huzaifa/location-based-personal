@@ -52,6 +52,18 @@ export default function JobDetailView() {
 
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
+  const [cvForm, setCvForm] = useState({
+    fullName: "",
+    email: "",
+    cvUrl: "",
+    phoneNumber: "",
+  });
+
+  const [uploading, setUploading] = useState(false);
+
+  const observerRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (!id) return;
 
@@ -153,16 +165,24 @@ export default function JobDetailView() {
     fetchCandidates(1, false);
   }, [statusFilter, genderFilter, locationFilter, sortOption]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (
-      !listLoading &&
-      hasMore &&
-      scrollHeight - scrollTop <= clientHeight + 50
-    ) {
-      fetchCandidates(currentPage + 1, true);
-    }
-  };
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !listLoading) {
+          fetchCandidates(currentPage + 1, true);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const current = observerRef.current;
+    if (current) observer.observe(current);
+
+    return () => {
+      if (current) observer.unobserve(current);
+    };
+  }, [hasMore, listLoading, currentPage]);
 
   const handleSelectCandidate = async (app: any) => {
     setSelectedApplication(app);
@@ -194,6 +214,111 @@ export default function JobDetailView() {
     setTempStatus("");
     setTempGender("");
     setTempLocation("");
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      const extension = file.name.split(".").pop()?.toLowerCase() || "";
+
+      const uploadRes = await CandidatesAPI.ManualUploadCv({
+        name: file.name,
+        fileType: extension,
+        type: "document",
+      });
+
+      const { signedUrl } = uploadRes.data;
+
+      const fileUrl = signedUrl.split("?")[0];
+
+      await fetch(signedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      setCvForm((prev) => ({ ...prev, cvUrl: fileUrl }));
+
+      Swal.fire({
+        icon: "success",
+        text: "File uploaded successfully!",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        text: "Failed to upload file",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAddCv = async () => {
+    if (!id) return;
+    if (
+      !cvForm.fullName ||
+      !cvForm.phoneNumber ||
+      !cvForm.email ||
+      !cvForm.cvUrl
+    ) {
+      Swal.fire({
+        icon: "warning",
+        text: "Please fill all fields",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      return;
+    }
+
+    try {
+      await CandidatesAPI.AddManualCv({
+        jobId: id,
+        candidateInfo: {
+          fullName: cvForm.fullName,
+          email: cvForm.email,
+          appliedVia: "website",
+          phoneNumber: "phoneNumber",
+        },
+        cvUrl: cvForm.cvUrl,
+      });
+
+      Swal.fire({
+        icon: "success",
+        text: "CV added successfully!",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+
+      setIsCvModalOpen(false);
+      setCvForm({ fullName: "", email: "", cvUrl: "", phoneNumber: "" });
+      fetchCandidates(1, false);
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        text: "Failed to add CV",
+        toast: true,
+        position: "top-right",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
   };
 
   if (loading) {
@@ -298,11 +423,19 @@ export default function JobDetailView() {
               ? "Both genders"
               : job.gender.toLowerCase()}
           </span>
+          <div className="ml-auto">
+            <button
+              onClick={() => setIsCvModalOpen(true)}
+              className="bg-teal-600 text-white px-3 py-1 rounded-md hover:bg-teal-700"
+            >
+              Add CV
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="flex flex-1 p-4 gap-8">
-        <div className="w-[360px] max-h-[850px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white">
+        <div className="w-[360px] max-h-[850px] border-r overflow-y-auto py-3 border border-gray-300 rounded-lg p-4 bg-white hide-scrollbar">
           <div className="flex items-center justify-between border rounded-lg px-4 py-2 mb-4">
             <div className="flex gap-2 w-full max-w-sm">
               <img
@@ -344,11 +477,8 @@ export default function JobDetailView() {
             </span>
           </div>
 
-          <div
-            className="max-h-[700px] overflow-y-auto pr-1"
-            onScroll={handleScroll}
-          >
-            {listLoading ? (
+          <div className="max-h-[750px] overflow-y-auto pr-1">
+            {listLoading && candidates.length === 0 ? (
               <div className="flex justify-center items-center py-10">
                 <ClipLoader size={35} color="#16968F" loading />
               </div>
@@ -357,82 +487,86 @@ export default function JobDetailView() {
                 No candidates found
               </p>
             ) : (
-              <motion.ul
-                className="space-y-2"
-                variants={listVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <AnimatePresence>
-                  {candidates.map((app) => {
-                    const c = app.candidate;
-                    return (
-                      <motion.li
-                        key={app._id}
-                        onClick={() => handleSelectCandidate(app)}
-                        className={`p-4 cursor-pointer border-b border-gray-300 ${
-                          selectedApplication?._id === app._id
-                            ? "opacity-10 bg-stone-100"
-                            : "hover:bg-gray-100"
-                        } ${!app.isRead ? "border-l-2 border-teal-600" : ""}`}
-                        variants={itemVariants}
-                        whileHover={{
-                          scale: 1.02,
-                          boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
-                        }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                      >
-                        <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                          <div>
-                            {new Date(app.appliedAt).toLocaleDateString()}
+              <>
+                <motion.ul
+                  className="space-y-2"
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <AnimatePresence>
+                    {candidates.map((app) => {
+                      const c = app.candidate;
+                      return (
+                        <motion.li
+                          key={app._id}
+                          onClick={() => handleSelectCandidate(app)}
+                          className={`p-4 cursor-pointer border-b border-gray-300 ${
+                            selectedApplication?._id === app._id
+                              ? "opacity-10 bg-stone-100"
+                              : "hover:bg-gray-100"
+                          } ${!app.isRead ? "border-l-2 border-teal-600" : ""}`}
+                          variants={itemVariants}
+                          whileHover={{
+                            scale: 1.02,
+                            boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+                          }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                        >
+                          <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                            <div>
+                              {new Date(app.appliedAt).toLocaleDateString()}
+                            </div>
+                            <div
+                              className={`text-xs font-normal ${
+                                app.status === "INTERVIEW_SCHEDULED"
+                                  ? "text-[#16968F]"
+                                  : app.status === "REJECTED"
+                                  ? "text-[#961616]"
+                                  : app.status === "SHORTLISTED"
+                                  ? "text-[#A37302]"
+                                  : app.status === "REVIEWED"
+                                  ? "text-[#000000]"
+                                  : "text-[#000000]"
+                              }`}
+                            >
+                              {app.status
+                                .toLowerCase()
+                                .replace(/_/g, " ")
+                                .replace(/^\w/, (c: string) => c.toUpperCase())}
+                            </div>
                           </div>
-                          <div
-                            className={`text-xs font-normal ${
-                              app.status === "INTERVIEW_SCHEDULED"
-                                ? "text-[#16968F]"
-                                : app.status === "REJECTED"
-                                ? "text-[#961616]"
-                                : app.status === "SHORTLISTED"
-                                ? "text-[#A37302]"
-                                : app.status === "REVIEWED"
-                                ? "text-[#000000]"
-                                : app.status === "APPLIED"
-                                ? "text-[#000000]"
-                                : app.status === "SELECTED"
-                                ? "text-[#000000]"
-                                : "text-[#000000]"
-                            }`}
-                          >
-                            {app.status
-                              .toLowerCase()
-                              .replace(/_/g, " ")
-                              .replace(/^\w/, (c: string) => c.toUpperCase())}
+                          <div className="text-black text-base font-medium">
+                            {c?.fullName}
                           </div>
-                        </div>
-                        <div className="text-black text-base font-medium">
-                          {c?.fullName}
-                        </div>
-                        <div className="text-indigo-700 text-sm">
-                          {c?.currentLocation || "No City"}
-                        </div>
-                        <div className="flex items-center gap-1 mt-2">
-                          <img
-                            src="/icons/comment-icon.svg"
-                            alt="List"
-                            width={15}
-                            height={15}
-                          />
-                          <div className="justify-start text-neutral-500 text-xs font-medium urbanist leading-tight">
-                            {app.comments?.length > 0
-                              ? app.comments[app.comments.length - 1].text
-                              : "No comment"}
+                          <div className="text-indigo-700 text-sm">
+                            {c?.currentLocation || "No City"}
                           </div>
-                        </div>
-                      </motion.li>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.ul>
+                          <div className="flex items-center gap-1 mt-2">
+                            <img
+                              src="/icons/comment-icon.svg"
+                              alt="List"
+                              width={15}
+                              height={15}
+                            />
+                            <div className="justify-start text-neutral-500 text-xs font-medium urbanist leading-tight">
+                              {app.comments?.length > 0
+                                ? app.comments[app.comments.length - 1].text
+                                : "No comment"}
+                            </div>
+                          </div>
+                        </motion.li>
+                      );
+                    })}
+                  </AnimatePresence>
+                </motion.ul>
+
+                {hasMore && (
+                  <div ref={observerRef} className="h-6 flex justify-center">
+                    {listLoading && <ClipLoader size={20} color="#16968F" />}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -625,6 +759,139 @@ export default function JobDetailView() {
                 }}
               >
                 Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isCvModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[480px] shadow-lg">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h2 className="text-xl font-medium text-slate-900">
+                Add Candidate CV
+              </h2>
+              <button
+                onClick={() => {
+                  setIsCvModalOpen(false);
+                  setCvForm({
+                    fullName: "",
+                    email: "",
+                    cvUrl: "",
+                    phoneNumber: "",
+                  });
+                  setUploading(false);
+                }}
+              >
+                <img
+                  src="/icons/cross-icon.svg"
+                  alt="Close"
+                  width={18}
+                  height={18}
+                />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={cvForm.fullName}
+                  onChange={(e) =>
+                    setCvForm({ ...cvForm, fullName: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Enter candidate name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={cvForm.phoneNumber}
+                  onChange={(e) =>
+                    setCvForm({ ...cvForm, phoneNumber: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Enter candidate phone number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={cvForm.email}
+                  onChange={(e) =>
+                    setCvForm({ ...cvForm, email: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  placeholder="Enter candidate email"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload CV
+                </label>
+                {cvForm.cvUrl ? (
+                  <div className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-md text-sm">
+                    <a
+                      href={cvForm.cvUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-teal-600 underline"
+                    >
+                      {cvForm.cvUrl.split("/").pop()}
+                    </a>
+                    <button
+                      onClick={() =>
+                        setCvForm((prev) => ({ ...prev, cvUrl: "" }))
+                      }
+                      className="text-red-500 text-xs ml-2"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) =>
+                      e.target.files && handleFileUpload(e.target.files[0])
+                    }
+                    className="w-full text-sm"
+                    disabled={uploading}
+                  />
+                )}
+                {uploading && (
+                  <p className="text-xs text-gray-500 mt-1">Uploading...</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={() => setIsCvModalOpen(false)}
+                className="px-5 py-2 text-sm border rounded-md text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddCv}
+                className="px-6 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700"
+                disabled={uploading}
+              >
+                {uploading ? "Creating..." : "Create Application"}
               </button>
             </div>
           </div>

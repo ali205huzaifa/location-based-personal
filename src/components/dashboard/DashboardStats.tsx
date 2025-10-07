@@ -17,7 +17,7 @@ const DashboardStats = () => {
     shortlisted: 0,
     interviewScheduled: 0,
     hired: 0,
-    applied: 0,
+    rejected: 0,
     activeJobs: 0,
     activeApplications: 0,
     totalJobs: 0,
@@ -28,7 +28,20 @@ const DashboardStats = () => {
     const fetchStats = async () => {
       try {
         const { data } = await NoteAPI.getAllStats();
-        setStats(data || {});
+
+        const mappedStats = {
+          shortlisted: data.applicationStats?.shortlisted || 0,
+          interviewScheduled: data.applicationStats?.interviewScheduled || 0,
+          hired: data.applicationStats?.hired || 0,
+          rejected: data.applicationStats?.rejected || 0,
+
+          activeJobs: data.totals?.activeJobs || 0,
+          activeApplications: data.totals?.applicationsAgainstActiveJobs || 0,
+          totalJobs: data.totals?.totalJobs || 0,
+          totalApplications: data.totals?.totalApplications || 0,
+        };
+
+        setStats(mappedStats);
       } catch (error) {
         console.error("Failed to fetch stats:", error);
       }
@@ -49,7 +62,11 @@ const DashboardStats = () => {
       icon: iconMap.interviewScheduled,
     },
     { label: "Candidates Hired", count: stats.hired, icon: iconMap.hired },
-    { label: "Job Applications", count: stats.applied, icon: iconMap.applied },
+    {
+      label: "Rejected Applications",
+      count: stats.rejected,
+      icon: iconMap.applied,
+    },
     { label: "Active Jobs", count: stats.activeJobs, icon: iconMap.activeJobs },
     {
       label: "Active Applications",
@@ -77,7 +94,7 @@ const DashboardStats = () => {
             </div>
             <p className="text-[#16151C] text-[19.5px]">{stat.label}</p>
           </div>
-          <p className="text-[#16151C] text-[32.01px]">{stat.count || 0}</p>
+          <p className="text-[#16151C] text-[32.01px]">{stat.count}</p>
         </div>
       ))}
     </div>

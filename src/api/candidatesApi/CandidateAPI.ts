@@ -20,6 +20,14 @@ class CandidatesAPI {
   static SubmitNDAForm(id: string, payload: any) {
     return axiosClient.patch(`/candidates/${id}`, payload);
   }
+
+  static AddManualCv(payload: any) {
+    return axiosClient.post(`/applications`, payload);
+  }
+
+  static ManualUploadCv(data: { name: string; fileType: string; type: string }) {
+    return axiosClient.post(`/ndaDoc/upload-media`, data);
+  }
 }
 
 export default CandidatesAPI;

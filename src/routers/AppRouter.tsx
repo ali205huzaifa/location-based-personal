@@ -28,6 +28,7 @@ import SkillsPage from "../components/deptSkills/SkillsPage";
 import SignedNdaList from "../components/signedNDA/signedNdaList";
 import ForgotPassword from "../components/Auth/ForgotPassword";
 import VerifyOtp from "../components/Auth/VerifyOtp";
+import SmtpView from "../components/SmtpConfig/SmtpView";
 
 const AppRouter: React.FC = () => {
   return (
@@ -148,6 +149,14 @@ const AppRouter: React.FC = () => {
             element={
               <ProtectedRoute requiredPermission="view-signedNDA">
                 <SignedNdaList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/SmtpConfig"
+            element={
+              <ProtectedRoute requiredPermission="view-SmtpConfig">
+                <SmtpView />
               </ProtectedRoute>
             }
           />

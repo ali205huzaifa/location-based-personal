@@ -17,7 +17,7 @@ class signedNdaAPI {
     return axiosClient.delete(`/ndaDoc/${id}`);
   }
 
-    static GetUploadUrl(data: { name: string; fileType: string; type: string }) {
+  static GetUploadUrl(data: { name: string; fileType: string; type: string }) {
     return axiosClient.post("/ndaDoc/upload-media", data);
   }
 }

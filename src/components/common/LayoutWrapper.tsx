@@ -26,6 +26,7 @@ function getTitleFromPath(pathname: string): string {
     /^[a-zA-Z0-9]{12,}$/.test(segments[segments.length - 1]);
 
   if (pathname.includes("/jobs/") && isLikelyId) return "Jobs";
+  if (pathname.includes("/SmtpConfig")) return "Smtp Configuration";
 
   const base = isLikelyId
     ? segments[segments.length - 2]
