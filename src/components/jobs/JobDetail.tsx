@@ -63,6 +63,7 @@ export default function JobDetailView() {
   const [uploading, setUploading] = useState(false);
 
   const observerRef = useRef<HTMLDivElement | null>(null);
+  const loadingPage = useRef<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -86,11 +87,12 @@ export default function JobDetailView() {
     fetchJob();
   }, [id]);
 
-  const fetchCandidates = async (
-    page: number = currentPage,
-    append = false
-  ) => {
+  const fetchCandidates = async (page = currentPage, append = false) => {
     if (!id) return;
+
+    if (loadingPage.current === page) return;
+    loadingPage.current = page;
+
     try {
       setListLoading(true);
 
@@ -109,12 +111,7 @@ export default function JobDetailView() {
       const res = await CandidatesAPI.getAll(params);
       const data = Array.isArray(res.data.data) ? res.data.data : [];
 
-      if (append) {
-        setCandidates((prev) => [...prev, ...data]);
-      } else {
-        setCandidates(data);
-      }
-
+      setCandidates((prev) => (append ? [...prev, ...data] : data));
       setCurrentPage(res.data.currentPage || page);
 
       if (
@@ -139,6 +136,7 @@ export default function JobDetailView() {
       setCandidates([]);
     } finally {
       setListLoading(false);
+      loadingPage.current = null;
     }
   };
 
@@ -158,19 +156,22 @@ export default function JobDetailView() {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (initialLoad.current) return;
-    initialLoad.current = true;
     setCandidates([]);
     setCurrentPage(1);
     fetchCandidates(1, false);
   }, [statusFilter, genderFilter, locationFilter, sortOption]);
+
+  const currentPageRef = useRef(currentPage);
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
         if (first.isIntersecting && hasMore && !listLoading) {
-          fetchCandidates(currentPage + 1, true);
+          fetchCandidates(currentPageRef.current + 1, true);
         }
       },
       { threshold: 1.0 }
@@ -181,8 +182,9 @@ export default function JobDetailView() {
 
     return () => {
       if (current) observer.unobserve(current);
+      observer.disconnect();
     };
-  }, [hasMore, listLoading, currentPage]);
+  }, [hasMore, listLoading]);
 
   const handleSelectCandidate = async (app: any) => {
     setSelectedApplication(app);
@@ -214,6 +216,15 @@ export default function JobDetailView() {
     setTempStatus("");
     setTempGender("");
     setTempLocation("");
+
+    setStatusFilter("");
+    setGenderFilter("");
+    setLocationFilter("");
+    setCurrentPage(1);
+    setHasMore(true);
+    setCandidates([]);
+
+    fetchCandidates(1, false);
   };
 
   const handleFileUpload = async (file: File) => {
@@ -477,7 +488,7 @@ export default function JobDetailView() {
             </span>
           </div>
 
-          <div className="max-h-[750px] overflow-y-auto pr-1">
+          <div className="max-h-[750px] overflow-y-auto pr-1 hide-scrollbar">
             {listLoading && candidates.length === 0 ? (
               <div className="flex justify-center items-center py-10">
                 <ClipLoader size={35} color="#16968F" loading />
