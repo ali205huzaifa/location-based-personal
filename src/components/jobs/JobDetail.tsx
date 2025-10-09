@@ -302,7 +302,7 @@ export default function JobDetailView() {
           fullName: cvForm.fullName,
           email: cvForm.email,
           appliedVia: "website",
-          phoneNumber: "phoneNumber",
+          phoneNumber: cvForm.phoneNumber,
         },
         cvUrl: cvForm.cvUrl,
       });
