@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { Form, Button as AntButton } from "antd";
-import Swal from "sweetalert2";
+import { Form, Button, Input, message, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthAPI from "../../api/authApi/AuthAPI";
-import ClipLoader from "react-spinners/ClipLoader";
 
 const ForgotPassword: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -13,86 +11,74 @@ const ForgotPassword: React.FC = () => {
     try {
       setLoading(true);
       const res = await AuthAPI.SendOTP({ email: values.email });
-      Swal.fire({
-        icon: "success",
-        text: res.data.message || "An OTP has been sent to your email.",
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      message.success(
+        res.data.message || "An OTP has been sent to your email."
+      );
       navigate("/verify-otp", { state: { email: values.email } });
     } catch (err: any) {
-      Swal.fire({
-        icon: "error",
-        text: "Something went wrong.",
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      message.error(err?.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center bg-cover bg-center px-4 sm:px-6 md:px-10 pt-16 sm:pt-24 md:pt-40 relative"
-      style={{ backgroundImage: `url('/images/login-Background.svg')` }}
-    >
-      <div className="text-center mb-10">
-        <img
-          src="/images/IR-logo.svg"
-          alt="Logo"
-          width={144}
-          height={144}
-          className="mx-auto mb-6"
-        />
-        <h1 className="urbanist font-medium text-white text-2xl sm:text-3xl md:text-4xl">
-          Job Portal & Management System
-        </h1>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">
+          Forgot Password?
+        </h2>
+        <p className="text-gray-500 mb-6 text-lg">
+          Enter your email to reset your account access.
+        </p>
 
-      <Form
-        name="forgotPasswordForm"
-        onFinish={handleSendOTP}
-        className="w-full max-w-md px-6 py-8 sm:px-8"
-        layout="vertical"
-      >
-        <Form.Item
-          name="email"
-          rules={[{ required: true, message: "Please enter your email!" }]}
+        <Form
+          name="forgotPasswordForm"
+          onFinish={handleSendOTP}
+          layout="vertical"
         >
-          <div className="relative">
-            <img
-              src="/icons/username-icon.svg"
-              alt="user"
-              width={20}
-              height={20}
-              className="absolute left-4 top-4"
-            />
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="urbanist pl-12 px-4 py-3 w-full border rounded-lg focus:outline-none text-sm sm:text-base"
-            />
-          </div>
-        </Form.Item>
-
-        <Form.Item>
-          <AntButton
-            type="primary"
-            htmlType="submit"
-            disabled={loading}
-            className="urbanist w-full bg-black text-white py-6 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none flex items-center justify-center"
+          <Form.Item
+            name="email"
+            label={<span className="text-gray-700 font-medium">Email</span>}
+            rules={[
+              { required: true, message: "Please enter your email!" },
+              { type: "email", message: "Please enter a valid email address!" },
+            ]}
+            className="mb-6"
           >
-            {loading ? <ClipLoader size={25} color="#16968F" /> : "Send OTP"}
-          </AntButton>
-        </Form.Item>
-      </Form>
+            <Input
+              placeholder="example123@gmail.com"
+              size="large"
+              className="rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              disabled={loading}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 ease-in-out h-10 flex items-center justify-center"
+            >
+              {loading ? (
+                <Spin size="small" className="text-white" />
+              ) : (
+                "Send Code"
+              )}
+            </Button>
+          </Form.Item>
+        </Form>
+
+        <div className="mt-6 text-sm">
+          <span className="text-gray-500">Back to </span>
+          <a
+            onClick={() => navigate("/")}
+            className="text-purple-600 hover:text-purple-700 cursor-pointer"
+          >
+            Login
+          </a>
+        </div>
+      </div>
     </div>
   );
 };

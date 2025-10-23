@@ -1,17 +1,18 @@
 import React, { useState } from "react";
-import { Form, Button as AntButton } from "antd";
-import Swal from "sweetalert2";
+import { Form, Button, Input, message, Spin } from "antd";
+import {
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+  LockOutlined,
+  NumberOutlined,
+} from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthAPI from "../../api/authApi/AuthAPI";
-import ClipLoader from "react-spinners/ClipLoader";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 
 const VerifyOtp: React.FC = () => {
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -22,26 +23,10 @@ const VerifyOtp: React.FC = () => {
     try {
       setLoading(true);
       await AuthAPI.VerifyOTP({ otp: Number(enteredOtp) });
-      Swal.fire({
-        icon: "success",
-        title: "OTP Verified",
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      message.success("OTP verified successfully!");
       setOtpVerified(true);
     } catch (err: any) {
-      Swal.fire({
-        icon: "error",
-        text: "Please Enter Correct OTP!",
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      message.error("Please enter the correct OTP!");
     } finally {
       setLoading(false);
     }
@@ -52,15 +37,7 @@ const VerifyOtp: React.FC = () => {
     confirmPassword: string;
   }) => {
     if (values.newPassword !== values.confirmPassword) {
-      Swal.fire({
-        icon: "error",
-        text: "New password and confirm password must match!",
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      message.error("New password and confirm password must match!");
       return;
     }
 
@@ -71,23 +48,10 @@ const VerifyOtp: React.FC = () => {
         newPassword: values.newPassword,
         otp: Number(otp),
       });
-      Swal.fire({
-        icon: "success",
-        title: "Password Changed Successfully",
-        toast: true,
-        position: "top-right",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      message.success("Password changed successfully!");
       navigate("/");
     } catch (err: any) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed",
-        text: err?.response?.data?.message || "Something went wrong.",
-        confirmButtonColor: "#000",
-      });
+      message.error(err?.response?.data?.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -98,24 +62,13 @@ const VerifyOtp: React.FC = () => {
       className="min-h-screen flex flex-col items-center bg-cover bg-center px-4 sm:px-6 md:px-10 pt-16 sm:pt-24 md:pt-40 relative"
       style={{ backgroundImage: `url('/images/login-Background.svg')` }}
     >
-      <div className="text-center mb-10">
-        <img
-          src="/images/IR-logo.svg"
-          alt="Logo"
-          width={144}
-          height={144}
-          className="mx-auto mb-6"
-        />
-        <h1 className="urbanist font-medium text-white text-2xl sm:text-3xl md:text-4xl">
-          Job Portal & Management System
-        </h1>
-      </div>
-
       {!otpVerified ? (
-        <div className="w-full max-w-md px-6 py-8">
-          <h2 className="text-center text-lg font-medium mb-4">Enter OTP</h2>
-          <input
-            type="text"
+        <div className="w-full max-w-md px-6 py-8 bg-transparent">
+          <h2 className="text-center text-lg font-medium mb-4 text-white">
+            Enter OTP
+          </h2>
+          <Input
+            prefix={<NumberOutlined />}
             value={otp}
             maxLength={6}
             onChange={(e) => {
@@ -125,12 +78,13 @@ const VerifyOtp: React.FC = () => {
                 handleVerifyOTP(val);
               }
             }}
-            className="urbanist text-center text-lg tracking-[10px] px-4 py-3 w-full border rounded-lg focus:outline-none"
-            placeholder="______"
+            placeholder="Enter 6-digit OTP"
+            size="large"
+            className="text-center tracking-[8px]"
           />
           {loading && (
             <div className="flex justify-center mt-4">
-              <ClipLoader size={30} color="#16968F" />
+              <Spin size="large" />
             </div>
           )}
         </div>
@@ -138,82 +92,48 @@ const VerifyOtp: React.FC = () => {
         <Form
           name="resetPasswordForm"
           onFinish={handleResetPassword}
-          className="w-full max-w-md px-6 py-8 sm:px-8"
+          className="w-full max-w-md px-6 py-8 sm:px-8 bg-transparent"
           layout="vertical"
         >
           <Form.Item
             name="newPassword"
+            label={<span className="text-white">New Password</span>}
             rules={[{ required: true, message: "Please enter new password!" }]}
           >
-            <div className="relative">
-              <img
-                src="/icons/password-icon.svg"
-                alt="lock"
-                width={20}
-                height={20}
-                className="absolute left-4 top-4"
-              />
-              <input
-                type={showNewPassword ? "text" : "password"}
-                placeholder="New Password"
-                className="urbanist pl-20 px-4 py-3 w-full border rounded-lg focus:outline-none text-sm sm:text-base password-input"
-              />
-              <span
-                className="absolute right-4 top-3.5 cursor-pointer text-gray-500"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-              >
-                {showNewPassword ? (
-                  <EyeInvisibleOutlined />
-                ) : (
-                  <EyeTwoTone twoToneColor="#999" />
-                )}
-              </span>
-            </div>
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="New Password"
+              size="large"
+              iconRender={(visible) =>
+                visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+              }
+            />
           </Form.Item>
 
           <Form.Item
             name="confirmPassword"
+            label={<span className="text-white">Confirm Password</span>}
             rules={[{ required: true, message: "Please confirm password!" }]}
           >
-            <div className="relative">
-              <img
-                src="/icons/password-icon.svg"
-                alt="lock"
-                width={20}
-                height={20}
-                className="absolute left-4 top-4"
-              />
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                className="urbanist pl-20 px-4 py-3 w-full border rounded-lg focus:outline-none text-sm sm:text-base password-input"
-              />
-              <span
-                className="absolute right-4 top-3.5 cursor-pointer text-gray-500"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeInvisibleOutlined />
-                ) : (
-                  <EyeTwoTone twoToneColor="#999" />
-                )}
-              </span>
-            </div>
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Confirm Password"
+              size="large"
+              iconRender={(visible) =>
+                visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+              }
+            />
           </Form.Item>
 
           <Form.Item>
-            <AntButton
+            <Button
               type="primary"
               htmlType="submit"
               disabled={loading}
               className="urbanist w-full bg-black text-white py-6 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none flex items-center justify-center"
             >
-              {loading ? (
-                <ClipLoader size={25} color="#16968F" />
-              ) : (
-                "Change Password"
-              )}
-            </AntButton>
+              {loading ? <Spin size="small" /> : "Change Password"}
+            </Button>
           </Form.Item>
         </Form>
       )}

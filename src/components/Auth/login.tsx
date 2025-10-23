@@ -1,17 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import { Form, Button as AntButton } from "antd";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import AuthAPI from "../../api/authApi/AuthAPI";
+import { Form, Input, Button, Divider, message } from "antd";
+import {
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+  GoogleOutlined,
+  AppleOutlined,
+} from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
-import ClipLoader from "react-spinners/ClipLoader";
+import AuthAPI from "../../api/authApi/AuthAPI";
+
+const PURPLE_LIGHT = "#EDE5FF";
+const PURPLE_MAIN = "#7C4DFF";
+const GRAY_DARK = "#333";
+const GRAY_MEDIUM = "#666";
+const GRAY_LIGHT_BG = "#f8f8fc";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleFinish = async (values: {
@@ -40,11 +48,7 @@ const LoginPage: React.FC = () => {
         accessLevel: user.accessLevel || "user",
         lastLogin: user.lastLogin || new Date().toISOString(),
         profilePicture: user.profilePicture,
-        role: {
-          _id: user.role._id,
-          name: user.role.name,
-          permissions: user.role.permissions || [],
-        },
+        role: user.role,
         isActive: user.isActive,
         isBlocked: user.isBlocked,
         emailVerified: user.emailVerified,
@@ -61,23 +65,14 @@ const LoginPage: React.FC = () => {
       );
 
       localStorage.setItem("token", api_token);
-
-      const permissions = user.role.permissions;
-      if (permissions.includes("view-dashboard")) {
-        navigate("/dashboard");
-      } else if (permissions.includes("view-job")) {
-        navigate("/jobs");
-      }
+      message.success("Login successful!");
+      navigate("/dashboard");
     } catch (err: any) {
-      Swal.fire({
-        icon: "error",
-        title: "Login Failed",
-        text:
-          err?.response?.data?.message ||
+      message.error(
+        err?.response?.data?.message ||
           err.message ||
-          "Invalid username or password.",
-        confirmButtonColor: "#000",
-      });
+          "Invalid username or password."
+      );
     } finally {
       setLoading(false);
     }
@@ -85,106 +80,123 @@ const LoginPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center bg-cover bg-center px-4 sm:px-6 md:px-10 pt-16 sm:pt-24 md:pt-40 relative"
-      style={{ backgroundImage: `url('/images/login-Background.svg')` }}
+      className={`min-h-screen flex flex-col md:flex-row bg-[${GRAY_LIGHT_BG}]`}
     >
-      <div className="text-center mb-10 sm:mb-15">
-        <img
-          src="/images/IR-logo.svg"
-          alt="Logo"
-          width={144}
-          height={144}
-          className="mx-auto mb-6"
-        />
-        <h1 className="urbanist font-medium text-white text-2xl sm:text-3xl md:text-4xl">
-          Job Portal & Management System
-        </h1>
+      <div
+        className={`md:w-1/2 w-full flex flex-col justify-center items-center bg-[${PURPLE_LIGHT}] p-10 sm:p-16`}
+      >
+        <div className="max-w-md text-left w-full">
+          <h1
+            className={`text-4xl sm:text-5xl font-extrabold text-[${PURPLE_MAIN}] mb-6`}
+          >
+            Logo
+          </h1>
+
+          <img
+            src="/images/login-illustration.svg"
+            alt="Login illustration"
+            className="w-full max-w-md mx-auto"
+          />
+
+          <p
+            className={`mt-6 text-[${GRAY_MEDIUM}] text-base sm:text-lg leading-relaxed`}
+          >
+            Login to continue exploring what's happening around you.
+          </p>
+        </div>
       </div>
 
-      <Form
-        name="loginForm"
-        onFinish={handleFinish}
-        className="w-full max-w-md px-6 py-8 sm:px-8"
-        layout="vertical"
-      >
-        <Form.Item
-          name="username"
-          rules={[
-            { required: true, message: "Please enter your email address!" },
-          ]}
-        >
-          <div className="relative">
-            <img
-              src="/icons/username-icon.svg"
-              alt="user"
-              width={20}
-              height={20}
-              className="absolute left-4 top-3.5"
-            />
-            <input
-              type="text"
-              placeholder="Email Address"
-              autoComplete="username"
-              className="urbanist pl-20 py-3 w-full bg-white rounded-lg focus:outline-none text-sm sm:text-base password-input"
-            />
-          </div>
-        </Form.Item>
+      <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 py-10 bg-white">
+        <div className="w-full max-w-sm">
+          <h2 className={`text-3xl font-normal mb-8 text-gray-800`}>Login</h2>
 
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: "Please enter your password!" }]}
-        >
-          <div className="relative">
-            <img
-              src="/icons/password-icon.svg"
-              alt="lock"
-              width={20}
-              height={20}
-              className="absolute left-4 top-3.5"
-            />
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              className="urbanist pl-20 pr-12 py-3 w-full bg-white rounded-lg focus:outline-none text-sm sm:text-base password-input"
-            />
-            <span
-              className="absolute right-4 top-3.5 cursor-pointer text-gray-500"
-              onClick={() => setShowPassword(!showPassword)}
+          <Form layout="vertical" onFinish={handleFinish} className="space-y-4">
+            <Form.Item
+              name="username"
+              label={
+                <span className={`text-[${GRAY_DARK}] font-normal`}>Email</span>
+              }
+              rules={[
+                { required: true, message: "Please enter your email" },
+                { type: "email", message: "Enter a valid email address" },
+              ]}
             >
-              {showPassword ? (
-                <EyeInvisibleOutlined />
-              ) : (
-                <EyeTwoTone twoToneColor="#999" />
-              )}
-            </span>
-          </div>
-        </Form.Item>
+              <Input
+                placeholder="example123@gmail.com"
+                size="large"
+                className="rounded-lg !h-12 border border-solid border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
+              />
+            </Form.Item>
 
-        <Form.Item>
-          <AntButton
-            type="primary"
-            htmlType="submit"
-            disabled={loading}
-            className="urbanist w-full bg-black text-white py-6 mt-2 rounded-lg hover:!bg-gray-800 transition font-medium text-sm sm:text-base border-none flex items-center justify-center"
-          >
-            {loading ? <ClipLoader size={25} color="#16968F" /> : "Login"}
-          </AntButton>
-        </Form.Item>
+            <Form.Item
+              name="password"
+              label={
+                <span className={`text-[${GRAY_DARK}] font-normal`}>
+                  Password
+                </span>
+              }
+              rules={[
+                { required: true, message: "Please enter your password" },
+              ]}
+            >
+              <Input.Password
+                placeholder="Enter your password"
+                iconRender={(visible) =>
+                  visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                }
+                size="large"
+                className="rounded-lg !h-12 border border-solid border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
+              />
+            </Form.Item>
 
-        <div className="w-full flex justify-end">
-          <button
-            type="button"
-            className="text-sm text-white hover:underline"
-            onClick={() => navigate("/forgot-password")}
-          >
-            Forgot Password?
-          </button>
+            <div className="flex justify-end mb-6">
+              <button
+                type="button"
+                className={`text-sm text-[${PURPLE_MAIN}] hover:underline`}
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              className={`w-full !h-12 bg-[${PURPLE_MAIN}] border-none hover:!bg-[#6b3df7] text-white font-medium rounded-lg shadow-md transition-all duration-200`}
+            >
+              Login
+            </Button>
+
+            <Divider className="text-gray-500 my-8">or continue with</Divider>
+
+            <div className="flex justify-center gap-4">
+              <Button
+                icon={<GoogleOutlined className="text-xl" />}
+                shape="circle"
+                size="large"
+                className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF] hover:text-[#7C4DFF]"
+              />
+              <Button
+                icon={<AppleOutlined className="text-xl" />}
+                shape="circle"
+                size="large"
+                className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF] hover:text-[#7C4DFF]"
+              />
+            </div>
+
+            <p className="text-center mt-8 text-gray-600">
+              Don’t have an account?{" "}
+              <span
+                onClick={() => navigate("/signup")}
+                className={`text-[${PURPLE_MAIN}] cursor-pointer font-medium hover:underline`}
+              >
+                Sign up
+              </span>
+            </p>
+          </Form>
         </div>
-      </Form>
-
-      <footer className="urbanist font-Regular text-white text-xs sm:text-sm absolute bottom-4 sm:bottom-4">
-        Copyright 2025 IR Solutions. All rights reserved.
-      </footer>
+      </div>
     </div>
   );
 };
