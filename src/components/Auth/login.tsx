@@ -33,38 +33,34 @@ const LoginPage: React.FC = () => {
         password: values.password,
       });
 
-      const api_token = loginRes.data.api_token;
+      const api_token = loginRes.data.data.token;
       if (!api_token) throw new Error("Token not found");
 
       const verifyRes = await AuthAPI.verifyToken(api_token);
-      const user = verifyRes.data.data.user;
+      const user = verifyRes?.data;
 
       const userInfo = {
         _id: user._id,
-        name: user.name,
-        fullName: user.fullName || user.name,
+        fullName: user.fullName,
+        username: user.username,
         email: user.email,
-        phoneNumber: user.phoneNumber || "",
-        accessLevel: user.accessLevel || "user",
-        lastLogin: user.lastLogin || new Date().toISOString(),
-        profilePicture: user.profilePicture,
         role: user.role,
-        isActive: user.isActive,
-        isBlocked: user.isBlocked,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        status: user.status,
+        age: user.age,
+        dob: user.dob,
+        notificationsEnabled: user.notificationsEnabled,
+        privacy: user.privacy,
       };
 
       dispatch(
         setAuthData({
           currentUser: userInfo,
           token: api_token,
-          permissions: user.role.permissions,
         })
       );
 
       localStorage.setItem("token", api_token);
+
       message.success("Login successful!");
       navigate("/dashboard");
     } catch (err: any) {
@@ -87,22 +83,25 @@ const LoginPage: React.FC = () => {
       >
         <div className="max-w-md text-left w-full">
           <h1
-            className={`text-4xl sm:text-5xl font-extrabold text-[${PURPLE_MAIN}] mb-6`}
+            className={`text-4xl sm:text-5xl font-extrabold text-[${PURPLE_MAIN}] mb-8`}
           >
             Logo
           </h1>
-
-          <img
-            src="/images/login-illustration.svg"
-            alt="Login illustration"
-            className="w-full max-w-md mx-auto"
-          />
-
+          <h1
+            className={`text-4xl sm:text-5xl font-extrabold text-[${PURPLE_MAIN}]`}
+          >
+            Welcome Back!
+          </h1>
           <p
-            className={`mt-6 text-[${GRAY_MEDIUM}] text-base sm:text-lg leading-relaxed`}
+            className={`py-6 text-[${GRAY_MEDIUM}] text-base sm:text-lg leading-relaxed`}
           >
             Login to continue exploring what's happening around you.
           </p>
+          <img
+            src="/images/login.svg"
+            alt="Login illustration"
+            className="max-w-lg mx-auto mt-4"
+          />
         </div>
       </div>
 
@@ -163,14 +162,14 @@ const LoginPage: React.FC = () => {
               type="primary"
               htmlType="submit"
               loading={loading}
-              className={`w-full !h-12 bg-[${PURPLE_MAIN}] border-none hover:!bg-[#6b3df7] text-white font-medium rounded-lg shadow-md transition-all duration-200`}
+              className={`w-full !h-12 bg-[${PURPLE_MAIN}] border-none hover:!bg-[#6b3df7] text-white font-medium rounded-lg shadow-md transition-all duration-200 !mt-12`}
             >
               Login
             </Button>
 
-            <Divider className="text-gray-500 my-8">or continue with</Divider>
+            <Divider className="text-gray-500 !my-8">or continue with</Divider>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-8">
               <Button
                 icon={<GoogleOutlined className="text-xl" />}
                 shape="circle"
@@ -185,7 +184,7 @@ const LoginPage: React.FC = () => {
               />
             </div>
 
-            <p className="text-center mt-8 text-gray-600">
+            <p className="text-center !mt-8 text-gray-600">
               Don’t have an account?{" "}
               <span
                 onClick={() => navigate("/signup")}

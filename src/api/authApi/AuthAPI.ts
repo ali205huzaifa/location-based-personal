@@ -5,8 +5,12 @@ class AuthAPI {
     return axiosClient.post('/auth/login', data);
   }
 
+  static SignUp(data: { fullName:string; email: string; password: string }) {
+    return axiosClient.post('/auth/register', data);
+  }
+
   static verifyToken(token: string) {
-    return axiosClient.get('/auth/verify-token', {
+    return axiosClient.get('/user/me', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -14,7 +18,7 @@ class AuthAPI {
   }
 
   static SendOTP(data: { email: string; }) {
-    return axiosClient.post('/auth/forgot-password', data);
+    return axiosClient.post('/auth/forget-password', data);
   }
 
   static VerifyOTP (data: { otp: number; }) {

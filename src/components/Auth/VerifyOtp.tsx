@@ -70,11 +70,11 @@ const VerifyOtp: React.FC = () => {
           <Input
             prefix={<NumberOutlined />}
             value={otp}
-            maxLength={6}
+            maxLength={4}
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, "");
               setOtp(val);
-              if (val.length === 6) {
+              if (val.length === 4) {
                 handleVerifyOTP(val);
               }
             }}

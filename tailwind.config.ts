@@ -1,5 +1,4 @@
 import type { Config } from 'tailwindcss';
-import defaultTheme from 'tailwindcss/defaultTheme';
 
 const config: Config = {
   content: [
@@ -10,8 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        product: ['"Product Sans"', ...defaultTheme.fontFamily.sans],
-        urbanist: ['"Urbanist"', ...defaultTheme.fontFamily.sans],
+        poppins: ['Poppins', 'sans-serif'],
       },
     },
   },
