@@ -1,21 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form, Input, Button, Divider, message } from "antd";
-import {
-  EyeInvisibleOutlined,
-  EyeTwoTone,
-  GoogleOutlined,
-  AppleOutlined,
-} from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
 import AuthAPI from "../../api/authApi/AuthAPI";
-
-const PURPLE_LIGHT = "#EDE5FF";
-const PURPLE_MAIN = "#7C4DFF";
-const GRAY_DARK = "#333";
-const GRAY_MEDIUM = "#666";
-const GRAY_LIGHT_BG = "#f8f8fc";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -75,45 +63,41 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen flex flex-col md:flex-row bg-[${GRAY_LIGHT_BG}]`}
-    >
+    <div className={`min-h-screen flex flex-col md:flex-row`}>
       <div
-        className={`md:w-1/2 w-full flex flex-col justify-center items-center bg-[${PURPLE_LIGHT}] p-10 sm:p-16`}
+        className={`md:w-1/2 w-full flex flex-col justify-center items-start text-left bg-violet-500/10 p-10 sm:p-16`}
       >
-        <div className="max-w-md text-left w-full">
+        <div className="max-w-lg">
           <h1
-            className={`text-4xl sm:text-5xl font-extrabold text-[${PURPLE_MAIN}] mb-8`}
+            className={`text-4xl sm:text-5xl font-extrabold text-[#8869F3] mb-8`}
           >
             Logo
           </h1>
-          <h1
-            className={`text-4xl sm:text-5xl font-extrabold text-[${PURPLE_MAIN}]`}
-          >
+          <h1 className={`text-4xl font-semibold text-[#000000]`}>
             Welcome Back!
           </h1>
-          <p
-            className={`py-6 text-[${GRAY_MEDIUM}] text-base sm:text-lg leading-relaxed`}
-          >
+          <p className={`py-8 text-[#666666] text-2xl font-normal`}>
             Login to continue exploring what's happening around you.
           </p>
           <img
             src="/images/login.svg"
             alt="Login illustration"
-            className="max-w-lg mx-auto mt-4"
+            className="max-w-xl mx-auto mt-4"
           />
         </div>
       </div>
 
       <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 py-10 bg-white">
         <div className="w-full max-w-sm">
-          <h2 className={`text-3xl font-normal mb-8 text-gray-800`}>Login</h2>
+          <h2 className={`text-black text-4xl font-medium mb-8`}>Login</h2>
 
           <Form layout="vertical" onFinish={handleFinish} className="space-y-4">
             <Form.Item
               name="username"
               label={
-                <span className={`text-[${GRAY_DARK}] font-normal`}>Email</span>
+                <span className={`text-xs font-normal text-[#000000]`}>
+                  Email
+                </span>
               }
               rules={[
                 { required: true, message: "Please enter your email" },
@@ -123,14 +107,14 @@ const LoginPage: React.FC = () => {
               <Input
                 placeholder="example123@gmail.com"
                 size="large"
-                className="rounded-lg !h-12 border border-solid border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
+                className="rounded-xl !h-12 border border-solid border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
               />
             </Form.Item>
 
             <Form.Item
               name="password"
               label={
-                <span className={`text-[${GRAY_DARK}] font-normal`}>
+                <span className={`text-xs font-normal text-[#000000]`}>
                   Password
                 </span>
               }
@@ -141,17 +125,29 @@ const LoginPage: React.FC = () => {
               <Input.Password
                 placeholder="Enter your password"
                 iconRender={(visible) =>
-                  visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                  visible ? (
+                    <img
+                      src="/icons/eyeOpen-icon.svg"
+                      alt="Show password"
+                      style={{ width: 20, height: 20 }}
+                    />
+                  ) : (
+                    <img
+                      src="/icons/eyeClose-icon.svg"
+                      alt="Hide password"
+                      style={{ width: 20, height: 20 }}
+                    />
+                  )
                 }
                 size="large"
-                className="rounded-lg !h-12 border border-solid border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
+                className="rounded-xl !h-12 border border-solid border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
               />
             </Form.Item>
 
             <div className="flex justify-end mb-6">
               <button
                 type="button"
-                className={`text-sm text-[${PURPLE_MAIN}] hover:underline`}
+                className={`text-sm text-[#8869F3] hover:underline`}
                 onClick={() => navigate("/forgot-password")}
               >
                 Forgot Password?
@@ -162,33 +158,48 @@ const LoginPage: React.FC = () => {
               type="primary"
               htmlType="submit"
               loading={loading}
-              className={`w-full !h-12 bg-[${PURPLE_MAIN}] border-none hover:!bg-[#6b3df7] text-white font-medium rounded-lg shadow-md transition-all duration-200 !mt-12`}
+              className={`w-full !h-12 bg-[#8869F3] border-none hover:!bg-[#6b3df7] text-white text-lg font-normal rounded-xl shadow-md transition-all duration-200 !mt-12`}
             >
               Login
             </Button>
 
-            <Divider className="text-gray-500 !my-8">or continue with</Divider>
+            <Divider className="!text-stone-500 !text-sm !font-normal !my-8">
+              or continue with
+            </Divider>
 
             <div className="flex justify-center gap-8">
               <Button
-                icon={<GoogleOutlined className="text-xl" />}
                 shape="circle"
                 size="large"
+                icon={
+                  <img
+                    src="/icons/google-icon.svg"
+                    alt="Google"
+                    className="w-6 h-6"
+                  />
+                }
                 className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF] hover:text-[#7C4DFF]"
               />
+
               <Button
-                icon={<AppleOutlined className="text-xl" />}
                 shape="circle"
                 size="large"
+                icon={
+                  <img
+                    src="/icons/apple-icon.svg"
+                    alt="Apple"
+                    className="w-6 h-6"
+                  />
+                }
                 className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF] hover:text-[#7C4DFF]"
               />
             </div>
 
-            <p className="text-center !mt-8 text-gray-600">
+            <p className="text-center !mt-8 text-gray-600 text-sm font-normal">
               Don’t have an account?{" "}
               <span
                 onClick={() => navigate("/signup")}
-                className={`text-[${PURPLE_MAIN}] cursor-pointer font-medium hover:underline`}
+                className={`text-[#8869F3] cursor-pointer font-medium hover:underline`}
               >
                 Sign up
               </span>

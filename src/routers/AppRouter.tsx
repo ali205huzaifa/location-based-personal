@@ -6,6 +6,7 @@ import ForgotPassword from "../components/Auth/ForgotPassword";
 import VerifyOtp from "../components/Auth/VerifyOtp";
 import Signup from "../components/Auth/signUp";
 import MainLayout from "../layout/MainLayout";
+import UserVerification from "../components/Auth/UserVerification";
 
 const AppRouter: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const AppRouter: React.FC = () => {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/verify" element={<UserVerification />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
 

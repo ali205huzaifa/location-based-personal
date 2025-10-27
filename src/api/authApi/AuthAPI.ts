@@ -5,8 +5,14 @@ class AuthAPI {
     return axiosClient.post('/auth/login', data);
   }
 
-  static SignUp(data: { fullName:string; email: string; password: string }) {
-    return axiosClient.post('/auth/register', data);
+  static SignUp(data: {
+    fullName: string;
+    username: string;
+    email: string;
+    password: string;
+    dob: string;
+  }) {
+    return axiosClient.post("/auth/register", data);
   }
 
   static verifyToken(token: string) {
@@ -21,11 +27,15 @@ class AuthAPI {
     return axiosClient.post('/auth/forget-password', data);
   }
 
-  static VerifyOTP (data: { otp: number; }) {
+  static VerifyOTP (data: {email:string; otp: number; }) {
     return axiosClient.post('/auth/verify-password-otp', data);
   }
 
-  static ResetPassword  (data: { email: string; newPassword: string; otp: number; }) {
+  static VerifyUserOTP (data: {email:string; otp: number; }) {
+    return axiosClient.post('/auth/verify-email-otp', data);
+  }
+
+  static ResetPassword  (data: { email: string; password: string; }) {
     return axiosClient.post('/auth/reset-password', data);
   }
 }
