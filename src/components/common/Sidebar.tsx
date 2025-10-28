@@ -1,74 +1,135 @@
+import React, { useState } from "react";
 import { Avatar } from "antd";
-import {
-  HomeOutlined,
-  MessageOutlined,
-  SettingOutlined,
-  PlusOutlined,
-  LogoutOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-} from "@ant-design/icons";
-import React from "react";
+import { useNavigate } from "react-router-dom";
+
+import HomeIcon from "/icons/home-icon.svg";
+import ActivityIcon from "/icons/activity-icon.svg";
+import ChatsIcon from "/icons/chats-icon.svg";
+import SettingIcon from "/icons/setting-icon.svg";
+import AddPostIcon from "/icons/Addpost-icon.svg";
+import LogoutIcon from "/icons/logout-icon.svg";
+import LogoutModal from "./LogoutModal";
+import AddPostModal from "../Addpost/AddPostModal";
 
 const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+  const [active, setActive] = useState("Home");
+  const [showAddPostModal, setShowAddPostModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleNav = (label: string) => {
+    setActive(label);
+    switch (label) {
+      case "Home":
+        navigate("/home");
+        break;
+      case "My Activity":
+        navigate("/activity");
+        break;
+      case "Chats":
+        navigate("/chats");
+        break;
+      case "Profile Settings":
+        navigate("/settings");
+        break;
+      case "Add Post":
+        setShowAddPostModal(true);
+        break;
+      case "Logout":
+        setShowLogoutModal(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleLogoutConfirm = () => {
+    localStorage.removeItem("token");
+    setShowLogoutModal(false);
+    navigate("/");
+  };
+
   return (
-    <aside className="w-72 bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center space-y-6">
+    <aside className="relative w-80 bg-white rounded-xl p-6 flex flex-col items-center space-y-4 max-h-[650px]">
       <div className="flex flex-col items-center space-y-2">
         <Avatar
-          size={80}
+          size={120}
           src="https://i.pravatar.cc/150?img=32"
           className="shadow-sm border border-gray-200"
         />
-        <h2 className="text-lg font-semibold text-gray-900">Alex Costa</h2>
-        <p className="text-sm text-gray-500">@alexcosta45</p>
+        <h2 className="text-2xl font-medium text-[#000000]">Alex Costa</h2>
+        <p className="text-xs font-normal text-gray-500 -mb-4">@alexcosta45</p>
       </div>
 
       <div className="flex items-center w-full bg-gray-50 rounded-xl px-4 py-3 space-x-3">
-        <EnvironmentOutlined className="text-lg text-gray-700" />
+        <img
+          src="/icons/location-icon.svg"
+          alt="location"
+          className="w-5 h-5"
+        />
         <div>
-          <p className="text-sm font-medium text-gray-800">San Francisco, CA</p>
+          <p className="text-black text-base font-normal">San Francisco, CA</p>
           <p className="text-xs text-gray-500">Current Location</p>
         </div>
       </div>
 
-      <nav className="w-full space-y-1">
+      <nav className="w-full space-y-1 text-base font-normal">
         <SidebarItem
-          icon={<HomeOutlined />}
+          icon={HomeIcon}
           label="Home"
-          active
+          active={active === "Home"}
+          onClick={() => handleNav("Home")}
         />
         <SidebarItem
-          icon={<CalendarOutlined />}
+          icon={ActivityIcon}
           label="My Activity"
+          active={active === "My Activity"}
+          onClick={() => handleNav("My Activity")}
         />
         <SidebarItem
-          icon={<MessageOutlined />}
+          icon={ChatsIcon}
           label="Chats"
+          active={active === "Chats"}
+          onClick={() => handleNav("Chats")}
         />
         <SidebarItem
-          icon={<SettingOutlined />}
+          icon={SettingIcon}
           label="Profile Settings"
+          active={active === "Profile Settings"}
+          onClick={() => handleNav("Profile Settings")}
         />
         <SidebarItem
-          icon={<PlusOutlined />}
+          icon={AddPostIcon}
           label="Add Post"
+          onClick={() => handleNav("Add Post")}
         />
-
         <SidebarItem
-          icon={<LogoutOutlined />}
+          icon={LogoutIcon}
           label="Logout"
           danger
+          onClick={() => handleNav("Logout")}
         />
       </nav>
+
+      <AddPostModal
+        visible={showAddPostModal}
+        onClose={() => setShowAddPostModal(false)}
+      />
+      <LogoutModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutConfirm}
+      />
     </aside>
   );
 };
 
 interface SidebarItemProps {
-  icon: React.ReactNode;
+  icon: string;
   label: string;
   active?: boolean;
   danger?: boolean;
+  onClick?: () => void;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -76,24 +137,27 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   label,
   active = false,
   danger = false,
+  onClick,
 }) => {
   return (
     <button
+      onClick={onClick}
       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition 
-        ${active
-          ? "bg-gradient-to-r from-purple-100 to-purple-50 text-purple-600"
-          : danger
-          ? "text-red-500 hover:bg-red-50"
-          : "text-gray-700 hover:bg-gray-50"
+        ${
+          active
+            ? "bg-gradient-to-r from-purple-100 to-purple-50 text-[#8869F3]"
+            : danger
+            ? "text-red-500 hover:bg-red-50"
+            : "text-gray-700 hover:bg-gray-50"
         }`}
     >
-      <span
-        className={`text-lg ${
-          active ? "text-purple-600" : danger ? "text-red-500" : "text-gray-600"
+      <img
+        src={icon}
+        alt={label}
+        className={`w-5 h-5 ${
+          active ? "filter-purple" : danger ? "filter-red" : "opacity-80"
         }`}
-      >
-        {icon}
-      </span>
+      />
       <span>{label}</span>
     </button>
   );

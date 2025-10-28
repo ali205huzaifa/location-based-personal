@@ -9,6 +9,7 @@ import MainLayout from "../layout/MainLayout";
 import UserVerification from "../components/Auth/UserVerification";
 import ProtectedRoute from "./ProtectedRoutes";
 import Home from "../components/home/home";
+import CompleteGoogleProfile from "../components/Auth/CompleteGoogleProfile";
 
 const AppRouter: React.FC = () => {
   return (
@@ -17,9 +18,12 @@ const AppRouter: React.FC = () => {
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify" element={<UserVerification />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="home" element={<Home />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/auth/google/complete-profile"
+          element={<CompleteGoogleProfile />}
+        />
         <Route
           path="/"
           element={
@@ -28,7 +32,10 @@ const AppRouter: React.FC = () => {
             </ProtectedRoute>
           }
         >
-          <Route path="dashboard" element={<Home />} />
+          <Route path="home" element={<Home />} />
+          <Route path="activity" element={<Home />} />
+          <Route path="chats" element={<Home />} />
+          <Route path="settings" element={<Home />} />
         </Route>
       </Routes>
     </Router>

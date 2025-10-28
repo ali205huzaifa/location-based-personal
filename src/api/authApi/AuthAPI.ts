@@ -38,6 +38,10 @@ class AuthAPI {
   static ResetPassword  (data: { email: string; password: string; }) {
     return axiosClient.post('/auth/reset-password', data);
   }
+
+  static CompleteGoogleProfile  (id: string, data: { username: string; dob: number; }) {
+    return axiosClient.patch(`/auth/complete-google-profile/${id}`, data);
+  }
 }
 
 export default AuthAPI;

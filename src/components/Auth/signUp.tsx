@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Form, Input, Button, Divider, DatePicker, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthAPI from "../../api/authApi/AuthAPI";
-import dayjs from "dayjs";
 
 const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -14,7 +13,7 @@ const Signup: React.FC = () => {
       username: values.username,
       email: values.email,
       password: values.password,
-      dob: dayjs(values.dob).format("YYYY-MM-DD"),
+      dob: values.dob,
     };
 
     try {
@@ -35,7 +34,7 @@ const Signup: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="md:w-1/2 w-full flex flex-col justify-center items-start text-left bg-violet-500/10 p-10 sm:p-16">
+      <div className="md:w-1/2 w-full flex flex-col justify-center items-start text-left bg-violet-500/10 p-10 sm:p-8">
         <div className="max-w-xl">
           <h1 className="text-3xl sm:text-4xl font-bold text-[#8869F3] mb-16">
             Logo
@@ -43,7 +42,7 @@ const Signup: React.FC = () => {
           <h2 className="text-[#000000] text-4xl font-semibold mb-3 leading-snug">
             Join the Community, Start Connecting
           </h2>
-          <p className="text-[#666666] text-2xl font-normal leading-relaxed">
+          <p className="text-[#666666] text-2xl font-normal leading-relaxed mb-16">
             Create your account and explore people, posts, and stories around
             you — your local world is waiting!
           </p>
@@ -51,7 +50,7 @@ const Signup: React.FC = () => {
           <img
             src="/images/login.svg"
             alt="Signup illustration"
-            className="max-w-xl mx-auto mt-4"
+            className="xl:max-w-lg lg:max-w-md md:max-w-xs mx-auto"
           />
         </div>
       </div>
@@ -64,36 +63,48 @@ const Signup: React.FC = () => {
             <Form.Item
               name="fullName"
               label="Full Name"
-              className="text-xs font-normal text-[#000000] rounded-xl"
+              className="text-xs font-normal text-[#000000]"
               rules={[
                 { required: true, message: "Please enter your full name" },
               ]}
             >
-              <Input size="large" placeholder="Alex Costa" />
+              <Input
+                size="large"
+                placeholder="Enter FullName"
+                className="rounded-xl h-12"
+              />
             </Form.Item>
 
             <div className="flex gap-3">
               <Form.Item
                 name="username"
                 label="Username"
-                className="flex-1 text-xs font-normal text-[#000000] rounded-xl"
+                className="flex-1 text-xs font-normal text-[#000000]"
                 rules={[
                   { required: true, message: "Please create a username" },
                 ]}
               >
-                <Input size="large" placeholder="Create username" />
+                <Input
+                  size="large"
+                  placeholder="Create username"
+                  className="rounded-xl h-12"
+                />
               </Form.Item>
 
               <Form.Item
                 name="email"
                 label="Email"
-                className="flex-1 text-xs font-normal text-[#000000] rounded-xl"
+                className="flex-1 text-xs font-normal text-[#000000]"
                 rules={[
                   { required: true, message: "Please enter your email" },
                   { type: "email", message: "Enter a valid email address" },
                 ]}
               >
-                <Input size="large" placeholder="Enter your email" />
+                <Input
+                  size="large"
+                  placeholder="Enter your email"
+                  className="rounded-xl h-12"
+                />
               </Form.Item>
             </div>
 
@@ -101,7 +112,7 @@ const Signup: React.FC = () => {
               <Form.Item
                 name="password"
                 label="Password"
-                className="flex-1 text-xs font-normal text-[#000000] rounded-xl"
+                className="flex-1 text-xs font-normal text-[#000000]"
                 rules={[
                   { required: true, message: "Please enter your password" },
                 ]}
@@ -109,6 +120,7 @@ const Signup: React.FC = () => {
                 <Input.Password
                   size="large"
                   placeholder="Enter your password"
+                  className="rounded-xl h-12"
                   iconRender={(visible) =>
                     visible ? (
                       <img
@@ -130,7 +142,7 @@ const Signup: React.FC = () => {
               <Form.Item
                 name="confirmPassword"
                 label="Confirm Password"
-                className="flex-1 text-xs font-normal text-[#000000] rounded-xl"
+                className="flex-1 text-xs font-normal text-[#000000]"
                 dependencies={["password"]}
                 rules={[
                   { required: true, message: "Please confirm your password" },
@@ -149,6 +161,7 @@ const Signup: React.FC = () => {
                 <Input.Password
                   size="large"
                   placeholder="Re-enter your password"
+                  className="rounded-xl h-12"
                   iconRender={(visible) =>
                     visible ? (
                       <img
@@ -171,7 +184,7 @@ const Signup: React.FC = () => {
             <Form.Item
               name="dob"
               label="Age"
-              className="text-xs font-normal text-[#000000] rounded-xl"
+              className="text-xs font-normal text-[#000000]"
               rules={[
                 { required: true, message: "Please select your date of birth" },
               ]}
@@ -185,9 +198,9 @@ const Signup: React.FC = () => {
                     style={{ width: 20, height: 20 }}
                   />
                 }
-                format="DD/MM/YYYY"
-                className="w-full"
-                placeholder="DD/MM/YY"
+                format="YYYY/MM/DD"
+                className="w-full rounded-xl h-12"
+                placeholder="YYYY/MM/DD"
               />
             </Form.Item>
 
