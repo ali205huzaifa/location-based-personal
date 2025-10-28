@@ -1,168 +1,101 @@
-"use client";
+import { Avatar } from "antd";
+import {
+  HomeOutlined,
+  MessageOutlined,
+  SettingOutlined,
+  PlusOutlined,
+  LogoutOutlined,
+  EnvironmentOutlined,
+  CalendarOutlined,
+} from "@ant-design/icons";
+import React from "react";
 
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { useState } from "react";
-import { clearAuthData } from "../../store/Auth";
-import LogoutModal from "./LogoutModal";
-
-const Sidebar = () => {
-  const permissions = useSelector((state: any) => state.auth.permissions);
-  const location = useLocation();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const handleLogout = () => {
-    dispatch(clearAuthData());
-    localStorage.removeItem("token");
-    navigate("/");
-    setShowLogoutModal(false);
-  };
-
-  const navItems = [
-    {
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: "/icons/dashboard-icon.svg",
-      permission: "view-dashboard",
-    },
-    {
-      label: "Jobs",
-      href: "/jobs",
-      icon: "/icons/jobs-icon.svg",
-      permission: "view-job",
-    },
-    {
-      label: "Candidates",
-      href: "/candidates",
-      icon: "/icons/candidate-icon.svg",
-      permission: "view-candidates",
-    },
-    {
-      label: "Manage Users",
-      href: "/manage-users",
-      icon: "/icons/manageUser-icon.svg",
-      permission: "view-user",
-    },
-    {
-      label: "Interviewers",
-      href: "/interviewers",
-      icon: "/icons/interviewer-icon.svg",
-      permission: "view-interviewer",
-    },
-    {
-      label: "Access Roles",
-      href: "/roles",
-      icon: "/icons/roles-icon.svg",
-      permission: "view-accessRole",
-    },
-    {
-      label: "Locations",
-      href: "/locations",
-      icon: "/icons/route-location-icon.svg",
-      permission: "view-locations",
-    },
-    {
-      label: "Jobs Details",
-      href: "/deptSkills",
-      icon: "/icons/deptSkills-icon.svg",
-      permission: "view-deptSkills",
-    },
-    {
-      label: "Signed NDA",
-      href: "/signedNDA",
-      icon: "/icons/deptSkills-icon.svg",
-      permission: "view-signedNDA",
-    },
-    {
-      label: "Smtp Config",
-      href: "/SmtpConfig",
-      icon: "/icons/deptSkills-icon.svg",
-      permission: "view-SmtpConfig",
-    },
-  ];
-
+const Sidebar: React.FC = () => {
   return (
-    <>
-      <aside
-        className="w-64 h-screen fixed top-0 left-0 text-white flex flex-col bg-cover bg-center"
-        style={{ backgroundImage: 'url("/images/sidebar.svg")' }}
-      >
-        <div className="p-6 flex items-center gap-2 border-b border-white/20">
-          <img
-            src="/icons/sidebar-logo.svg"
-            alt="Logo"
-            width={34.38}
-            height={26.05}
-          />
-          <div className="leading-tight">
-            <h1 className="text-[15.26px] font-medium urbanist tracking-wider">
-              SOLUTIONS
-            </h1>
-            <p className="text-[8px] urbanist font-medium text-white/80">
-              Job Portal & Managment System
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col flex-grow justify-between">
-          <nav className="flex flex-col mt-4 px-4">
-            {navItems
-              .filter((item) => permissions.includes(item.permission))
-              .map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 transition ${
-                    location.pathname === item.href ? "bg-white/20" : ""
-                  }`}
-                >
-                  <img
-                    src={item.icon}
-                    alt={item.label}
-                    width={
-                      item.icon.includes("route-location-icon.svg") ? 16 : 24
-                    }
-                    height={
-                      item.icon.includes("route-location-icon.svg") ? 16 : 24
-                    }
-                  />
-                  <h3
-                    className={`product font-Regular ${
-                      item.label === "Locations" ? "ml-2" : ""
-                    }`}
-                  >
-                    {item.label}
-                  </h3>
-                </Link>
-              ))}
-          </nav>
-
-          <div className="px-4 mb-4">
-            <button
-              onClick={() => setShowLogoutModal(true)}
-              className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 transition text-white"
-            >
-              <img
-                src="/icons/logout.svg"
-                alt="Log out"
-                width={29}
-                height={29}
-              />
-              <span className="font-medium">Log out</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {showLogoutModal && (
-        <LogoutModal
-          onClose={() => setShowLogoutModal(false)}
-          onConfirm={handleLogout}
+    <aside className="w-72 bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center space-y-6">
+      <div className="flex flex-col items-center space-y-2">
+        <Avatar
+          size={80}
+          src="https://i.pravatar.cc/150?img=32"
+          className="shadow-sm border border-gray-200"
         />
-      )}
-    </>
+        <h2 className="text-lg font-semibold text-gray-900">Alex Costa</h2>
+        <p className="text-sm text-gray-500">@alexcosta45</p>
+      </div>
+
+      <div className="flex items-center w-full bg-gray-50 rounded-xl px-4 py-3 space-x-3">
+        <EnvironmentOutlined className="text-lg text-gray-700" />
+        <div>
+          <p className="text-sm font-medium text-gray-800">San Francisco, CA</p>
+          <p className="text-xs text-gray-500">Current Location</p>
+        </div>
+      </div>
+
+      <nav className="w-full space-y-1">
+        <SidebarItem
+          icon={<HomeOutlined />}
+          label="Home"
+          active
+        />
+        <SidebarItem
+          icon={<CalendarOutlined />}
+          label="My Activity"
+        />
+        <SidebarItem
+          icon={<MessageOutlined />}
+          label="Chats"
+        />
+        <SidebarItem
+          icon={<SettingOutlined />}
+          label="Profile Settings"
+        />
+        <SidebarItem
+          icon={<PlusOutlined />}
+          label="Add Post"
+        />
+
+        <SidebarItem
+          icon={<LogoutOutlined />}
+          label="Logout"
+          danger
+        />
+      </nav>
+    </aside>
+  );
+};
+
+interface SidebarItemProps {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  danger?: boolean;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({
+  icon,
+  label,
+  active = false,
+  danger = false,
+}) => {
+  return (
+    <button
+      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition 
+        ${active
+          ? "bg-gradient-to-r from-purple-100 to-purple-50 text-purple-600"
+          : danger
+          ? "text-red-500 hover:bg-red-50"
+          : "text-gray-700 hover:bg-gray-50"
+        }`}
+    >
+      <span
+        className={`text-lg ${
+          active ? "text-purple-600" : danger ? "text-red-500" : "text-gray-600"
+        }`}
+      >
+        {icon}
+      </span>
+      <span>{label}</span>
+    </button>
   );
 };
 
