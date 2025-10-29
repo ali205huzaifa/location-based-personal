@@ -23,7 +23,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4 bg-[url('/images/admin.svg')] bg-cover bg-center bg-no-repeat">
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-4 bg-[url('/images/admin.svg')] bg-cover bg-center bg-no-repeat">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
         <h2 className="text-black text-4xl font-medium mb-4">
           Forgot Password?

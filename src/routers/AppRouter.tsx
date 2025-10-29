@@ -15,7 +15,7 @@ const AppRouter: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify" element={<UserVerification />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
@@ -24,6 +24,7 @@ const AppRouter: React.FC = () => {
           path="/auth/google/complete-profile"
           element={<CompleteGoogleProfile />}
         />
+
         <Route
           path="/"
           element={

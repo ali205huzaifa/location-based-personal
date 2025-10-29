@@ -282,7 +282,9 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
         title={<span className="font-semibold text-base">Post settings</span>}
         className="rounded-xl overflow-hidden shadow-lg p-0"
         width={300}
-        bodyStyle={{ padding: "8px 20px" }}
+        styles={{
+          body: { padding: "8px 20px" },
+        }}
       >
         <Radio.Group
           onChange={(e) => setVisibility(e.target.value)}

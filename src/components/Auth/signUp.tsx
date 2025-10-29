@@ -248,7 +248,7 @@ const Signup: React.FC = () => {
             <p className="text-center !mt-8 text-gray-600 text-sm font-normal">
               Already have an account?{" "}
               <span
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/login")}
                 className="text-[#7C4DFF] cursor-pointer hover:underline"
               >
                 Login

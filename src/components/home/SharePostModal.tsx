@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Input, Checkbox, Button } from "antd";
-import { LinkOutlined } from "@ant-design/icons";
+import { LinkOutlined, SearchOutlined } from "@ant-design/icons";
 
 interface User {
   id: number;
@@ -14,7 +14,10 @@ interface SharePostModalProps {
   onClose: () => void;
 }
 
-const SharePostModal: React.FC<SharePostModalProps> = ({ visible, onClose }) => {
+const SharePostModal: React.FC<SharePostModalProps> = ({
+  visible,
+  onClose,
+}) => {
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [search, setSearch] = useState("");
 
@@ -85,15 +88,16 @@ const SharePostModal: React.FC<SharePostModalProps> = ({ visible, onClose }) => 
       onCancel={onClose}
       footer={null}
       centered
-      width={420}
-      className="rounded-2xl overflow-hidden"
-      bodyStyle={{ padding: "20px 24px" }}
+      width={520}
+      className="rounded-3xl overflow-hidden"
+      styles={{ body: { padding: "0px" } }}
       title={<span className="font-semibold text-gray-800">Share Post</span>}
     >
       <Input
+        prefix={<SearchOutlined />}
         placeholder="Search"
         allowClear
-        className="rounded-full mb-3"
+        className="rounded-xl mb-3 w-full h-10"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -123,7 +127,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({ visible, onClose }) => 
 
       <div
         onClick={handleCopyLink}
-        className="flex items-center text-sm text-indigo-600 cursor-pointer mt-4"
+        className="flex items-center text-sm text-[#8869F3] cursor-pointer mt-4"
       >
         <LinkOutlined className="mr-2" />
         Copy Link to Clipboard
@@ -133,8 +137,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({ visible, onClose }) => 
         type="primary"
         block
         size="large"
-        className="mt-4 rounded-full"
-        style={{ backgroundColor: "#6A5AE0" }}
+        className="mt-4 rounded-xl bg-[#8869F3]"
       >
         Share
       </Button>

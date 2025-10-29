@@ -48,7 +48,7 @@ const UserVerification: React.FC = () => {
         placement: "topRight",
       });
       setOtpVerified(true);
-      navigate("/");
+      navigate("/login");
     } catch (err: any) {
       notification.error({
         message: "Invalid OTP",
@@ -83,7 +83,7 @@ const UserVerification: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('/images/admin.svg')] bg-cover bg-center bg-no-repeat ">
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
       <div className="bg-white rounded-2xl p-8 w-[90%] sm:w-[400px] text-center border border-gray-300">
         <h2 className="text-black text-4xl font-medium mb-2">Verify OTP</h2>
         <p className="text-stone-500 text-lg font-normal mb-6">

@@ -1,6 +1,10 @@
 import React from "react";
 import { Drawer, Avatar } from "antd";
-import { MessageOutlined, HeartFilled, ClockCircleOutlined } from "@ant-design/icons";
+import {
+  MessageOutlined,
+  HeartFilled,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 
 interface Notification {
   id: number;
@@ -15,7 +19,10 @@ interface NotificationDrawerProps {
   onClose: () => void;
 }
 
-const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ visible, onClose }) => {
+const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
+  visible,
+  onClose,
+}) => {
   const notifications: Notification[] = [
     {
       id: 1,
@@ -57,9 +64,11 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ visible, onClos
       onClose={onClose}
       open={visible}
       width={360}
-      bodyStyle={{
-        padding: "16px",
-        backgroundColor: "#fff",
+      styles={{
+        body: {
+          padding: "16px",
+          backgroundColor: "#fff",
+        },
       }}
     >
       <div className="space-y-4">

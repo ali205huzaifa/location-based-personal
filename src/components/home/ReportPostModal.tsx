@@ -7,7 +7,10 @@ interface ReportPostModalProps {
   onClose: () => void;
 }
 
-const ReportPostModal: React.FC<ReportPostModalProps> = ({ visible, onClose }) => {
+const ReportPostModal: React.FC<ReportPostModalProps> = ({
+  visible,
+  onClose,
+}) => {
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [details, setDetails] = useState<string>("");
 
@@ -45,7 +48,7 @@ const ReportPostModal: React.FC<ReportPostModalProps> = ({ visible, onClose }) =
           <span className="font-semibold text-gray-800">Report Post</span>
         </div>
       }
-      bodyStyle={{ padding: "20px 24px" }}
+      styles={{ body: { padding: "20px 24px" } }}
       className="rounded-2xl overflow-hidden"
     >
       <p className="text-sm text-gray-600 mb-4">

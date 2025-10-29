@@ -1,14 +1,8 @@
 import React, { useState } from "react";
-import { Input, Card, Avatar, Divider } from "antd";
-import {
-  HeartOutlined,
-  CommentOutlined,
-  ShareAltOutlined,
-  AimOutlined,
-} from "@ant-design/icons";
+import { Input, Avatar } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import PostModal from "./PostModal";
-
-const { Search } = Input;
+import SharePostModal from "./SharePostModal";
 
 interface MapCardProps {
   image: string;
@@ -19,92 +13,138 @@ interface MapCardProps {
   shares: number;
   onClick: () => void;
   isAd?: boolean;
+  username: string;
 }
-
-const MapCard: React.FC<MapCardProps> = ({
-  image,
-  caption,
-  likes,
-  comments,
-  shares,
-  onClick,
-  location,
-  isAd,
-}) => (
-  <Card
-    onClick={onClick}
-    hoverable
-    className={`rounded-2xl shadow-md overflow-hidden ${
-      isAd ? "border border-purple-400" : ""
-    }`}
-    cover={
-      <img src={image} alt="map post" className="object-cover h-44 w-full" />
-    }
-  >
-    <p className="text-gray-800 font-medium mb-2 text-sm">{caption}</p>
-    {location && (
-      <p className="text-xs text-gray-500 mb-2 flex items-center">
-        <AimOutlined className="mr-1" /> {location}
-      </p>
-    )}
-    <div className="flex items-center justify-between text-gray-600 text-sm">
-      <span>
-        <HeartOutlined className="mr-1" /> {likes}
-      </span>
-      <span>
-        <CommentOutlined className="mr-1" /> {comments}
-      </span>
-      <span>
-        <ShareAltOutlined className="mr-1" /> {shares}
-      </span>
-    </div>
-  </Card>
-);
 
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
-
-  const handlePostClick = (postData: any) => {
-    setSelectedPost(postData);
-    setIsModalOpen(true);
-  };
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [popupPostId, setPopupPostId] = useState<number | null>(null);
 
   const posts = [
     {
-      image:
-        "https://images.unsplash.com/photo-1606813902871-4d5b8a8966f6?q=80&w=800",
-      caption: "Street musician absolutely killing it! 🎸",
+      id: 1,
+      image: "https://randomuser.me/api/portraits/women/65.jpg",
+      caption: "Street musician absolutely killing it! ",
       likes: 129,
       comments: 80,
       shares: 29,
       location: "Pier 39, San Francisco, CA",
+      username: "@alexcos45",
+      top: "300px",
+      left: "420px",
     },
     {
-      image:
-        "https://images.unsplash.com/photo-1585386959984-a41552231693?q=80&w=800",
-      caption: "SNEAKERS – Save up to 50%! 👟",
+      id: 2,
+      image: "https://randomuser.me/api/portraits/men/32.jpg",
+      caption: "SNEAKERS – Save up to 50%! ",
       likes: 129,
       comments: 80,
       shares: 29,
-      location: "Pier 39, San Francisco, CA",
+      location: "Times Square, New York, NY",
+      username: "@alexcos45",
       isAd: true,
+      top: "500px",
+      left: "250px",
     },
   ];
 
+  const MapCard: React.FC<MapCardProps> = ({
+    image,
+    caption,
+    likes,
+    comments,
+    shares,
+    location,
+    onClick,
+  }) => (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-00 p-2"
+    >
+      <img
+        src={image}
+        alt="map post"
+        className="object-cover h-44 w-full rounded-xl"
+      />
+      <div className="pt-4 pb-2">
+        <div className="flex items-start justify-start text-gray-600 text-sm mb-1 gap-3">
+          <span className="flex items-center">
+            <img
+              src="/icons/heart-icon.svg"
+              alt="Likes"
+              className="w-4 h-4 mr-1"
+            />
+            {likes || 129}
+          </span>
+
+          <span className="flex items-center">
+            <img
+              src="/icons/comment-icon.svg"
+              alt="Comments"
+              className="w-4 h-4 mr-1"
+            />
+            {comments || 80}
+          </span>
+          <span className="flex items-center">
+            <img
+              src="/icons/share-icon.svg"
+              alt="Share"
+              className="w-4 h-4 mr-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsShareOpen(true);
+              }}
+            />{" "}
+            {shares}
+          </span>
+        </div>
+        <p className="text-[#000000] text-sm font-normal">{caption}</p>
+        <p className="text-stone-500 text-xs font-normal mt-2 flex items-center">
+          <img
+            src="/icons/location-icon.svg"
+            alt="Location icon"
+            className="w-3.5 h-3.5 mr-1"
+          />
+          {location}
+        </p>
+      </div>
+    </div>
+  );
+
+  const handleAvatarClick = (id: number) => {
+    setPopupPostId(id);
+  };
+
+  const handleClosePopup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPopupPostId(null);
+  };
+
+  const handlePostClick = (post: any) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedPost(null);
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 gap-4">
-      <div className="flex-1 relative">
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-[400px] z-20">
-          <Search
-            placeholder="Search"
+    <div className="flex gap-4 bg-[#F9FAFB]">
+      <div className="flex-1 flex flex-col">
+        <div className="flex justify-center py-4">
+          <Input
+            prefix={<SearchOutlined />}
+            placeholder="Search by name or email"
             allowClear
-            size="large"
-            className="rounded-full shadow-sm"
+            className="!h-10 !text-sm"
           />
         </div>
 
-        <div className="w-full h-full rounded-lg overflow-hidden relative">
+        <div className="relative w-full h-[850px] rounded-lg overflow-hidden">
           <iframe
             title="map"
             width="100%"
@@ -113,30 +153,45 @@ const Home: React.FC = () => {
             src="https://www.openstreetmap.org/export/embed.html?bbox=-105.0%2C39.7%2C-104.9%2C39.8&amp;layer=mapnik"
           ></iframe>
 
-          <div className="absolute top-[140px] left-[180px] space-y-6">
-            {posts.map((post, index) => (
-              <MapCard
-                key={index}
-                {...post}
-                onClick={() => handlePostClick(post)}
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              className="absolute cursor-pointer"
+              style={{ top: post.top, left: post.left }}
+              onClick={() => handleAvatarClick(post.id)}
+            >
+              <Avatar
+                size={50}
+                src={post.image}
+                className="border-2 border-white shadow-md"
               />
-            ))}
-          </div>
 
-          <div className="absolute top-[300px] left-[420px]">
-            <Avatar
-              size={50}
-              src="https://randomuser.me/api/portraits/women/65.jpg"
-              className="border-2 border-white shadow-md"
-            />
-          </div>
-          <div className="absolute top-[500px] left-[250px]">
-            <Avatar
-              size={50}
-              src="https://randomuser.me/api/portraits/men/32.jpg"
-              className="border-2 border-white shadow-md"
-            />
-          </div>
+              {popupPostId === post.id && (
+                <div
+                  className="absolute z-50"
+                  style={{
+                    bottom: "70px",
+                    left: "-90px",
+                    width: "250px",
+                  }}
+                >
+                  <div
+                    className="relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 after:absolute after:left-1/2 after:translate-x-[-50%] after:bottom-[-8px] after:w-4 after:h-4 after:bg-white after:rotate-45 after:shadow-md"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={handleClosePopup}
+                      className="absolute top-1.5 right-1.5 bg-white rounded-full text-gray-600 hover:text-black shadow-sm w-5 h-5 flex items-center justify-center z-10"
+                    >
+                      ×
+                    </button>
+
+                    <MapCard {...post} onClick={() => {}} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
 
           <div className="absolute bottom-6 right-6 flex flex-col space-y-2">
             <button className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow">
@@ -149,41 +204,25 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-80 h-full mr-8 overflow-y-auto bg-white border-l border-gray-200 p-4 space-y-4">
-        {posts.map((post, i) => (
-          <div key={i}>
-            <img
-              src={post.image}
-              alt="post"
-              className="rounded-xl mb-2 object-cover w-full h-48"
-            />
-            <p className="text-gray-800 font-medium mb-1">{post.caption}</p>
-            {post.location && (
-              <p className="text-xs text-gray-500 mb-2">
-                <AimOutlined className="mr-1" />
-                {post.location}
-              </p>
-            )}
-            <div className="flex items-center justify-between text-gray-600 text-sm">
-              <span>
-                <HeartOutlined className="mr-1" /> {post.likes}
-              </span>
-              <span>
-                <CommentOutlined className="mr-1" /> {post.comments}
-              </span>
-              <span>
-                <ShareAltOutlined className="mr-1" /> {post.shares}
-              </span>
-            </div>
-            <Divider className="my-3" />
-          </div>
+      <div className="w-80 h-[920px] mr-8 overflow-y-auto bg-[#F9FAFB] p-4 space-y-4">
+        {posts.map((post) => (
+          <MapCard
+            key={post.id}
+            {...post}
+            onClick={() => handlePostClick(post)}
+          />
         ))}
       </div>
 
       <PostModal
         visible={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
         post={selectedPost}
+      />
+
+      <SharePostModal
+        visible={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
       />
     </div>
   );

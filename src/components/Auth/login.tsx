@@ -53,7 +53,7 @@ const LoginPage: React.FC = () => {
       const verifyRes = await AuthAPI.verifyToken(token);
       const user = verifyRes?.data;
 
-      if (!user.username || !user.age) {
+      if (!user.username || !user.dob) {
         setUserToken(token);
         setGoogleModalVisible(true);
         return;

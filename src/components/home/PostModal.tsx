@@ -1,13 +1,5 @@
 import React, { useState } from "react";
 import { Modal, Input } from "antd";
-import {
-  HeartOutlined,
-  CommentOutlined,
-  ShareAltOutlined,
-  EnvironmentOutlined,
-  SendOutlined,
-  ExclamationCircleOutlined,
-} from "@ant-design/icons";
 import SharePostModal from "./SharePostModal";
 import ReportPostModal from "./ReportPostModal";
 
@@ -21,6 +13,7 @@ interface PostModalProps {
     likes?: number;
     comments?: number;
     shares?: number;
+    username?: string;
   } | null;
 }
 
@@ -37,8 +30,10 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
       footer={null}
       centered
       width={900}
-      className="rounded-2xl overflow-hidden"
-      bodyStyle={{ padding: 0, borderRadius: "16px", overflow: "hidden" }}
+      className="rounded-2xl overflow-hidden [&_.ant-modal-content]:!p-0"
+      closeIcon={
+        <img src="/icons/cross-icon.svg" alt="close" className="w-4 h-4 mb-4" />
+      }
     >
       <div className="flex flex-row bg-white rounded-2xl overflow-hidden">
         <div className="flex-1 bg-black">
@@ -51,9 +46,9 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
           )}
         </div>
 
-        <div className="w-[380px] flex flex-col justify-between border-l border-gray-100">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-3">
+        <div className="w-[380px] flex flex-col justify-between border-l border-gray-100 py-4">
+          <div className="">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-200 px-4">
               <div className="flex items-center space-x-3">
                 <img
                   src="https://i.pravatar.cc/40"
@@ -62,21 +57,51 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
                 />
                 <div>
                   <p className="font-semibold text-gray-800">Emma Wilson</p>
-                  <p className="text-xs text-gray-500">
-                    <EnvironmentOutlined className="mr-1" />
-                    {post.location || "Pier 39, San Francisco, CA"}
-                  </p>
+                  <p className="text-xs text-gray-500">{post.username}</p>
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2 cursor-pointer">
+                <img
+                  src="/icons/AddUser-icon.svg"
+                  alt="Add to contact"
+                  className="w-5 h-5"
+                />
+                <span className="text-sm text-blue-600 font-medium">
+                  Add to contact
+                </span>
               </div>
             </div>
 
-            <p className="text-gray-800 text-sm mb-4">{post.caption}</p>
-
-            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-1 p-4">
+              <div className="flex">
+                <img
+                  src="https://i.pravatar.cc/40"
+                  alt="profile"
+                  className="rounded-full w-10 h-10 mt-1"
+                />
+                <div className="pl-2">
+                  <p className="font-semibold text-gray-800">Emma Wilson</p>
+                  <p className="text-gray-800 text-sm">{post.caption}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-gray-500">
+                      {post.location || "Pier 39, San Francisco, CA"}
+                    </p>
+                    <div className="flex items-center space-x-1 text-xs text-gray-500">
+                      <span>12m ago</span>
+                      <img
+                        src="/icons/globe-icon.svg"
+                        alt="profile"
+                        className="rounded-full w-4 h-4"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div>
                 <p className="text-sm">
-                  <span className="font-semibold">Natalie Parker</span>{" "}
-                  Damn, this sunset looks unreal 🔥 you really caught the perfect
+                  <span className="font-semibold">Natalie Parker</span> Damn,
+                  this sunset looks unreal 🔥 you really caught the perfect
                   moment!
                 </p>
               </div>
@@ -87,39 +112,79 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
               </div>
               <div>
                 <p className="text-sm">
-                  <span className="font-semibold">Natalie Parker</span>{" "}
-                  Damn, this sunset looks unreal 🔥 you really caught the perfect
+                  <span className="font-semibold">Natalie Parker</span> Damn,
+                  this sunset looks unreal 🔥 you really caught the perfect
                   moment!
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-100 p-3 space-y-3">
+          <div className="px-4 pb-0 space-y-3">
             <div className="flex items-center justify-between text-gray-600 text-sm">
-              <span>
-                <HeartOutlined className="mr-1" /> {post.likes || 129}
-              </span>
-              <span>
-                <CommentOutlined className="mr-1" /> {post.comments || 80}
-              </span>
-              <span onClick={() => setIsShareOpen(true)} className="cursor-pointer">
-                <ShareAltOutlined className="mr-1" /> {post.shares || 29}
-              </span>
-              <span onClick={() => setIsReportOpen(true)} className="cursor-pointer">
-                <ExclamationCircleOutlined className="mr-1 text-red-500" /> Report
+              <div className="flex items-center space-x-4">
+                <span className="flex items-center">
+                  <img
+                    src="/icons/heart-icon.svg"
+                    alt="Likes"
+                    className="w-4 h-4 mr-1"
+                  />
+                  {post.likes || 129}
+                </span>
+
+                <span className="flex items-center">
+                  <img
+                    src="/icons/comment-icon.svg"
+                    alt="Comments"
+                    className="w-4 h-4 mr-1"
+                  />
+                  {post.comments || 80}
+                </span>
+
+                <span
+                  onClick={() => setIsShareOpen(true)}
+                  className="flex items-center cursor-pointer"
+                >
+                  <img
+                    src="/icons/share-icon.svg"
+                    alt="Share"
+                    className="w-4 h-4 mr-1"
+                  />
+                  {post.shares || 29}
+                </span>
+              </div>
+
+              <span
+                onClick={() => setIsReportOpen(true)}
+                className="flex items-center cursor-pointer"
+              >
+                <img
+                  src="/icons/report-icon.svg"
+                  alt="Report"
+                  className="w-4 h-4 mr-1 text-red-500"
+                />
               </span>
             </div>
 
             <Input
               placeholder="Add a comment..."
-              suffix={<SendOutlined />}
-              className="rounded-full py-1 px-3"
+              suffix={
+                <span className="text-purple-600 font-medium cursor-pointer">
+                  Submit
+                </span>
+              }
+              className="rounded-xl py-1 px-3 h-12"
             />
           </div>
         </div>
-        <SharePostModal visible={isShareOpen} onClose={() => setIsShareOpen(false)} />
-        <ReportPostModal visible={isReportOpen} onClose={() => setIsReportOpen(false)} />
+        <SharePostModal
+          visible={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+        />
+        <ReportPostModal
+          visible={isReportOpen}
+          onClose={() => setIsReportOpen(false)}
+        />
       </div>
     </Modal>
   );
