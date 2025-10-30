@@ -1,37 +1,36 @@
-import React, { useState } from "react";
-import { Modal, Radio, Input, Button, message } from "antd";
-import { WarningOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { Modal, Checkbox, Input, Button } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 
-interface ReportPostModalProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-const ReportPostModal: React.FC<ReportPostModalProps> = ({
+const ReportPostModal = ({
   visible,
   onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
 }) => {
-  const [selectedReason, setSelectedReason] = useState<string>("");
-  const [details, setDetails] = useState<string>("");
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [additionalInfo, setAdditionalInfo] = useState("");
 
-  const reportReasons = [
+  const options = [
     "Spam or misleading",
-    "Hate speech or symbols",
+    "Inappropriate Media",
+    "Fake or incorrect location",
     "Harassment or bullying",
-    "False information",
-    "Violence or dangerous acts",
-    "Intellectual property violation",
+    "Violence or bullying",
     "Other",
   ];
 
+  const toggleOption = (option: string) => {
+    setSelectedOptions((prev) =>
+      prev.includes(option)
+        ? prev.filter((o) => o !== option)
+        : [...prev, option]
+    );
+  };
+
   const handleSubmit = () => {
-    if (!selectedReason) {
-      message.warning("Please select a reason before submitting.");
-      return;
-    }
-    message.success("Report submitted successfully!");
-    setSelectedReason("");
-    setDetails("");
+    console.log("Selected:", selectedOptions, "Info:", additionalInfo);
     onClose();
   };
 
@@ -41,51 +40,66 @@ const ReportPostModal: React.FC<ReportPostModalProps> = ({
       onCancel={onClose}
       footer={null}
       centered
-      width={420}
+      width={520}
+      className="rounded-3xl overflow-hidden"
+      styles={{ body: { padding: "0px 0px 20px 0px" } }}
       title={
-        <div className="flex items-center space-x-2">
-          <WarningOutlined className="text-red-500 text-lg" />
-          <span className="font-semibold text-gray-800">Report Post</span>
-        </div>
+        <span className="font-semibold text-gray-900 text-lg">
+          Help us understand what’s wrong with the post
+        </span>
       }
-      styles={{ body: { padding: "20px 24px" } }}
-      className="rounded-2xl overflow-hidden"
     >
-      <p className="text-sm text-gray-600 mb-4">
-        Please select a reason for reporting this post:
-      </p>
+      {/* Warning Section */}
+      <div className="bg-[#FFF7E6] border border-[#FFD591] rounded-lg p-4 mb-5 flex items-start space-x-3">
+        <ExclamationCircleOutlined className="text-[#FAAD14] text-lg mt-0.5" />
+        <div>
+          <p className="font-semibold text-[#FAAD14] mb-1">
+            Report Responsibly.
+          </p>
+          <p className="text-gray-600 text-sm">
+            False reports may result in action against your account. Only report
+            content that violates our community guidelines.
+          </p>
+        </div>
+      </div>
 
-      <Radio.Group
-        onChange={(e) => setSelectedReason(e.target.value)}
-        value={selectedReason}
-        className="flex flex-col space-y-2 mb-3"
-      >
-        {reportReasons.map((reason) => (
-          <Radio key={reason} value={reason} className="text-sm text-gray-800">
-            {reason}
-          </Radio>
+      {/* Checkbox List */}
+      <div className="flex flex-col space-y-3 mb-4">
+        {options.map((option) => (
+          <Checkbox
+            key={option}
+            checked={selectedOptions.includes(option)}
+            onChange={() => toggleOption(option)}
+            className="text-gray-800"
+          >
+            {option}
+          </Checkbox>
         ))}
-      </Radio.Group>
+      </div>
 
-      {selectedReason === "Other" && (
+      {/* Additional Info */}
+      <div className="mb-4">
+        <p className="font-medium text-gray-700 mb-1">
+          Additional Information (optional)
+        </p>
         <Input.TextArea
+          placeholder="Provide any additional context that might help our review team..."
           rows={3}
-          placeholder="Please describe the issue..."
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          className="rounded-lg mb-3"
+          className="rounded-xl text-sm"
+          value={additionalInfo}
+          onChange={(e) => setAdditionalInfo(e.target.value)}
         />
-      )}
+      </div>
 
+      {/* Submit Button */}
       <Button
         type="primary"
         block
         size="large"
-        className="rounded-full"
-        style={{ backgroundColor: "#ef4444", border: "none" }}
+        className="rounded-xl bg-[#8869F3] hover:bg-[#7c5dee] font-medium"
         onClick={handleSubmit}
       >
-        Submit Report
+        Submit
       </Button>
     </Modal>
   );

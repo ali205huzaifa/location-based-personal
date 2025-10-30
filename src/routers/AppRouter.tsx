@@ -10,6 +10,7 @@ import UserVerification from "../components/Auth/UserVerification";
 import ProtectedRoute from "./ProtectedRoutes";
 import Home from "../components/home/home";
 import CompleteGoogleProfile from "../components/Auth/CompleteGoogleProfile";
+import ProfileOptions from "../components/profileSetting/ProfileOptions";
 
 const AppRouter: React.FC = () => {
   return (
@@ -36,7 +37,7 @@ const AppRouter: React.FC = () => {
           <Route path="home" element={<Home />} />
           <Route path="activity" element={<Home />} />
           <Route path="chats" element={<Home />} />
-          <Route path="settings" element={<Home />} />
+          <Route path="settings" element={<ProfileOptions />} />
         </Route>
       </Routes>
     </Router>
