@@ -6,26 +6,26 @@ const PrivacySettings: React.FC = () => {
   const [isPublic, setIsPublic] = useState(true);
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        <h2 className="text-black text-2xl font-medium mb-2">
           Privacy Settings
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-[#666666] text-sm font-normal">
           Control who can view your profile, send messages, or interact with
           your posts.
         </p>
       </div>
 
-      <div className="space-y-6 max-w-lg">
-        <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white">
+      <div className="space-y-6 max-w-2xl">
+        <div className="flex items-center justify-between">
           <div className="flex items-start gap-3">
-            <div className="bg-gray-100 p-2 rounded-full">
+            <div className="w-9 h-9 bg-white p-2 rounded-full">
               <GlobalOutlined className="text-lg text-gray-600" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Public Account</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-black text-base font-medium">Public Account</div>
+              <div className="text-[#666666] text-xs font-normal">
                 Anyone can view your profile and posts
               </div>
             </div>
@@ -37,14 +37,14 @@ const PrivacySettings: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white">
+        <div className="flex items-center justify-between">
           <div className="flex items-start gap-3">
-            <div className="bg-gray-100 p-2 rounded-full">
+            <div className="w-9 h-9 bg-white p-2 rounded-full">
               <LockOutlined className="text-lg text-gray-600" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Private Account</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-black text-base font-medium">Private Account</div>
+              <div className="text-[#666666] text-xs font-normal">
                 Only contacts can see your posts and profile details.
               </div>
             </div>

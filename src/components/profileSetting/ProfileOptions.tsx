@@ -6,7 +6,6 @@ import {
   SettingOutlined,
   GlobalOutlined,
 } from "@ant-design/icons";
-import { Card } from "antd";
 
 import EditProfile from "./EditProfile";
 import NotificationSettings from "./NotificationSettings";
@@ -51,8 +50,8 @@ const ProfileOptions: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-6 p-6 bg-white rounded-xl shadow-sm min-h-[600px]">
-      <div className="w-72 border-r border-gray-100 pr-4">
+    <div className="flex gap-6 p-2 rounded-xl min-h-[600px]">
+      <div className="w-80 border-r border-l border-gray-200 px-4 pt-4">
         <div className="flex flex-col space-y-2">
           {menuItems.map((item) => (
             <div
@@ -73,9 +72,9 @@ const ProfileOptions: React.FC = () => {
       </div>
 
       <div className="flex-1">
-        <Card className="h-full rounded-xl border-gray-100 shadow-none">
+        <div className="h-full rounded-xl border-gray-100 shadow-none">
           {renderContent()}
-        </Card>
+        </div>
       </div>
     </div>
   );

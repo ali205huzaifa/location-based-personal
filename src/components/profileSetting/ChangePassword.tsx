@@ -1,95 +1,145 @@
-import React, { useState } from "react";
-import { Input, Button } from "antd";
-import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
+import React from "react";
+import { Form, Input, Button } from "antd";
 
 const ChangePassword: React.FC = () => {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form] = Form.useForm();
 
-  //   const [showCurrent, setShowCurrent] = useState(false);
-  //   const [showNew, setShowNew] = useState(false);
-  //   const [showConfirm, setShowConfirm] = useState(false);
+  const handleSubmit = (values: any) => {
+    console.log("Password Change Data:", values);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+    <div>
+      <div className="mb-10">
+        <h2 className="text-black text-2xl font-medium mb-2">
           Change Password
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-[#666666] text-sm font-normal">
           Secure your account by setting a new password whenever you want.
         </p>
       </div>
 
-      <div className="space-y-6 max-w-lg">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Current Password
-          </label>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        className="space-y-6 max-w-xl"
+      >
+        <Form.Item
+          label="Current Password"
+          name="currentPassword"
+          className="text-[#000000] text-sm font-normal"
+          rules={[{ required: true, message: "Please enter your current password" }]}
+        >
           <Input.Password
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="Enter Current password"
+            placeholder="Enter current password"
             iconRender={(visible) =>
               visible ? (
-                <EyeOutlined className="text-gray-400" />
+                <img
+                  src="/icons/eyeOpen-icon.svg"
+                  alt="Show"
+                  width={20}
+                  height={20}
+                />
               ) : (
-                <EyeInvisibleOutlined className="text-gray-400" />
+                <img
+                  src="/icons/eyeClose-icon.svg"
+                  alt="Hide"
+                  width={20}
+                  height={20}
+                />
               )
             }
-            className="h-11 rounded-lg"
+            size="large"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal"
           />
-        </div>
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            New Password
-          </label>
+        <Form.Item
+          label="New Password"
+          className="text-[#000000] text-sm font-normal"
+          name="newPassword"
+          rules={[
+            { required: true, message: "Please enter your new password" },
+            { min: 6, message: "Password must be at least 6 characters" },
+          ]}
+        >
           <Input.Password
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password"
             iconRender={(visible) =>
               visible ? (
-                <EyeOutlined className="text-gray-400" />
+                <img
+                  src="/icons/eyeOpen-icon.svg"
+                  alt="Show"
+                  width={20}
+                  height={20}
+                />
               ) : (
-                <EyeInvisibleOutlined className="text-gray-400" />
+                <img
+                  src="/icons/eyeClose-icon.svg"
+                  alt="Hide"
+                  width={20}
+                  height={20}
+                />
               )
             }
-            className="h-11 rounded-lg"
+            size="large"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal"
           />
-        </div>
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Confirm Password
-          </label>
+        <Form.Item
+          label="Confirm Password"
+          name="confirmPassword"
+          className="text-[#000000] text-sm font-normal"
+          dependencies={["newPassword"]}
+          rules={[
+            { required: true, message: "Please confirm your password" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("newPassword") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Passwords do not match"));
+              },
+            }),
+          ]}
+        >
           <Input.Password
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Reenter your password"
+            placeholder="Re-enter new password"
             iconRender={(visible) =>
               visible ? (
-                <EyeOutlined className="text-gray-400" />
+                <img
+                  src="/icons/eyeOpen-icon.svg"
+                  alt="Show"
+                  width={20}
+                  height={20}
+                />
               ) : (
-                <EyeInvisibleOutlined className="text-gray-400" />
+                <img
+                  src="/icons/eyeClose-icon.svg"
+                  alt="Hide"
+                  width={20}
+                  height={20}
+                />
               )
             }
-            className="h-11 rounded-lg"
+            size="large"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal"
           />
-        </div>
+        </Form.Item>
 
-        <div className="pt-4">
+        <Form.Item className="flex justify-end pt-4">
           <Button
             type="primary"
+            htmlType="submit"
             size="large"
-            className="w-full sm:w-auto px-8 bg-purple-600 hover:bg-purple-700 border-none rounded-lg font-medium"
+            className="!h-12 sm:w-auto px-8 bg-[#8869F3] hover:bg-purple-700 border-none rounded-xl text-white text-sm font-normal"
           >
             Save Changes
           </Button>
-        </div>
-      </div>
+        </Form.Item>
+      </Form>
     </div>
   );
 };

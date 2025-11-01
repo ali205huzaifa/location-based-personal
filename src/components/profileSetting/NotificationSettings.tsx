@@ -5,20 +5,20 @@ const NotificationSettings: React.FC = () => {
   const [pushEnabled, setPushEnabled] = useState(false);
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        <h2 className="text-black text-2xl font-medium mb-2">
           Notifications
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[#666666] font-normal">
           Manage alerts for messages, posts, and activities so you stay informed
           your way.
         </p>
       </div>
 
-      <div className="flex items-center justify-between max-w-md">
+      <div className="flex items-center justify-between max-w-2xl">
         <div>
-          <div className="text-sm font-medium text-gray-900">
+          <div className="text-black text-base font-normal">
             Push Notifications
           </div>
         </div>

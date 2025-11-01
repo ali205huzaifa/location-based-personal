@@ -10,16 +10,15 @@ const LanguageSettings: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Language</h2>
-        <p className="text-sm text-gray-600">
-          Choose your preferred language to make your app experience more
-          comfortable and familiar.
+        <h2 className="text-black text-2xl font-medium mb-2">Language</h2>
+        <p className="text-[#666666] text-sm font-normal">
+        Choose your preferred language to make your app experience more comfortable and familiar.
         </p>
       </div>
 
-      <div className="space-y-3 max-w-lg">
+      <div className="space-y-3 max-w-2xl">
         {languages.map((lang) => (
           <div
             key={lang.name}
