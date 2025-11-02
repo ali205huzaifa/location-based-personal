@@ -8,7 +8,7 @@ const Navbar: FC = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   return (
-    <header className="flex items-center justify-between px-12 py-3 shadow-sm bg-white">
+    <header className="flex items-center justify-between px-14 py-3 shadow-sm bg-white">
       <h1 className="text-lg font-semibold text-purple-600 tracking-tight">
         Social Platform
       </h1>

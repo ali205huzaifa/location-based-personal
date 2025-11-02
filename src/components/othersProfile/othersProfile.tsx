@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Input, Avatar, Button, Segmented } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import PostModal from "../home/PostModal";
 import SharePostModal from "../home/SharePostModal";
-import OwnPostModal from "./ownPostModal";
 
 interface MapCardProps {
   image: string;
@@ -16,7 +16,7 @@ interface MapCardProps {
   username: string;
 }
 
-const MyActivity: React.FC = () => {
+const OthersProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"posts" | "interactions">("posts");
   const [isModalOpen, setIsModalOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,8 +182,8 @@ const MyActivity: React.FC = () => {
                 value={activeTab}
                 onChange={(val) => setActiveTab(val as "posts" | "interactions")}
                 options={[
-                    { label: "My Posts", value: "posts" },
-                    { label: "My Interactions", value: "interactions" },
+                    { label: "Posts", value: "posts" },
+                    { label: "Interactions", value: "interactions" },
                 ]}
                 className="custom-segmented bg-white rounded-xl !w-80 h-12 flex items-center"
                 block
@@ -257,7 +257,7 @@ const MyActivity: React.FC = () => {
         </div>
       </div>
 
-      <OwnPostModal
+      <PostModal
         visible={isModalOpen}
         onClose={handleModalClose}
         post={selectedPost}
@@ -270,4 +270,4 @@ const MyActivity: React.FC = () => {
   );
 };
 
-export default MyActivity;
+export default OthersProfile;

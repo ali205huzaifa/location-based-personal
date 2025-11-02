@@ -1,16 +1,18 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import LoginPage from "../components/Auth/login";
-import ForgotPassword from "../components/Auth/ForgotPassword";
-import VerifyOtp from "../components/Auth/VerifyOtp";
-import Signup from "../components/Auth/signUp";
+import LoginPage from "../components/auth/login";
+import ForgotPassword from "../components/auth/ForgotPassword";
+import VerifyOtp from "../components/auth/VerifyOtp";
+import Signup from "../components/auth/signUp";
 import MainLayout from "../layout/MainLayout";
-import UserVerification from "../components/Auth/UserVerification";
+import UserVerification from "../components/auth/UserVerification";
 import ProtectedRoute from "./ProtectedRoutes";
 import Home from "../components/home/home";
-import CompleteGoogleProfile from "../components/Auth/CompleteGoogleProfile";
+import CompleteGoogleProfile from "../components/auth/CompleteGoogleProfile";
 import ProfileOptions from "../components/profileSetting/ProfileOptions";
+import MyActivity from "../components/myActivity/MyActivity";
+import ChatLayout from "../components/chats/ChatLayout";
 
 const AppRouter: React.FC = () => {
   return (
@@ -35,8 +37,8 @@ const AppRouter: React.FC = () => {
           }
         >
           <Route path="home" element={<Home />} />
-          <Route path="activity" element={<Home />} />
-          <Route path="chats" element={<Home />} />
+          <Route path="activity" element={<MyActivity />} />
+          <Route path="chats" element={<ChatLayout />} />
           <Route path="settings" element={<ProfileOptions />} />
         </Route>
       </Routes>

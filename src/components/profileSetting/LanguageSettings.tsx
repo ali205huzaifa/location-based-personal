@@ -23,14 +23,9 @@ const LanguageSettings: React.FC = () => {
           <div
             key={lang.name}
             onClick={() => setSelectedLanguage(lang.name)}
-            className={`
-              flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all
-              ${
-                selectedLanguage === lang.name
-                  ? "border-purple-500 bg-purple-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }
-            `}
+            className="
+              flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all border-gray-200 bg-white"
+            
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">

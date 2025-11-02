@@ -138,7 +138,7 @@ const Home: React.FC = () => {
         <div className="flex justify-center py-4">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Search by name or email"
+            placeholder="Search"
             allowClear
             className="!h-10 !text-sm"
           />
