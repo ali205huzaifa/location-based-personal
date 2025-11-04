@@ -50,7 +50,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="relative w-80 bg-white rounded-xl p-6 flex flex-col items-center space-y-4 max-h-[650px]">
+    <aside className="relative w-[285px] bg-white rounded-xl p-6 flex flex-col items-center space-y-4 h-full">
       <div className="flex flex-col items-center space-y-2">
         <Avatar
           size={120}
@@ -73,7 +73,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      <nav className="w-full space-y-1 text-base font-normal">
+      <nav className="w-full space-y-1 text-base font-normal flex-1">
         <SidebarItem
           icon={HomeIcon}
           label="Home"
@@ -103,13 +103,16 @@ const Sidebar: React.FC = () => {
           label="Add Post"
           onClick={() => handleNav("Add Post")}
         />
+      </nav>
+
+      <div className="w-full pt-4">
         <SidebarItem
           icon={LogoutIcon}
           label="Logout"
           danger
           onClick={() => handleNav("Logout")}
         />
-      </nav>
+      </div>
 
       <AddPostModal
         visible={showAddPostModal}

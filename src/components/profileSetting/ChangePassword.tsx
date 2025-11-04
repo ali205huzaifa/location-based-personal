@@ -1,11 +1,39 @@
-import React from "react";
-import { Form, Input, Button } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Button, message } from "antd";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
+import ProfileAPI from "../../api/profileApi/ProfileAPI";
 
 const ChangePassword: React.FC = () => {
   const [form] = Form.useForm();
+  const { token } = useSelector((state: RootState) => state.auth);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (values: any) => {
-    console.log("Password Change Data:", values);
+  const handleSubmit = async (values: any) => {
+    if (!token) {
+      message.error("You must be logged in to change your password.");
+      return;
+    }
+
+    const payload = {
+      currentPassword: values.currentPassword,
+      newPassword: values.newPassword,
+    };
+
+    setLoading(true);
+    try {
+      await ProfileAPI.ChangePassword(payload, token);
+      message.success("Password updated successfully!");
+      form.resetFields();
+    } catch (error: any) {
+      console.error("Password change error:", error);
+      const errMsg =
+        error?.response?.data?.message ||
+        "Failed to update password. Please try again.";
+      message.error(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,7 +57,9 @@ const ChangePassword: React.FC = () => {
           label="Current Password"
           name="currentPassword"
           className="text-[#000000] text-sm font-normal"
-          rules={[{ required: true, message: "Please enter your current password" }]}
+          rules={[
+            { required: true, message: "Please enter your current password" },
+          ]}
         >
           <Input.Password
             placeholder="Enter current password"
@@ -51,7 +81,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-gray-50 outline-[#8869F3]"
           />
         </Form.Item>
 
@@ -84,7 +114,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-gray-50 outline-[#8869F3]"
           />
         </Form.Item>
 
@@ -125,7 +155,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-gray-50 outline-[#8869F3]"
           />
         </Form.Item>
 
@@ -134,6 +164,7 @@ const ChangePassword: React.FC = () => {
             type="primary"
             htmlType="submit"
             size="large"
+            loading={loading}
             className="!h-12 sm:w-auto px-8 bg-[#8869F3] hover:bg-purple-700 border-none rounded-xl text-white text-sm font-normal"
           >
             Save Changes

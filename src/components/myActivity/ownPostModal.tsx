@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Modal, Input } from "antd";
+import { useNavigate } from "react-router-dom";
 import SharePostModal from "../home/SharePostModal";
 import ReportPostModal from "../home/ReportPostModal";
-
 
 interface PostModalProps {
   visible: boolean;
@@ -23,8 +23,13 @@ const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (!post) return null;
+
+  const handleProfileClick = () => {
+    navigate(`/othersProfile/${post.username || "unknown"}`);
+  };
 
   return (
     <Modal
@@ -48,15 +53,18 @@ const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
             <img
               src={post.image}
               alt="post"
-              className="object-cover w-full h-full"
+              className="bg-top bg-no-repeat bg-contain w-full h-full"
             />
           )}
         </div>
 
-        <div className="w-[533px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
+        <div className="xl:w-[533px] md:w-[360px] lg:w-[450px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
           <div className="">
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 px-4">
-              <div className="flex items-center space-x-3">
+              <div
+                className="flex items-center space-x-3"
+                onClick={handleProfileClick}
+              >
                 <img
                   src="https://i.pravatar.cc/40"
                   alt="profile"
@@ -68,42 +76,41 @@ const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
                 </div>
               </div>
 
-          <div className="relative">
-            <div
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-8 h-8 border-gray-200 p-1 border rounded-full mr-4 cursor-pointer flex items-center justify-center"
-            >
-              <img
-                src="/icons/dots.svg"
-                alt="Actions"
-                className="w-6 h-6 pb-0.5"
-              />
-            </div>
+              <div className="relative">
+                <div
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-8 h-8 border-gray-200 p-1 border rounded-full mr-4 cursor-pointer flex items-center justify-center"
+                >
+                  <img
+                    src="/icons/dots.svg"
+                    alt="Actions"
+                    className="w-6 h-6 pb-0.5"
+                  />
+                </div>
 
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <button
-                  onClick={() => {
-                    console.log("Edit Post clicked");
-                    setIsDropdownOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                >
-                  Edit Post
-                </button>
-                <button
-                  onClick={() => {
-                    setIsDeleteModalOpen(true);
-                    setIsDropdownOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                >
-                  Delete Post
-                </button>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <button
+                      onClick={() => {
+                        console.log("Edit Post clicked");
+                        setIsDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Edit Post
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsDeleteModalOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                    >
+                      Delete Post
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-
             </div>
 
             <div className="space-y-3 max-h-60 overflow-y-auto pr-1 p-4">
@@ -221,38 +228,41 @@ const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
       </div>
 
       <Modal
-      open={isDeleteModalOpen}
-      onCancel={() => setIsDeleteModalOpen(false)}
-      footer={null}
-      centered
-      className="!p-0 flex items-center justify-center"
-    >
-      <div className="flex flex-col items-center p-6">
-        <img src="/icons/delete-warning.svg" alt="Delete" className="w-20 h-20 mb-4" />
-        <p className="text-gray-800 text-center mb-6">
-          Are you sure you want to delete this post?
-        </p>
-        <div className="flex space-x-4">
-          <button
-            onClick={() => {
-              console.log("Post deleted");
-              setIsDeleteModalOpen(false);
-              onClose();
-            }}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => setIsDeleteModalOpen(false)}
-            className="bg-white border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-100"
-          >
-            Cancel
-          </button>
+        open={isDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        footer={null}
+        centered
+        className="!p-0 flex items-center justify-center"
+      >
+        <div className="flex flex-col items-center p-6">
+          <img
+            src="/icons/delete-warning.svg"
+            alt="Delete"
+            className="w-20 h-20 mb-4"
+          />
+          <p className="text-gray-800 text-center mb-6">
+            Are you sure you want to delete this post?
+          </p>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => {
+                console.log("Post deleted");
+                setIsDeleteModalOpen(false);
+                onClose();
+              }}
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="bg-white border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </div>
-    </Modal>
-
+      </Modal>
     </Modal>
   );
 };

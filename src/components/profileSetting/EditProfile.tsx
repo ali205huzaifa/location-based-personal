@@ -1,104 +1,213 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "../../store";
+import { setAuthData } from "../../store/Auth";
 import { CameraOutlined } from "@ant-design/icons";
-import { Input, Button, Avatar } from "antd";
+import { Form, Input, Button, Avatar, message } from "antd";
+import ProfileAPI from "../../api/profileApi/ProfileAPI";
+import AddPostAPI from "../../api/addPostApi/AddPostAPI";
 
 const { TextArea } = Input;
 
 const EditProfile: React.FC = () => {
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
+  const [form] = Form.useForm();
+  const dispatch = useDispatch();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [image, setImage] = useState<string>(
+    "https://i.pravatar.cc/150?img=32"
+  );
+
+  const { currentUser, token } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (currentUser) {
+      form.setFieldsValue({
+        fullName: currentUser.fullName || "",
+        username: currentUser.username || "",
+        email: currentUser.email || "",
+        bio: currentUser.bio || "",
+        image: currentUser.image || "https://i.pravatar.cc/150?img=32",
+      });
+      setImage(currentUser.image || "https://i.pravatar.cc/150?img=32");
+    }
+  }, [currentUser, form]);
+
+  const handleSaveChanges = async () => {
+    if (!token) {
+      message.error("User not authenticated!");
+      return;
+    }
+
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        fullName: values.fullName,
+        username: values.username,
+        bio: values.bio,
+        image: values.image,
+      };
+
+      await ProfileAPI.UpdateProfileInfo(payload, token);
+      message.success("Profile updated successfully!");
+
+      if (!currentUser) {
+        message.error("User data not available");
+        return;
+      }
+
+      dispatch(
+        setAuthData({
+          currentUser: {
+            ...currentUser,
+            ...payload,
+            _id: currentUser._id,
+          },
+          token,
+        })
+      );
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      message.error(
+        error?.response?.data?.message || "Failed to update profile"
+      );
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!token) {
+      message.error("User not authenticated!");
+      return;
+    }
+
+    try {
+      message.loading({ content: "Uploading image...", key: "upload" });
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadResponse = await AddPostAPI.uploadMedia(file);
+      const imageUrl = uploadResponse?.data?.url;
+
+      if (imageUrl) {
+        form.setFieldValue("image", imageUrl);
+        setImage(imageUrl);
+        message.success({
+          content: "Image uploaded successfully!",
+          key: "upload",
+        });
+      } else {
+        throw new Error("Invalid upload response");
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      message.error({ content: "Failed to upload image!", key: "upload" });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-black text-2xl font-medium mb-2">
-          Edit Profile
-        </h2>
+        <h2 className="text-black text-2xl font-medium mb-2">Edit Profile</h2>
         <p className="text-[#666666] text-sm font-normal">
           Update your name, bio, and profile photo to keep your account fresh
           and personal.
         </p>
       </div>
 
-      <div className="mb-4">
-        <div className="ttext-[#000000] text-sm font-normal mb-3">
-          Display Image
-        </div>
-        <div className="flex justify-start">
-          <div className="relative inline-block">
-            <Avatar
-              size={80}
-              src="https://randomuser.me/api/portraits/men/32.jpg"
-              className="border-none"
-            />
-            <div className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full shadow-lg cursor-pointer hover:bg-purple-700 transition">
-              <CameraOutlined className=" w-6 h-6 text-sm pl-1" />
+      <Form
+        form={form}
+        layout="vertical"
+        className="space-y-6 max-w-lg"
+        initialValues={{
+          fullName: "",
+          username: "",
+          email: "",
+          bio: "",
+          image: "https://i.pravatar.cc/150?img=32",
+        }}
+      >
+        <div className="mb-4">
+          <div className="text-[#000000] text-sm font-normal mb-3">
+            Display Image
+          </div>
+          <div className="flex justify-start">
+            <div className="relative inline-block">
+              <Avatar size={80} src={image} className="border-none" />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 bg-[#8869F3] text-white p-1 rounded-full shadow-lg cursor-pointer"
+              >
+                <CameraOutlined className="w-6 h-6 text-sm pl-1" />
+              </button>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleImageChange}
+              />
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="space-y-6 max-w-lg">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Full Name
-          </label>
+        <Form.Item
+          name="fullName"
+          label="Full Name"
+          rules={[{ required: true, message: "Please enter your full name" }]}
+        >
           <Input
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal"
-            placeholder="Enter your full name"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-50"
+            placeholder="Enter full name"
           />
-        </div>
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Username
-          </label>
+        <Form.Item
+          name="username"
+          label="Username"
+          rules={[{ required: true, message: "Please choose a username" }]}
+        >
           <Input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-50"
             placeholder="Choose a username"
           />
-        </div>
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email
-          </label>
+        <Form.Item name="email" label="Email">
           <Input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal"
-            placeholder="your@email.com"
+            disabled
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-100 cursor-not-allowed"
           />
-        </div>
+        </Form.Item>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bio
-          </label>
+        <Form.Item name="bio" label="Bio">
           <TextArea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal"
+            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-50"
             placeholder="Tell us about yourself..."
           />
-        </div>
+        </Form.Item>
+
+        <Form.Item hidden name="image">
+          <Input />
+        </Form.Item>
 
         <div className="flex justify-end pt-2">
           <Button
             type="primary"
             size="large"
+            onClick={handleSaveChanges}
             className="!w-36 !h-12 sm:w-auto px-8 bg-[#8869F3] hover:bg-purple-700 border-none rounded-xl text-white text-sm font-normal"
           >
             Save Changes
           </Button>
         </div>
-      </div>
+      </Form>
     </div>
   );
 };

@@ -133,18 +133,18 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-4 bg-[#F9FAFB]">
+    <div className="flex gap-4 bg-[#F9FAFB] md:ml-4 xl:ml-0">
       <div className="flex-1 flex flex-col">
         <div className="flex justify-center py-4">
           <Input
             prefix={<SearchOutlined />}
             placeholder="Search"
             allowClear
-            className="!h-10 !text-sm"
+            className="!h-10 !text-sm outline-[#8869F3]"
           />
         </div>
 
-        <div className="relative w-full h-[850px] rounded-lg overflow-hidden">
+        <div className="relative w-full h-full rounded-lg overflow-hidden">
           <iframe
             title="map"
             width="100%"
@@ -204,7 +204,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-80 h-[920px] mr-8 overflow-y-auto bg-[#F9FAFB] p-4 space-y-4">
+      <div className="xl:w-80 w-72 h-[920px] xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
         {posts.map((post) => (
           <MapCard
             key={post.id}

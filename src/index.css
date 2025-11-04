@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-family: 'Poppins', sans-serif;
+  --font-family: "Poppins", sans-serif;
 }
 
 * {
@@ -34,7 +34,7 @@
 }
 
 .custom-segmented .ant-segmented-item-selected {
-  background-color: #8869F3 !important;
+  background-color: #8869f3 !important;
   color: white !important;
   height: 100%;
   border-radius: 10px;

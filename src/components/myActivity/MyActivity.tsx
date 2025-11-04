@@ -27,7 +27,8 @@ const MyActivity: React.FC = () => {
   const posts = [
     {
       id: 1,
-      image: "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=800",
+      image:
+        "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=800",
       caption: "Street musician absolutely killing it 🎸",
       likes: 129,
       comments: 80,
@@ -39,7 +40,8 @@ const MyActivity: React.FC = () => {
     },
     {
       id: 2,
-      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+      image:
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
       caption: "Beachside vibes 🌊",
       likes: 212,
       comments: 64,
@@ -48,7 +50,7 @@ const MyActivity: React.FC = () => {
       username: "@alexcos45",
       top: "500px",
       left: "260px",
-    }
+    },
   ];
 
   const MapCard: React.FC<MapCardProps> = ({
@@ -135,62 +137,64 @@ const MyActivity: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col bg-[#F9FAFB] min-h-screen">
+    <div className="flex flex-col bg-[#F9FAFB] h-full">
       <div className="flex gap-4 px-2 flex-1">
-        <div className="flex-1 flex flex-col gap-4">
-        <div className="w-[650px] flex flex-col gap-4 px-20">
-            <div className="flex items-center gap-6">
-                <Avatar
+        <div className="flex-1 flex flex-col gap-4 w-full min-w-0">
+          <div className="flex flex-col gap-4 xl:px-20 lg:px-4 md:px-2">
+            <div className="flex items-center lg:gap-2 xl:gap-6 md:gap-1">
+              <Avatar
                 size={120}
                 src="https://randomuser.me/api/portraits/men/45.jpg"
-                />
-                <div>
-                <h2 className="text-xl font-semibold text-gray-800">Alex Costa</h2>
+              />
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Alex Costa
+                </h2>
                 <p className="text-gray-500 text-sm">@alexcos45</p>
                 <div className="flex justify-between mt-2 text-left w-64 text-gray-600 text-sm">
-                    <div className="flex flex-col">
-                        <strong className="text-lg text-gray-800">08</strong>
-                        <span>Circles Joined</span>
-                    </div>
-                    <div className="flex flex-col">
-                        <strong className="text-lg text-gray-800">18</strong>
-                        <span>Circle Size</span>
-                    </div>
+                  <div className="flex flex-col">
+                    <strong className="text-lg text-gray-800">08</strong>
+                    <span>Circles Joined</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <strong className="text-lg text-gray-800">18</strong>
+                    <span>Circle Size</span>
+                  </div>
                 </div>
                 <p className="text-gray-500 text-sm mt-1">
-                    Digital creator ✦ NYC | Sharing moments, not just posts ✦
+                  Digital creator ✦ NYC | Sharing moments, not just posts ✦
                 </p>
-                </div>
+              </div>
             </div>
 
             <Button
-                type="primary"
-                className="w-full rounded-lg py-2 bg-white text-[#8869F3] border-[#8869F3] !h-8"
+              type="primary"
+              className="w-full rounded-lg py-2 bg-white text-[#8869F3] border-[#8869F3] !h-8"
             >
-                Edit Profile
+              Edit Profile
             </Button>
-        </div>
+          </div>
 
-          <div className="w-[650px] flex justify-between items-center rounded-lg">
+          <div className="w-full flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 rounded-lg">
             <Input
               prefix={<SearchOutlined />}
               placeholder="Search"
               allowClear
-              className="!h-11 !text-sm !w-80"
+              className="!h-11 !text-sm w-full xl:!w-80 outline-[#8869F3]"
             />
             <Segmented
-                value={activeTab}
-                onChange={(val) => setActiveTab(val as "posts" | "interactions")}
-                options={[
-                    { label: "My Posts", value: "posts" },
-                    { label: "My Interactions", value: "interactions" },
-                ]}
-                className="custom-segmented bg-white rounded-xl !w-80 h-12 flex items-center"
-                block
+              value={activeTab}
+              onChange={(val) => setActiveTab(val as "posts" | "interactions")}
+              options={[
+                { label: "My Posts", value: "posts" },
+                { label: "My Interactions", value: "interactions" },
+              ]}
+              className="custom-segmented bg-white rounded-xl w-full xl:!w-80 h-12 flex items-center"
+              block
             />
           </div>
 
-          <div className="relative w-[650px] h-[780px] rounded-lg overflow-hidden bg-white border shadow-sm">
+          <div className="relative w-full h-full rounded-lg overflow-hidden">
             <iframe
               title="map"
               width="100%"
@@ -244,7 +248,7 @@ const MyActivity: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-80 h-[930px] overflow-y-auto bg-[#F9FAFB] pr-2 space-y-4 mr-6">
+        <div className="xl:w-80 w-72 h-full overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 xl:mr-8 md:mr-0">
           {(activeTab === "posts" ? posts : posts.slice(0, 2)).map((post) => (
             <MapCard
               key={post.id}

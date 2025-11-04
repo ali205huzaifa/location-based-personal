@@ -6,24 +6,7 @@ export const chats = [
     avatar: "https://i.pravatar.cc/100?img=1",
     lastMessage: "I saw your post n...",
     messages: [
-      {
-        id: 1,
-        sender: "Emma",
-        text: "Hey! I just came across your profile in the 'Local Creators' group...",
-        time: "11:23 am",
-      },
-      {
-        id: 2,
-        sender: "Me",
-        text: "Thanks a lot, that means a lot 😊 Right now, I mostly take custom orders...",
-        time: "11:50 am",
-      },
-      {
-        id: 3,
-        sender: "Emma",
-        text: "That's awesome! You should definitely do it.",
-        time: "11:23 am",
-      },
+      { id: 1, sender: "Emma", text: "Hey! How are you?", time: "11:23 am" },
     ],
   },
   {
@@ -34,12 +17,13 @@ export const chats = [
     lastMessage: "Emily: Sure thing 😄",
     messages: [],
   },
-  {
-    id: 3,
-    name: "Sarah Johnson",
-    username: "",
-    avatar: "https://i.pravatar.cc/100?img=3",
-    lastMessage: "Send me a few...",
-    messages: [],
-  },
+];
+
+export const users = [
+  { id: 1, name: "Kathrine Davis", username: "@Kathrine12", avatar: "https://i.pravatar.cc/100?img=11" },
+  { id: 2, name: "Leatrice Handler", username: "@valeenyabs_", avatar: "https://i.pravatar.cc/100?img=12" },
+  { id: 3, name: "Freida Varnes", username: "@belindaa", avatar: "https://i.pravatar.cc/100?img=13" },
+  { id: 4, name: "Dick Nicolas", username: "@katwa0", avatar: "https://i.pravatar.cc/100?img=14" },
+  { id: 5, name: "Enrique Rutherford", username: "@sylviawuor", avatar: "https://i.pravatar.cc/100?img=15" },
+  { id: 6, name: "Leandro Barrows", username: "@dumakaka", avatar: "https://i.pravatar.cc/100?img=16" },
 ];

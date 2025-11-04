@@ -51,7 +51,7 @@ const ProfileOptions: React.FC = () => {
 
   return (
     <div className="flex gap-6 p-2 rounded-xl min-h-[600px]">
-      <div className="w-80 border-r border-l border-gray-200 px-4 pt-4">
+      <div className="xl:w-80 md:w-64 border-r border-l border-gray-200 xl:px-4 md:px-1 pt-4">
         <div className="flex flex-col space-y-2">
           {menuItems.map((item) => (
             <div

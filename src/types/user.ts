@@ -8,16 +8,19 @@ export interface Role {
 }
 
 export interface User {
-  _id: string;
-  fullName: string;
-  username: string;
-  email: string;
-  role: string;
-  dob: string;
-  status: string;
-  notificationsEnabled: boolean;
-  privacy: string;
-  age: number;
+  _id?: string;
+  fullName?: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  dob?: string;
+  status?: string;
+  notificationsEnabled?: boolean;
+  privacy?: string;
+  age?: number;
+  bio?: string;
+  image?: string;
+  language?: string;
 }
 
 export interface Interviewer {
@@ -40,7 +43,7 @@ export interface Job {
   status: string;
   positions?: string;
   workArrangement?: string;
-  TotalCount?:string;
+  TotalCount?: string;
 }
 
 export type JobPayloadType = {
@@ -84,7 +87,7 @@ export interface City {
   _id: string;
   name: string;
   countryId?: string | Country;
-  country?: Country;            
+  country?: Country;
 }
 
 export type ModalMode = "create" | "edit";
@@ -116,4 +119,4 @@ export interface NdaDocument {
   email: string;
   signedDate?: string;
   [key: string]: any;
-};
+}

@@ -1,6 +1,6 @@
 import React from "react";
 import { List, Avatar, Typography, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { chats } from "./data";
 
 const { Text } = Typography;
@@ -8,39 +8,60 @@ const { Text } = Typography;
 interface ChatListProps {
   selectedChatId: number | null;
   onSelectChat: (id: number) => void;
+  onOpenNewGroup: () => void;
 }
 
-const ChatList: React.FC<ChatListProps> = ({ selectedChatId, onSelectChat }) => {
+const ChatList: React.FC<ChatListProps> = ({
+  selectedChatId,
+  onSelectChat,
+  onOpenNewGroup,
+}) => {
   return (
-    <div style={{ width: "30%", height: "100vh", borderRight: "1px solid #f0f0f0" }}>
-      <div style={{ padding: "16px" }}>
+    <div className="xl:w-80 md:w-72 flex flex-col h-full px-2">
+      <div className="flex-shrink-0">
         <Input
           placeholder="Search"
           prefix={<SearchOutlined />}
-          style={{ borderRadius: 20 }}
+          className="rounded-xl w-full !h-12 mb-8 outline-[#8869F3]"
         />
+        <div
+          onClick={onOpenNewGroup}
+          className="flex items-center text-purple-600 font-semibold cursor-pointer hover:text-purple-700 transition-colors mb-6"
+        >
+          <PlusOutlined className="text-base mr-2" />
+          <Text className="text-purple-600 font-medium">New Group</Text>
+        </div>
       </div>
 
-      <List
-        itemLayout="horizontal"
-        dataSource={chats}
-        renderItem={(chat) => (
-          <List.Item
-            onClick={() => onSelectChat(chat.id)}
-            style={{
-              background: selectedChatId === chat.id ? "#f5f5f5" : "transparent",
-              cursor: "pointer",
-              padding: "12px 16px",
-            }}
-          >
-            <List.Item.Meta
-              avatar={<Avatar src={chat.avatar} size={40} />}
-              title={<Text strong>{chat.name}</Text>}
-              description={<Text type="secondary">{chat.lastMessage}</Text>}
-            />
-          </List.Item>
-        )}
-      />
+      <div className="flex-1 overflow-y-auto border-x border-gray-200 px-2">
+        <List
+          itemLayout="horizontal"
+          className="mt-2"
+          dataSource={chats}
+          renderItem={(chat) => (
+            <List.Item
+              onClick={() => onSelectChat(chat.id)}
+              className={`cursor-pointer px-2 !py-4 transition-colors !h-16 !border-none ${
+                selectedChatId === chat.id ? "bg-gray-100" : "!hover:bg-gray-50"
+              }`}
+            >
+              <List.Item.Meta
+                avatar={<Avatar src={chat.avatar} size={50} />}
+                title={
+                  <div className="text-black text-base font-normal mt-1">
+                    {chat.name}
+                  </div>
+                }
+                description={
+                  <div className="text-stone-500 text-sm font-normal">
+                    {chat.lastMessage}
+                  </div>
+                }
+              />
+            </List.Item>
+          )}
+        />
+      </div>
     </div>
   );
 };

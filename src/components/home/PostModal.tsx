@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal, Input } from "antd";
 import SharePostModal from "./SharePostModal";
 import ReportPostModal from "./ReportPostModal";
@@ -20,8 +21,13 @@ interface PostModalProps {
 const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (!post) return null;
+
+  const handleProfileClick = () => {
+    navigate(`/othersProfile/${post.username || "unknown"}`);
+  };
 
   return (
     <Modal
@@ -45,15 +51,18 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
             <img
               src={post.image}
               alt="post"
-              className="object-cover w-full h-full"
+              className="bg-top bg-no-repeat bg-contain w-full h-full"
             />
           )}
         </div>
 
-        <div className="w-[533px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
+        <div className="xl:w-[533px] md:w-[360px] lg:w-[450px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
           <div className="">
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 px-4">
-              <div className="flex items-center space-x-3">
+              <div
+                className="flex items-center space-x-3"
+                onClick={handleProfileClick}
+              >
                 <img
                   src="https://i.pravatar.cc/40"
                   alt="profile"
