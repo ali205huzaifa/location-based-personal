@@ -36,9 +36,13 @@ const Signup: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row">
       <div className="md:w-1/2 w-full flex flex-col justify-center items-start text-left bg-violet-500/10 p-10 sm:p-8">
         <div className="max-w-xl">
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#8869F3] mb-16">
-            Logo
-          </h1>
+          <div className="flex items-center">
+            <img
+              src="/icons/location-icon.svg"
+              alt="Logo"
+              className="h-16 w-auto object-contain cursor-pointer mb-4"
+            />
+          </div>
           <h2 className="text-[#000000] text-4xl font-semibold mb-3 leading-snug">
             Join the Community, Start Connecting
           </h2>

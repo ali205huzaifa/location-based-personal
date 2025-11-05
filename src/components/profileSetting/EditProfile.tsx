@@ -163,7 +163,7 @@ const EditProfile: React.FC = () => {
           rules={[{ required: true, message: "Please enter your full name" }]}
         >
           <Input
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-50"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF]"
             placeholder="Enter full name"
           />
         </Form.Item>
@@ -174,7 +174,7 @@ const EditProfile: React.FC = () => {
           rules={[{ required: true, message: "Please choose a username" }]}
         >
           <Input
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-50"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF]"
             placeholder="Choose a username"
           />
         </Form.Item>
@@ -182,13 +182,13 @@ const EditProfile: React.FC = () => {
         <Form.Item name="email" label="Email">
           <Input
             disabled
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-100 cursor-not-allowed"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#E8E6E6] cursor-not-allowed"
           />
         </Form.Item>
 
         <Form.Item name="bio" label="Bio">
           <TextArea
-            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-gray-50"
+            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF]"
             placeholder="Tell us about yourself..."
           />
         </Form.Item>

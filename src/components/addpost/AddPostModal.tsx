@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Modal,
   Input,
@@ -11,28 +11,67 @@ import {
 } from "antd";
 import {
   PaperClipOutlined,
-  EnvironmentOutlined,
   CloseCircleOutlined,
   GlobalOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import type { RcFile } from "antd/es/upload";
+import {
+  GoogleMap,
+  Autocomplete,
+  Marker,
+  useJsApiLoader,
+} from "@react-google-maps/api";
 import AddPostAPI from "../../api/addPostApi/AddPostAPI";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 
 interface PostModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
+const defaultCenter = { lat: 33.6844, lng: 73.0479 };
+
 const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
   const [step, setStep] = useState(1);
   const [text, setText] = useState("");
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [location, setLocation] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("private");
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const user = useSelector((state: RootState) => state.auth.currentUser);
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
+    libraries: ["places"],
+  });
+
+  const onLoadAutocomplete = (
+    autocomplete: google.maps.places.Autocomplete
+  ) => {
+    autocompleteRef.current = autocomplete;
+  };
+
+  const onPlaceChanged = () => {
+    const autocomplete = autocompleteRef.current;
+    if (!autocomplete) return;
+
+    const place = autocomplete.getPlace();
+    if (!place || !place.geometry || !place.geometry.location) return;
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    setCoords({ lat, lng });
+    setLocation(place.formatted_address || "");
+  };
 
   const handleUpload = async (file: RcFile) => {
     try {
@@ -73,7 +112,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
   };
 
   const handlePost = async () => {
-    if (!location) {
+    if (!coords) {
       message.warning("Please select a location before posting!");
       return;
     }
@@ -90,7 +129,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
         visibility,
         location: {
           type: "Point",
-          coordinates: [33.669026, 72.999154],
+          coordinates: [coords.lng, coords.lat],
         },
       };
 
@@ -99,6 +138,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
       setText("");
       setFiles([]);
       setLocation("");
+      setCoords(null);
       setStep(1);
       onClose();
     } catch (err) {
@@ -129,15 +169,14 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
               </div>
 
               <div className="flex items-center mb-3">
-                <Avatar
-                  src="https://randomuser.me/api/portraits/men/45.jpg"
-                  size={45}
-                />
+                <Avatar src={user?.image} size={45} />
                 <div className="ml-3">
-                  <h3 className="font-medium text-gray-800">Alex Costa</h3>
+                  <h3 className="font-medium text-gray-800">
+                    {user?.fullName}
+                  </h3>
                   <Button
                     size="small"
-                    className="rounded-full text-xs bg-gray-100 text-gray-700"
+                    className="rounded text-xs bg-gray-100 text-gray-700"
                     onClick={() => setPrivacyModalVisible(true)}
                   >
                     {visibility === "public" ? "Public" : "Contacts Only"}
@@ -223,25 +262,33 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                 </h2>
               </div>
 
-              <Input
-                prefix={<EnvironmentOutlined style={{ fontSize: "15px" }} />}
-                placeholder="Enter a location..."
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="mb-4 h-12 rounded-xl text-[#8869F3]"
-              />
+              {isLoaded ? (
+                <div className="w-full flex flex-col gap-3">
+                  <Autocomplete
+                    onLoad={onLoadAutocomplete}
+                    onPlaceChanged={onPlaceChanged}
+                  >
+                    <Input
+                      placeholder="Search for a place"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="rounded-lg mb-2"
+                    />
+                  </Autocomplete>
 
-              <div className="w-full h-[400px] rounded-xl overflow-hidden mb-5">
-                <iframe
-                  title="map"
-                  width="100%"
-                  height="100%"
-                  className="border-none"
-                  src="https://www.openstreetmap.org/export/embed.html?bbox=-105.0%2C39.7%2C-104.9%2C39.8&amp;layer=mapnik"
-                ></iframe>
-              </div>
+                  <GoogleMap
+                    mapContainerStyle={{ width: "100%", height: "400px" }}
+                    center={coords || defaultCenter}
+                    zoom={14}
+                  >
+                    {coords && <Marker position={coords} />}
+                  </GoogleMap>
+                </div>
+              ) : (
+                <p>Loading map...</p>
+              )}
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 mt-5">
                 <Button
                   block
                   onClick={() => setStep(1)}
@@ -271,7 +318,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
             <Button
               type="primary"
               block
-              className="!bg-[#8869F3] h-12 rounded-xl text-lg font-medium"
+              className="!bg-[#8869F3] h-12 rounded-xl text-sm font-medium"
               onClick={() => setPrivacyModalVisible(false)}
             >
               Done
@@ -279,11 +326,15 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
           </div>
         }
         centered
-        title={<span className="font-semibold text-base">Post settings</span>}
-        className="rounded-xl overflow-hidden shadow-lg p-0"
-        width={300}
+        title={
+          <span className="text-black text-base font-medium">
+            Post settings
+          </span>
+        }
+        className="rounded-xl overflow-hidden shadow-lg"
+        width={350}
         styles={{
-          body: { padding: "8px 20px" },
+          body: { padding: "8px 0px 32px 0px" },
         }}
       >
         <Radio.Group
@@ -294,9 +345,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
           <div className="flex justify-between items-center py-2 cursor-pointer">
             <div className="flex items-center gap-4">
               <GlobalOutlined className="text-xl text-gray-700" />
-              <span className="font-normal text-base text-gray-800">
-                Public
-              </span>
+              <span className="font-normal text-black text-sm">Public</span>
             </div>
             <Radio value="public" className="custom-purple-radio" />
           </div>
@@ -304,11 +353,11 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
           <div className="flex justify-between items-center py-2 cursor-pointer">
             <div className="flex items-center gap-4">
               <TeamOutlined className="text-xl text-gray-700" />
-              <span className="font-normal text-base text-gray-800">
+              <span className="font-normal text-black text-sm">
                 Contacts Only
               </span>
             </div>
-            <Radio value="contacts" className="custom-purple-radio" />
+            <Radio value="private" className="custom-purple-radio" />
           </div>
         </Radio.Group>
       </Modal>

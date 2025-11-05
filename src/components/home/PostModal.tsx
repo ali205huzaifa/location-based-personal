@@ -7,15 +7,7 @@ import ReportPostModal from "./ReportPostModal";
 interface PostModalProps {
   visible: boolean;
   onClose: () => void;
-  post: {
-    image?: string;
-    caption?: string;
-    location?: string;
-    likes?: number;
-    comments?: number;
-    shares?: number;
-    username?: string;
-  } | null;
+  post: any | null;
 }
 
 const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
@@ -25,8 +17,16 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
 
   if (!post) return null;
 
+  const user = post.user || {};
+  const media = post.media?.[0]?.url || "https://via.placeholder.com/800x600";
+  const likes = post.interaction?.likeCount || 0;
+  const comments = post.interaction?.commentCount || 0;
+  const caption = post.content || "";
+  const location =
+    post.metadata?.publisherName || post.user?.fullName || "Unknown Location";
+
   const handleProfileClick = () => {
-    navigate(`/othersProfile/${post.username || "unknown"}`);
+    navigate(`/othersProfile/${user.username || "unknown"}`);
   };
 
   return (
@@ -46,31 +46,31 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
       closeIcon={null}
     >
       <div className="flex flex-row bg-white rounded-2xl overflow-hidden">
-        <div className="flex-1 bg-black">
-          {post.image && (
-            <img
-              src={post.image}
-              alt="post"
-              className="bg-top bg-no-repeat bg-contain w-full h-full"
-            />
-          )}
+        <div className="flex-1">
+          <img
+            src={media}
+            alt="post"
+            className="bg-top bg-no-repeat bg-contain w-full h-full"
+          />
         </div>
 
         <div className="xl:w-[533px] md:w-[360px] lg:w-[450px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
-          <div className="">
+          <div>
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 px-4">
               <div
-                className="flex items-center space-x-3"
+                className="flex items-center space-x-3 cursor-pointer"
                 onClick={handleProfileClick}
               >
                 <img
-                  src="https://i.pravatar.cc/40"
+                  src={user.profileImage || "https://i.pravatar.cc/40"}
                   alt="profile"
                   className="rounded-full w-10 h-10"
                 />
                 <div>
-                  <p className="font-semibold text-gray-800">Emma Wilson</p>
-                  <p className="text-xs text-gray-500">{post.username}</p>
+                  <p className="font-semibold text-gray-800">
+                    {user.fullName || "Unknown User"}
+                  </p>
+                  <p className="text-xs text-gray-500">@{user.username}</p>
                 </div>
               </div>
 
@@ -89,47 +89,45 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
             <div className="space-y-3 max-h-60 overflow-y-auto pr-1 p-4">
               <div className="flex">
                 <img
-                  src="https://i.pravatar.cc/40"
+                  src={user.profileImage || "https://i.pravatar.cc/40"}
                   alt="profile"
                   className="rounded-full w-10 h-10 mt-1"
                 />
                 <div className="pl-2">
-                  <p className="font-semibold text-gray-800">Emma Wilson</p>
-                  <p className="text-gray-800 text-sm">{post.caption}</p>
+                  <p className="font-semibold text-gray-800">
+                    {user.fullName || user.username}
+                  </p>
+                  <p className="text-gray-800 text-sm">{caption}</p>
                   <div className="flex justify-between items-center">
-                    <p className="text-xs text-gray-500">
-                      {post.location || "Pier 39, San Francisco, CA"}
-                    </p>
+                    <p className="text-xs text-gray-500">{location}</p>
                     <div className="flex items-center space-x-1 text-xs text-gray-500">
-                      <span>12m ago</span>
+                      <span>
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
                       <img
                         src="/icons/globe-icon.svg"
-                        alt="profile"
-                        className="rounded-full w-4 h-4"
+                        alt="Public"
+                        className="w-4 h-4"
                       />
                     </div>
                   </div>
                 </div>
               </div>
-              <div>
-                <p className="text-sm">
-                  <span className="font-semibold">Natalie Parker</span> Damn,
-                  this sunset looks unreal 🔥 you really caught the perfect
-                  moment!
+
+              {Array.isArray(post.comments) && post.comments.length > 0 ? (
+                post.comments.map((c: any, idx: number) => (
+                  <div key={idx}>
+                    <p className="text-sm">
+                      <span className="font-semibold">{c.user?.username}</span>{" "}
+                      {c.text}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm italic">
+                  No comments yet...
                 </p>
-              </div>
-              <div>
-                <p className="text-sm">
-                  <span className="font-semibold">Amber</span> Agreed
-                </p>
-              </div>
-              <div>
-                <p className="text-sm">
-                  <span className="font-semibold">Natalie Parker</span> Damn,
-                  this sunset looks unreal 🔥 you really caught the perfect
-                  moment!
-                </p>
-              </div>
+              )}
             </div>
           </div>
 
@@ -142,7 +140,7 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
                     alt="Likes"
                     className="w-4 h-4 mr-1"
                   />
-                  {post.likes || 129}
+                  {likes}
                 </span>
 
                 <span className="flex items-center">
@@ -151,7 +149,7 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
                     alt="Comments"
                     className="w-4 h-4 mr-1"
                   />
-                  {post.comments || 80}
+                  {comments}
                 </span>
 
                 <span
@@ -163,7 +161,7 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
                     alt="Share"
                     className="w-4 h-4 mr-1"
                   />
-                  {post.shares || 29}
+                  {post.shares || 0}
                 </span>
               </div>
 
@@ -190,6 +188,7 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
             />
           </div>
         </div>
+
         <SharePostModal
           visible={isShareOpen}
           onClose={() => setIsShareOpen(false)}

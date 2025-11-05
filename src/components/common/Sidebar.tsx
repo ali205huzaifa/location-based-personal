@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Avatar } from "antd";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 
 import HomeIcon from "/icons/home-icon.svg";
 import ActivityIcon from "/icons/activity-icon.svg";
@@ -16,6 +18,8 @@ const Sidebar: React.FC = () => {
   const [active, setActive] = useState("Home");
   const [showAddPostModal, setShowAddPostModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const user = useSelector((state: RootState) => state.auth.currentUser);
 
   const handleNav = (label: string) => {
     setActive(label);
@@ -54,11 +58,16 @@ const Sidebar: React.FC = () => {
       <div className="flex flex-col items-center space-y-2">
         <Avatar
           size={120}
-          src="https://i.pravatar.cc/150?img=32"
+          src={user?.image}
+          alt="Profile"
           className="shadow-sm border border-gray-200"
         />
-        <h2 className="text-2xl font-medium text-[#000000]">Alex Costa</h2>
-        <p className="text-xs font-normal text-gray-500 -mb-4">@alexcosta45</p>
+        <h2 className="text-2xl font-medium text-[#000000]">
+          {user?.fullName}
+        </h2>
+        <p className="text-xs font-normal text-gray-500 -mb-4">
+          @{user?.username}
+        </p>
       </div>
 
       <div className="flex items-center w-full bg-gray-50 rounded-xl px-4 py-3 space-x-3">

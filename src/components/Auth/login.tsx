@@ -93,9 +93,13 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row">
       <div className="md:w-1/2 w-full flex flex-col justify-center items-start bg-violet-500/10 p-6 sm:p-8">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#8869F3] mb-8">
-            Logo
-          </h1>
+          <div className="flex items-center">
+            <img
+              src="/icons/location-icon.svg"
+              alt="Logo"
+              className="h-16 w-auto object-contain cursor-pointer mb-8"
+            />
+          </div>
           <h1 className="text-4xl font-semibold text-black">Welcome Back!</h1>
           <p className="py-8 text-[#666666] text-2xl mb-16">
             Login to continue exploring what's happening around you.

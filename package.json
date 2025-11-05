@@ -1,5 +1,5 @@
 {
-  "name": "hr-portal-frontend",
+  "name": "hurcle-social-platform",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,6 +16,7 @@
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
     "@mui/material": "^7.3.2",
+    "@react-google-maps/api": "^2.20.7",
     "@reduxjs/toolkit": "^2.8.2",
     "antd": "^5.26.6",
     "axios": "^1.11.0",

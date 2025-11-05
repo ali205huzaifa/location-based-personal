@@ -3,15 +3,22 @@ import { Avatar } from "antd";
 import type { FC } from "react";
 import { useState } from "react";
 import NotificationDrawer from "./NotificationDrawer";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 
 const Navbar: FC = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const user = useSelector((state: RootState) => state.auth.currentUser);
 
   return (
     <header className="flex items-center justify-between px-14 py-3 shadow-sm bg-white">
-      <h1 className="text-lg font-semibold text-purple-600 tracking-tight">
-        Social Platform
-      </h1>
+      <div className="flex items-center">
+        <img
+          src="/icons/logo.svg"
+          alt="Logo"
+          className="h-12 w-auto object-contain cursor-pointer"
+        />
+      </div>
 
       <div className="flex items-center space-x-5">
         <div className="relative" onClick={() => setIsNotifOpen(true)}>
@@ -22,14 +29,14 @@ const Navbar: FC = () => {
         <div className="flex items-center space-x-3">
           <div className="flex flex-col text-right leading-tight">
             <span className="text-sm font-medium text-gray-900">
-              Alex Costa
+              {user?.fullName}
             </span>
-            <span className="text-xs text-gray-500">@alexcosta45</span>
+            <span className="text-xs text-gray-500">@{user?.username}</span>
           </div>
           <Avatar
             size={38}
-            src="https://i.pravatar.cc/150?img=32"
-            alt="Alex Costa"
+            src={user?.image}
+            alt="Profile"
             className="border border-gray-200 shadow-sm"
           />
         </div>

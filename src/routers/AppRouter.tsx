@@ -14,6 +14,7 @@ import ProfileOptions from "../components/profileSetting/ProfileOptions";
 import MyActivity from "../components/myActivity/MyActivity";
 import ChatLayout from "../components/chats/ChatLayout";
 import OthersProfile from "../components/othersProfile/othersProfile";
+import GoogleSuccess from "../components/auth/GoogleSuccess";
 
 const AppRouter: React.FC = () => {
   return (
@@ -24,6 +25,7 @@ const AppRouter: React.FC = () => {
         <Route path="/verify" element={<UserVerification />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/google/success" element={<GoogleSuccess />} />
         <Route
           path="/auth/google/complete-profile"
           element={<CompleteGoogleProfile />}

@@ -81,7 +81,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-gray-50 outline-[#8869F3]"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-[#FFFFFF] outline-[#8869F3]"
           />
         </Form.Item>
 
@@ -114,7 +114,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-gray-50 outline-[#8869F3]"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-[#FFFFFF] outline-[#8869F3]"
           />
         </Form.Item>
 
@@ -155,7 +155,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-gray-50 outline-[#8869F3]"
+            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-[#FFFFFF] outline-[#8869F3]"
           />
         </Form.Item>
 

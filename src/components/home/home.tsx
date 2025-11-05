@@ -1,8 +1,17 @@
-import React, { useState } from "react";
-import { Input, Avatar } from "antd";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import {
+  GoogleMap,
+  Marker,
+  useJsApiLoader,
+  MarkerClusterer,
+  StandaloneSearchBox,
+  InfoWindow,
+} from "@react-google-maps/api";
 import PostModal from "./PostModal";
 import SharePostModal from "./SharePostModal";
+import PostAPI from "../../api/postApi/PostAPI";
 
 interface MapCardProps {
   image: string;
@@ -16,39 +25,42 @@ interface MapCardProps {
   username: string;
 }
 
+const mapContainerStyle = {
+  width: "100%",
+  height: "100%",
+  borderRadius: "8px",
+};
+
+const defaultCenter = { lat: 33.6844, lng: 73.0479 };
+
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [popupPostId, setPopupPostId] = useState<number | null>(null);
+  const [popupPostId, setPopupPostId] = useState<string | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
-  const posts = [
-    {
-      id: 1,
-      image: "https://randomuser.me/api/portraits/women/65.jpg",
-      caption: "Street musician absolutely killing it! ",
-      likes: 129,
-      comments: 80,
-      shares: 29,
-      location: "Pier 39, San Francisco, CA",
-      username: "@alexcos45",
-      top: "300px",
-      left: "420px",
-    },
-    {
-      id: 2,
-      image: "https://randomuser.me/api/portraits/men/32.jpg",
-      caption: "SNEAKERS – Save up to 50%! ",
-      likes: 129,
-      comments: 80,
-      shares: 29,
-      location: "Times Square, New York, NY",
-      username: "@alexcos45",
-      isAd: true,
-      top: "500px",
-      left: "250px",
-    },
-  ];
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
+    libraries: ["places"],
+  });
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await PostAPI.getPublicPosts();
+        setPosts(res.data.posts || []);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   const MapCard: React.FC<MapCardProps> = ({
     image,
@@ -61,7 +73,7 @@ const Home: React.FC = () => {
   }) => (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-00 p-2"
+      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-100 p-2"
     >
       <img
         src={image}
@@ -76,16 +88,15 @@ const Home: React.FC = () => {
               alt="Likes"
               className="w-4 h-4 mr-1"
             />
-            {likes || 129}
+            {likes || 0}
           </span>
-
           <span className="flex items-center">
             <img
               src="/icons/comment-icon.svg"
               alt="Comments"
               className="w-4 h-4 mr-1"
             />
-            {comments || 80}
+            {comments || 0}
           </span>
           <span className="flex items-center">
             <img
@@ -96,7 +107,7 @@ const Home: React.FC = () => {
                 e.stopPropagation();
                 setIsShareOpen(true);
               }}
-            />{" "}
+            />
             {shares}
           </span>
         </div>
@@ -113,15 +124,6 @@ const Home: React.FC = () => {
     </div>
   );
 
-  const handleAvatarClick = (id: number) => {
-    setPopupPostId(id);
-  };
-
-  const handleClosePopup = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPopupPostId(null);
-  };
-
   const handlePostClick = (post: any) => {
     setSelectedPost(post);
     setIsModalOpen(true);
@@ -132,72 +134,129 @@ const Home: React.FC = () => {
     setSelectedPost(null);
   };
 
+  const onLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+  }, []);
+
+  const onUnmount = useCallback(() => setMap(null), []);
+
+  const handleSearchLoad = (ref: google.maps.places.SearchBox) => {
+    searchBoxRef.current = ref;
+  };
+
+  const handlePlacesChanged = () => {
+    const places = searchBoxRef.current?.getPlaces();
+    if (places && places.length > 0) {
+      const place = places[0];
+      if (place.geometry?.location && map) {
+        map.panTo(place.geometry.location);
+        map.setZoom(14);
+      }
+    }
+  };
+
+  if (!isLoaded || loading) return <div>Loading map and posts...</div>;
+
   return (
-    <div className="flex gap-4 bg-[#F9FAFB] md:ml-4 xl:ml-0">
+    <div className="flex gap-4 bg-[#F9FAFB] md:ml-4 xl:ml-0 h-full">
       <div className="flex-1 flex flex-col">
-        <div className="flex justify-center py-4">
-          <Input
-            prefix={<SearchOutlined />}
-            placeholder="Search"
-            allowClear
-            className="!h-10 !text-sm outline-[#8869F3]"
-          />
+        <div className="flex justify-center py-4 w-full">
+          <div className="w-full">
+            <StandaloneSearchBox
+              onLoad={handleSearchLoad}
+              onPlacesChanged={handlePlacesChanged}
+            >
+              <Input
+                prefix={<SearchOutlined />}
+                placeholder="Search"
+                allowClear
+                className="!h-10 !text-sm !w-full outline-[#8869F3]"
+              />
+            </StandaloneSearchBox>
+          </div>
         </div>
 
         <div className="relative w-full h-full rounded-lg overflow-hidden">
-          <iframe
-            title="map"
-            width="100%"
-            height="100%"
-            className="border-none"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=-105.0%2C39.7%2C-104.9%2C39.8&amp;layer=mapnik"
-          ></iframe>
-
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="absolute cursor-pointer"
-              style={{ top: post.top, left: post.left }}
-              onClick={() => handleAvatarClick(post.id)}
+          <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            center={defaultCenter}
+            zoom={4}
+            onLoad={onLoad}
+            onUnmount={onUnmount}
+          >
+            <MarkerClusterer
+              averageCenter
+              enableRetinaIcons
+              gridSize={60}
+              minimumClusterSize={2}
             >
-              <Avatar
-                size={50}
-                src={post.image}
-                className="border-2 border-white shadow-md"
-              />
-
-              {popupPostId === post.id && (
-                <div
-                  className="absolute z-50"
-                  style={{
-                    bottom: "70px",
-                    left: "-90px",
-                    width: "250px",
-                  }}
-                >
-                  <div
-                    className="relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 after:absolute after:left-1/2 after:translate-x-[-50%] after:bottom-[-8px] after:w-4 after:h-4 after:bg-white after:rotate-45 after:shadow-md"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={handleClosePopup}
-                      className="absolute top-1.5 right-1.5 bg-white rounded-full text-gray-600 hover:text-black shadow-sm w-5 h-5 flex items-center justify-center z-10"
-                    >
-                      ×
-                    </button>
-
-                    <MapCard {...post} onClick={() => {}} />
-                  </div>
-                </div>
+              {(clusterer) => (
+                <>
+                  {posts.map((post) => (
+                    <Marker
+                      key={post._id}
+                      position={{
+                        lat: post.location?.coordinates[1],
+                        lng: post.location?.coordinates[0],
+                      }}
+                      clusterer={clusterer}
+                      icon={{
+                        url:
+                          post.media?.length > 0
+                            ? post.media[0].url
+                            : "/icons/default-pin.png",
+                        scaledSize: new google.maps.Size(50, 50),
+                      }}
+                      onClick={() => setPopupPostId(post._id)}
+                    />
+                  ))}
+                </>
               )}
-            </div>
-          ))}
+            </MarkerClusterer>
+
+            {popupPostId && (
+              <InfoWindow
+                position={{
+                  lat: posts.find((p) => p._id === popupPostId)?.location
+                    ?.coordinates[1],
+                  lng: posts.find((p) => p._id === popupPostId)?.location
+                    ?.coordinates[0],
+                }}
+                onCloseClick={() => setPopupPostId(null)}
+              >
+                <div className="p-2 w-56">
+                  <p className="font-semibold text-sm mb-1">
+                    {posts.find((p) => p._id === popupPostId)?.user?.username}
+                  </p>
+                  <p className="text-xs text-gray-600 line-clamp-3">
+                    {posts.find((p) => p._id === popupPostId)?.content}
+                  </p>
+                  {posts.find((p) => p._id === popupPostId)?.media?.length >
+                    0 && (
+                    <img
+                      src={
+                        posts.find((p) => p._id === popupPostId)?.media[0].url
+                      }
+                      alt="Post"
+                      className="w-full h-24 object-cover mt-2 rounded"
+                    />
+                  )}
+                </div>
+              </InfoWindow>
+            )}
+          </GoogleMap>
 
           <div className="absolute bottom-6 right-6 flex flex-col space-y-2">
-            <button className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow">
+            <button
+              className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow"
+              onClick={() => map && map.setZoom(map.getZoom()! + 1)}
+            >
               +
             </button>
-            <button className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow">
+            <button
+              className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow"
+              onClick={() => map && map.setZoom(map.getZoom()! - 1)}
+            >
               −
             </button>
           </div>
@@ -207,8 +266,18 @@ const Home: React.FC = () => {
       <div className="xl:w-80 w-72 h-[920px] xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
         {posts.map((post) => (
           <MapCard
-            key={post.id}
-            {...post}
+            key={post._id}
+            image={
+              post.media?.length
+                ? post.media[0].url
+                : "https://via.placeholder.com/150"
+            }
+            caption={post.content || "No content"}
+            likes={post.interaction?.likeCount || 0}
+            comments={post.interaction?.commentCount || 0}
+            shares={0}
+            location={post.metadata?.publisherName || post.user?.fullName}
+            username={post.user?.username}
             onClick={() => handlePostClick(post)}
           />
         ))}
@@ -219,7 +288,6 @@ const Home: React.FC = () => {
         onClose={handleModalClose}
         post={selectedPost}
       />
-
       <SharePostModal
         visible={isShareOpen}
         onClose={() => setIsShareOpen(false)}
