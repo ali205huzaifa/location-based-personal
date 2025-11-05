@@ -25,4 +25,5 @@ dist-ssr
 
 # Environment files
 .env
-ends/.env.prod
+envs/.env.prod
+.env.prod
