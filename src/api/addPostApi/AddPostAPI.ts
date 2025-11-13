@@ -9,6 +9,14 @@ class AddPostAPI {
     });
   }
 
+  static async multiUploadMedia(files: File[]) {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    return axiosClient.post("/media/upload-multiple", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
   static async createPost(data: {
     content: string;
     media: { url: string; type: string }[];

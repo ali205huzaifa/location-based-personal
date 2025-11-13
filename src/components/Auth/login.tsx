@@ -95,9 +95,9 @@ const LoginPage: React.FC = () => {
         <div className="max-w-lg mx-auto">
           <div className="flex items-center">
             <img
-              src="/icons/location-icon.svg"
+              src="/icons/logo.svg"
               alt="Logo"
-              className="h-16 w-auto object-contain cursor-pointer mb-8"
+              className="h-24 w-auto object-contain cursor-pointer mb-8"
             />
           </div>
           <h1 className="text-4xl font-semibold text-black">Welcome Back!</h1>

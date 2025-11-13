@@ -50,11 +50,11 @@ const PostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
           <img
             src={media}
             alt="post"
-            className="bg-top bg-no-repeat bg-contain w-full h-full"
+            className="bg-top bg-no-repeat bg-contain h-full max-w-full"
           />
         </div>
 
-        <div className="xl:w-[533px] md:w-[360px] lg:w-[450px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
+        <div className="xl:w-[668px] md:w-[360px] lg:w-[450px] h-[850px] flex flex-col justify-between border-l border-gray-100 py-4">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 px-4">
               <div

@@ -5,43 +5,55 @@ import NewGroupModal from "./NewGroupModal";
 import GroupDetailsModal from "./GroupDetailsModal";
 
 const ChatLayout: React.FC = () => {
-  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [isExistingChat, setIsExistingChat] = useState<boolean>(false);
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false);
   const [isGroupDetailsOpen, setIsGroupDetailsOpen] = useState(false);
-  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
-  const handleNext = (members: number[]) => {
+  const handleNext = (members: string[]) => {
     setSelectedMembers(members);
     setIsNewGroupOpen(false);
     setIsGroupDetailsOpen(true);
   };
 
-  const handleCreateGroup = (group: { name: string; desc: string; image?: string }) => {
+  const handleCreateGroup = (group: {
+    name: string;
+    desc: string;
+    image?: string;
+  }) => {
     console.log("New Group Created:", group, "Members:", selectedMembers);
     setIsGroupDetailsOpen(false);
   };
 
   return (
-  <div className="flex w-full h-full">
-    <ChatList
-      selectedChatId={selectedChatId}
-      onSelectChat={setSelectedChatId}
-      onOpenNewGroup={() => setIsNewGroupOpen(true)}
-    />
-    <ChatWindow selectedChatId={selectedChatId} />
+    <div className="flex w-full h-full">
+      <ChatList
+        selectedChatId={selectedChatId}
+        onSelectChat={(id, isChat) => {
+          setSelectedChatId(id);
+          setIsExistingChat(isChat);
+        }}
+        onOpenNewGroup={() => setIsNewGroupOpen(true)}
+      />
 
-    <NewGroupModal
-      open={isNewGroupOpen}
-      onClose={() => setIsNewGroupOpen(false)}
-      onNext={handleNext}
-    />
+      <ChatWindow
+        selectedChatId={selectedChatId}
+        isExistingChat={isExistingChat}
+      />
 
-    <GroupDetailsModal
-      open={isGroupDetailsOpen}
-      onClose={() => setIsGroupDetailsOpen(false)}
-      onCreate={handleCreateGroup}
-    />
-  </div>
+      <NewGroupModal
+        open={isNewGroupOpen}
+        onClose={() => setIsNewGroupOpen(false)}
+        onNext={handleNext}
+      />
+
+      <GroupDetailsModal
+        open={isGroupDetailsOpen}
+        onClose={() => setIsGroupDetailsOpen(false)}
+        onCreate={handleCreateGroup}
+      />
+    </div>
   );
 };
 

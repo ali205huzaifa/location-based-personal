@@ -38,9 +38,9 @@ const Signup: React.FC = () => {
         <div className="max-w-xl">
           <div className="flex items-center">
             <img
-              src="/icons/location-icon.svg"
+              src="/icons/logo.svg"
               alt="Logo"
-              className="h-16 w-auto object-contain cursor-pointer mb-4"
+              className="h-24 w-auto object-contain cursor-pointer mb-4"
             />
           </div>
           <h2 className="text-[#000000] text-4xl font-semibold mb-3 leading-snug">

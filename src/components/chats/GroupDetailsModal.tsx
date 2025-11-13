@@ -1,45 +1,90 @@
 import React, { useState, useRef } from "react";
-import { Modal, Avatar, Input } from "antd";
-import { CameraOutlined } from "@ant-design/icons";
+import { Modal, Avatar, Input, message } from "antd";
+import { CameraOutlined, LoadingOutlined } from "@ant-design/icons";
+import ChatAPI from "../../api/chatApi/ChatAPI";
+import AddPostAPI from "../../api/addPostApi/AddPostAPI";
+
 const { TextArea } = Input;
 
 interface GroupDetailsModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (data: { name: string; desc: string; image?: string }) => void;
+  members: string[];
+  onGroupCreated: () => void;
 }
 
 const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
   open,
   onClose,
-  onCreate,
+  members,
+  onGroupCreated,
 }) => {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [image, setImage] = useState<string>();
+  const [uploading, setUploading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      setUploading(true);
+
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
+      reader.onloadend = () => setImage(reader.result as string);
       reader.readAsDataURL(file);
+
+      const res = await AddPostAPI.uploadMedia(file);
+      if (res?.data?.url) {
+        setImage(res.data.url);
+        message.success("Image uploaded successfully!");
+      } else {
+        message.error("Image upload failed");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      message.error("Error uploading image");
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleCreate = () => {
-    onCreate({ name, desc, image });
-    onClose();
-    setName("");
-    setDesc("");
-    setImage(undefined);
+  const handleCreate = async () => {
+    if (!name.trim()) return message.warning("Please enter a group name");
+    if (members.length === 0) return message.warning("Please select members");
+
+    try {
+      setCreating(true);
+      const payload = {
+        members,
+        type: "Group",
+        name,
+        desc,
+        image,
+      };
+
+      const res = await ChatAPI.createGroup(payload);
+      if (res?.data) {
+        message.success("Group created successfully!");
+        onClose();
+        onGroupCreated();
+        setName("");
+        setDesc("");
+        setImage(undefined);
+      }
+    } catch (error) {
+      console.error("Group creation failed:", error);
+      message.error("Failed to create group");
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -61,16 +106,16 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
         </div>
         <div className="flex justify-start mb-4">
           <div className="relative inline-block">
-            <Avatar
-              size={80}
-              src={image || "https://randomuser.me/api/portraits/men/32.jpg"}
-              className="border-none"
-            />
+            <Avatar size={80} src={image} className="border-none" />
             <div
               onClick={handleImageClick}
               className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full shadow-lg cursor-pointer hover:bg-purple-700 transition"
             >
-              <CameraOutlined className="w-6 h-6 text-sm pl-1" />
+              {uploading ? (
+                <LoadingOutlined className="text-sm p-1" />
+              ) : (
+                <CameraOutlined className="text-sm p-1" />
+              )}
             </div>
             <input
               type="file"
@@ -111,10 +156,10 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
 
       <button
         onClick={handleCreate}
-        disabled={!name || !desc}
-        className="mt-2 w-full bg-[#8869F3] text-white py-2 rounded-xl disabled:opacity-50"
+        disabled={!name || uploading || creating}
+        className="mt-2 w-full !bg-[#8869F3] text-white py-2 rounded-xl disabled:opacity-50"
       >
-        Create Group Chat
+        {creating ? "Creating Group..." : "Create Group Chat"}
       </button>
     </Modal>
   );

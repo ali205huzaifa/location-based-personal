@@ -1,57 +1,87 @@
-import React, { useState } from "react";
-import { Input, Avatar, Button, Segmented } from "antd";
+import React, { useState, useEffect, useCallback } from "react";
+import { Input, Avatar, Button, Segmented, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import SharePostModal from "../home/SharePostModal";
 import OwnPostModal from "./ownPostModal";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  GoogleMap,
+  Marker,
+  useJsApiLoader,
+  MarkerClusterer,
+  InfoWindow,
+} from "@react-google-maps/api";
+import PostAPI from "../../api/postApi/PostAPI";
+import { OverlayView } from "@react-google-maps/api";
 
 interface MapCardProps {
   image: string;
   caption: string;
   location?: string;
-  likes: number;
-  comments: number;
-  shares: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
   onClick: () => void;
   onShare: () => void;
   username: string;
 }
 
+const mapContainerStyle = {
+  width: "100%",
+  height: "100%",
+  borderRadius: "12px",
+};
+
+const defaultCenter = { lat: 30.3753, lng: 69.3451 };
+
 const MyActivity: React.FC = () => {
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.currentUser);
+
   const [activeTab, setActiveTab] = useState<"posts" | "interactions">("posts");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [popupPostId, setPopupPostId] = useState<number | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [popupPostId, setPopupPostId] = useState<string | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  const posts = [
-    {
-      id: 1,
-      image:
-        "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=800",
-      caption: "Street musician absolutely killing it 🎸",
-      likes: 129,
-      comments: 80,
-      shares: 29,
-      location: "Pier 39, San Francisco, CA",
-      username: "@alexcos45",
-      top: "320px",
-      left: "410px",
-    },
-    {
-      id: 2,
-      image:
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
-      caption: "Beachside vibes 🌊",
-      likes: 212,
-      comments: 64,
-      shares: 41,
-      location: "Miami Beach, FL",
-      username: "@alexcos45",
-      top: "500px",
-      left: "260px",
-    },
-  ];
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
+    libraries: ["places"],
+  });
+
+  const fetchPosts = useCallback(async () => {
+    if (!user?._id) return;
+    setLoading(true);
+    try {
+      const response = await PostAPI.getPublicPostsByUser(user._id);
+      setPosts(response.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const handlePostClick = (post: any) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedPost(null);
+  };
 
   const MapCard: React.FC<MapCardProps> = ({
     image,
@@ -61,10 +91,11 @@ const MyActivity: React.FC = () => {
     shares,
     location,
     onClick,
+    onShare,
   }) => (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-00 p-2"
+      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-100 p-2"
     >
       <img
         src={image}
@@ -79,7 +110,7 @@ const MyActivity: React.FC = () => {
               alt="Likes"
               className="w-4 h-4 mr-1"
             />
-            {likes || 129}
+            {likes || 0}
           </span>
 
           <span className="flex items-center">
@@ -88,19 +119,22 @@ const MyActivity: React.FC = () => {
               alt="Comments"
               className="w-4 h-4 mr-1"
             />
-            {comments || 80}
+            {comments || 0}
           </span>
-          <span className="flex items-center">
+
+          <span
+            className="flex items-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare();
+            }}
+          >
             <img
               src="/icons/share-icon.svg"
               alt="Share"
               className="w-4 h-4 mr-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsShareOpen(true);
-              }}
-            />{" "}
-            {shares}
+            />
+            {shares || 0}
           </span>
         </div>
         <p className="text-[#000000] text-sm font-normal">{caption}</p>
@@ -116,25 +150,13 @@ const MyActivity: React.FC = () => {
     </div>
   );
 
-  const handleAvatarClick = (id: number) => {
-    setPopupPostId(id);
-  };
+  const onLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+  }, []);
 
-  const handleClosePopup = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPopupPostId(null);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlePostClick = (post: any) => {
-    setSelectedPost(post);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedPost(null);
-  };
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
 
   return (
     <div className="flex flex-col bg-[#F9FAFB] h-full">
@@ -144,13 +166,13 @@ const MyActivity: React.FC = () => {
             <div className="flex items-center lg:gap-2 xl:gap-6 md:gap-1">
               <Avatar
                 size={120}
-                src="https://randomuser.me/api/portraits/men/45.jpg"
+                src={user?.image || "/icons/default-avatar.png"}
               />
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  Alex Costa
+                  {user?.fullName}
                 </h2>
-                <p className="text-gray-500 text-sm">@alexcos45</p>
+                <p className="text-gray-500 text-sm">@{user?.username}</p>
                 <div className="flex justify-between mt-2 text-left w-64 text-gray-600 text-sm">
                   <div className="flex flex-col">
                     <strong className="text-lg text-gray-800">08</strong>
@@ -161,15 +183,14 @@ const MyActivity: React.FC = () => {
                     <span>Circle Size</span>
                   </div>
                 </div>
-                <p className="text-gray-500 text-sm mt-1">
-                  Digital creator ✦ NYC | Sharing moments, not just posts ✦
-                </p>
+                <p className="text-gray-500 text-sm mt-1">{user?.bio}</p>
               </div>
             </div>
 
             <Button
               type="primary"
               className="w-full rounded-lg py-2 bg-white text-[#8869F3] border-[#8869F3] !h-8"
+              onClick={() => navigate("/settings")}
             >
               Edit Profile
             </Button>
@@ -195,67 +216,143 @@ const MyActivity: React.FC = () => {
           </div>
 
           <div className="relative w-full h-full rounded-lg overflow-hidden">
-            <iframe
-              title="map"
-              width="100%"
-              height="100%"
-              className="border-none"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=-105.0%2C39.7%2C-104.9%2C39.8&amp;layer=mapnik"
-            ></iframe>
-
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="absolute cursor-pointer"
-                style={{ top: post.top, left: post.left }}
-                onClick={() => handleAvatarClick(post.id)}
+            {isLoaded ? (
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={defaultCenter}
+                zoom={6}
+                onLoad={onLoad}
+                onUnmount={onUnmount}
               >
-                <Avatar
-                  size={50}
-                  src={post.image}
-                  className="border-2 border-white shadow-md"
-                />
-                {popupPostId === post.id && (
-                  <div
-                    className="absolute z-50"
-                    style={{
-                      bottom: "70px",
-                      left: "-90px",
-                      width: "250px",
+                <MarkerClusterer averageCenter enableRetinaIcons gridSize={60}>
+                  {(clusterer) => (
+                    <>
+                      {posts.map((post) => {
+                        const lat = post.location?.coordinates[1];
+                        const lng = post.location?.coordinates[0];
+                        if (!lat || !lng) return null;
+
+                        const isHovered = popupPostId === post._id;
+
+                        return (
+                          <OverlayView
+                            key={post._id}
+                            position={{ lat, lng }}
+                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                          >
+                            <div
+                              className="relative flex flex-col items-center"
+                              onMouseEnter={() => setPopupPostId(post._id)}
+                              onMouseLeave={() => setPopupPostId(null)}
+                            >
+                              {/* Circular Pin */}
+                              <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
+                                <img
+                                  src={
+                                    post.media?.[0]?.url ||
+                                    "/icons/default-avatar.png"
+                                  }
+                                  alt="pin"
+                                  className="object-cover w-full h-full"
+                                />
+                              </div>
+                              <AnimatePresence>
+                                {isHovered && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 20 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="absolute bottom-14 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
+                                  >
+                                    {post.media?.length > 0 && (
+                                      <img
+                                        src={post.media[0].url}
+                                        alt="Post"
+                                        className="w-full h-32 object-cover rounded-xl"
+                                      />
+                                    )}
+                                    <div className="pt-2 text-sm">
+                                      <p className="font-semibold text-gray-800">
+                                        @{post.user?.username}
+                                      </p>
+                                      <p className="text-gray-600 line-clamp-2">
+                                        {post.content}
+                                      </p>
+                                      <div className="flex gap-3 text-xs mt-2 text-gray-500">
+                                        <span>❤️ {post.likes || 0}</span>
+                                        <span>💬 {post.comments || 0}</span>
+                                        <span>🔁 {post.shares || 0}</span>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </OverlayView>
+                        );
+                      })}
+                    </>
+                  )}
+                </MarkerClusterer>
+
+                {/* {popupPostId && (
+                  <InfoWindow
+                    position={{
+                      lat: posts.find((p) => p._id === popupPostId)?.location
+                        ?.coordinates[1],
+                      lng: posts.find((p) => p._id === popupPostId)?.location
+                        ?.coordinates[0],
                     }}
+                    onCloseClick={() => setPopupPostId(null)}
                   >
-                    <div
-                      className="relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 after:absolute after:left-1/2 after:translate-x-[-50%] after:bottom-[-8px] after:w-4 after:h-4 after:bg-white after:rotate-45 after:shadow-md"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={handleClosePopup}
-                        className="absolute top-1.5 right-1.5 bg-white rounded-full text-gray-600 hover:text-black shadow-sm w-5 h-5 flex items-center justify-center z-10"
-                      >
-                        ×
-                      </button>
-                      <MapCard
-                        {...post}
-                        onClick={() => handlePostClick(post)}
-                        onShare={() => setIsShareOpen(true)}
-                        username={post.username}
-                      />
+                    <div className="p-2 w-56">
+                      <p className="font-semibold text-sm mb-1">
+                        @
+                        {
+                          posts.find((p) => p._id === popupPostId)?.user
+                            ?.username
+                        }
+                      </p>
+                      <p className="text-xs text-gray-600 line-clamp-3">
+                        {posts.find((p) => p._id === popupPostId)?.content}
+                      </p>
+                      {posts.find((p) => p._id === popupPostId)?.media?.length >
+                        0 && (
+                        <img
+                          src={
+                            posts.find((p) => p._id === popupPostId)?.media[0]
+                              .url
+                          }
+                          alt="Post"
+                          className="w-full h-24 object-cover mt-2 rounded"
+                        />
+                      )}
                     </div>
-                  </div>
-                )}
+                  </InfoWindow>
+                )} */}
+              </GoogleMap>
+            ) : (
+              <div className="flex justify-center items-center h-full">
+                <Spin />
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         <div className="xl:w-80 w-72 h-full overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 xl:mr-8 md:mr-0">
           {(activeTab === "posts" ? posts : posts.slice(0, 2)).map((post) => (
             <MapCard
-              key={post.id}
-              {...post}
+              key={post._id}
+              image={post.media?.[0]?.url || "/icons/default-post.png"}
+              caption={post.content}
+              location={post.address}
+              username={post.user?.username}
+              likes={0}
+              comments={0}
+              shares={0}
               onClick={() => handlePostClick(post)}
               onShare={() => setIsShareOpen(true)}
-              username={post.username}
             />
           ))}
         </div>

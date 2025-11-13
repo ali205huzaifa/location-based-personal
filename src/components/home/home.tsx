@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Input } from "antd";
+import { Input, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import {
   GoogleMap,
@@ -155,7 +155,21 @@ const Home: React.FC = () => {
     }
   };
 
-  if (!isLoaded || loading) return <div>Loading map and posts...</div>;
+  if (!isLoaded || loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+        }}
+      >
+        <Spin size="large" tip="Loading map and posts..." />
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-4 bg-[#F9FAFB] md:ml-4 xl:ml-0 h-full">
@@ -263,7 +277,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="xl:w-80 w-72 h-[920px] xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
+      <div className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
         {posts.map((post) => (
           <MapCard
             key={post._id}

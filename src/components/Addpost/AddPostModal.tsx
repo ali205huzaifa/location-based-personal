@@ -10,10 +10,10 @@ import {
   Radio,
 } from "antd";
 import {
-  PaperClipOutlined,
   CloseCircleOutlined,
   GlobalOutlined,
   TeamOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import type { RcFile } from "antd/es/upload";
@@ -26,6 +26,11 @@ import {
 import AddPostAPI from "../../api/addPostApi/AddPostAPI";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import { Navigation, Pagination } from "swiper/modules";
 
 interface PostModalProps {
   visible: boolean;
@@ -73,19 +78,36 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
     setLocation(place.formatted_address || "");
   };
 
+  const MAX_FILE_SIZE_MB = 10;
+  const MAX_FILE_COUNT = 5;
+
   const handleUpload = async (file: RcFile) => {
+    if (files.length >= MAX_FILE_COUNT) {
+      message.error(`You can only upload up to ${MAX_FILE_COUNT} files.`);
+      return Upload.LIST_IGNORE;
+    }
+
+    const isLtSize = file.size / 1024 / 1024 < MAX_FILE_SIZE_MB;
+    if (!isLtSize) {
+      message.error(`File must be smaller than ${MAX_FILE_SIZE_MB}MB!`);
+      return Upload.LIST_IGNORE;
+    }
+
     try {
       setLoading(true);
-      const res = await AddPostAPI.uploadMedia(file);
-      if (res?.data?.url) {
-        const newFile: UploadFile = {
+      const res = await AddPostAPI.multiUploadMedia([file]);
+      const uploaded = res?.data;
+
+      if (Array.isArray(uploaded) && uploaded.length > 0) {
+        const newFiles: UploadFile[] = uploaded.map((item) => ({
           uid: file.uid,
           name: file.name,
-          status: "done",
-          url: res.data.url,
+          status: "done" as const,
+          url: item.url,
+          type: item.type,
           originFileObj: file,
-        };
-        setFiles((prev) => [...prev, newFile]);
+        }));
+        setFiles((prev: UploadFile[]) => [...prev, ...newFiles]);
         message.success(`${file.name} uploaded successfully`);
       } else {
         message.error("Upload failed!");
@@ -96,6 +118,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
     } finally {
       setLoading(false);
     }
+
     return false;
   };
 
@@ -193,31 +216,51 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
               />
 
               {files.length > 0 && (
-                <div className="mb-4 grid grid-cols-2 gap-2">
-                  {files.map((file) => (
-                    <div
-                      key={file.uid}
-                      className="relative rounded-xl overflow-hidden group"
+                <div className="relative">
+                  <div className="relative">
+                    <Swiper
+                      modules={[Navigation, Pagination]}
+                      navigation
+                      pagination={{ clickable: true }}
+                      spaceBetween={10}
+                      className="w-full rounded-xl overflow-hidden custom-swiper"
+                      style={{ zIndex: 1 }}
                     >
-                      {file.type?.startsWith("video") ? (
-                        <video
-                          src={file.url}
-                          controls
-                          className="w-full h-48 object-cover"
-                        />
-                      ) : (
-                        <img
-                          src={file.url}
-                          alt={file.name}
-                          className="w-full h-48 object-cover"
-                        />
-                      )}
-                      <CloseCircleOutlined
-                        onClick={() => removeFile(file.uid)}
-                        className="absolute top-2 right-2 text-white text-lg cursor-pointer bg-black/60 rounded-full p-1 opacity-90 hover:opacity-100 transition"
-                      />
-                    </div>
-                  ))}
+                      {files.map((file) => (
+                        <SwiperSlide
+                          key={file.uid}
+                          className="flex justify-center items-center relative"
+                          style={{
+                            height: "400px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {file.type?.startsWith("video") ? (
+                            <video
+                              key={file.uid}
+                              src={file.url}
+                              controls
+                              preload="metadata"
+                              className="max-h-[400px] w-auto object-contain rounded-lg"
+                            />
+                          ) : (
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="max-h-[400px] w-auto object-contain rounded-lg"
+                            />
+                          )}
+
+                          <CloseCircleOutlined
+                            onClick={() => removeFile(file.uid)}
+                            className="absolute top-3 right-3 z-20 bg-gray-100 rounded-full border-gray-200 text-2xl cursor-pointer"
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+                  </div>
                 </div>
               )}
 
@@ -228,10 +271,12 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                   accept="image/*,video/*"
                   className="flex items-center justify-center"
                 >
-                  <Button
-                    type="text"
-                    icon={<PaperClipOutlined style={{ fontSize: "20px" }} />}
-                    className="flex items-center justify-center"
+                  <img
+                    src="/icons/attachment-icon.svg"
+                    alt="Show"
+                    width={20}
+                    height={20}
+                    className="flex items-center justify-center cursor-pointer"
                   />
                 </Upload>
               </div>
@@ -271,8 +316,9 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                     <Input
                       placeholder="Search for a place"
                       value={location}
+                      prefix={<SearchOutlined />}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="rounded-lg mb-2"
+                      className="rounded-lg mb-2 h-12"
                     />
                   </Autocomplete>
 

@@ -5,6 +5,10 @@ class PostAPI {
     return axiosClient.get("/post");
   }
 
+  static getPublicPostsByUser(id: string, params = {}) {
+    return axiosClient.get(`/post/user/${id}`, { params });
+  }
+
   static getMyContacts() {
     return axiosClient.get("/contacts/granted");
   }
