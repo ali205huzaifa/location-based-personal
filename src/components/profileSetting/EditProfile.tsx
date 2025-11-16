@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../store";
 import { setAuthData } from "../../store/Auth";
-import { CameraOutlined } from "@ant-design/icons";
 import { Form, Input, Button, Avatar, message } from "antd";
 import ProfileAPI from "../../api/profileApi/ProfileAPI";
 import AddPostAPI from "../../api/addPostApi/AddPostAPI";
@@ -14,7 +13,7 @@ const EditProfile: React.FC = () => {
   const dispatch = useDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [image, setImage] = useState<string>(
-    "https://i.pravatar.cc/150?img=32"
+    "/images/default-chat-profile.svg"
   );
 
   const { currentUser, token } = useSelector((state: RootState) => state.auth);
@@ -26,9 +25,9 @@ const EditProfile: React.FC = () => {
         username: currentUser.username || "",
         email: currentUser.email || "",
         bio: currentUser.bio || "",
-        image: currentUser.image || "https://i.pravatar.cc/150?img=32",
+        image: currentUser.image || "/images/default-chat-profile.svg",
       });
-      setImage(currentUser.image || "https://i.pravatar.cc/150?img=32");
+      setImage(currentUser.image || "/images/default-chat-profile.svg");
     }
   }, [currentUser, form]);
 
@@ -122,7 +121,7 @@ const EditProfile: React.FC = () => {
       <Form
         form={form}
         layout="vertical"
-        className="space-y-6 max-w-lg"
+        className="space-y-6 w-full pr-8"
         initialValues={{
           fullName: "",
           username: "",
@@ -142,9 +141,13 @@ const EditProfile: React.FC = () => {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 bg-[#8869F3] text-white p-1 rounded-full shadow-lg cursor-pointer"
+                className="w-8 h-8 absolute bottom-0 right-0 bg-[#8869F3] text-white p-1 rounded-full shadow-lg cursor-pointer"
               >
-                <CameraOutlined className="w-6 h-6 text-sm pl-1" />
+                <img
+                  src="/icons/image-edit-icon.svg"
+                  alt="Icon"
+                  className="w-6 h-6 text-sm p-1"
+                />
               </button>
               <input
                 type="file"

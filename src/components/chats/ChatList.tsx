@@ -11,6 +11,7 @@ interface ChatListProps {
   selectedChatId: string | null;
   onSelectChat: (id: string, isChat: boolean) => void;
   onOpenNewGroup: () => void;
+  refreshChats: boolean;
 }
 
 interface Contact {
@@ -39,6 +40,7 @@ const ChatList: React.FC<ChatListProps> = ({
   selectedChatId,
   onSelectChat,
   onOpenNewGroup,
+  refreshChats,
 }) => {
   const user = useSelector((state: RootState) => state.auth.currentUser);
   const [chats, setChats] = useState<Chat[]>([]);
@@ -63,7 +65,7 @@ const ChatList: React.FC<ChatListProps> = ({
       }
     };
     fetchChats();
-  }, [token]);
+  }, [token, refreshChats]);
 
   const fetchContacts = async () => {
     if (contacts.length > 0) return;

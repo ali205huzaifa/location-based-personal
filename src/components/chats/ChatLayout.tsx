@@ -7,9 +7,12 @@ import GroupDetailsModal from "./GroupDetailsModal";
 const ChatLayout: React.FC = () => {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [isExistingChat, setIsExistingChat] = useState<boolean>(false);
+
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false);
   const [isGroupDetailsOpen, setIsGroupDetailsOpen] = useState(false);
+
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [refreshChats, setRefreshChats] = useState(false);
 
   const handleNext = (members: string[]) => {
     setSelectedMembers(members);
@@ -17,13 +20,9 @@ const ChatLayout: React.FC = () => {
     setIsGroupDetailsOpen(true);
   };
 
-  const handleCreateGroup = (group: {
-    name: string;
-    desc: string;
-    image?: string;
-  }) => {
-    console.log("New Group Created:", group, "Members:", selectedMembers);
+  const handleGroupCreated = () => {
     setIsGroupDetailsOpen(false);
+    setRefreshChats((prev) => !prev);
   };
 
   return (
@@ -35,6 +34,7 @@ const ChatLayout: React.FC = () => {
           setIsExistingChat(isChat);
         }}
         onOpenNewGroup={() => setIsNewGroupOpen(true)}
+        refreshChats={refreshChats}
       />
 
       <ChatWindow
@@ -51,7 +51,8 @@ const ChatLayout: React.FC = () => {
       <GroupDetailsModal
         open={isGroupDetailsOpen}
         onClose={() => setIsGroupDetailsOpen(false)}
-        onCreate={handleCreateGroup}
+        members={selectedMembers}
+        onGroupCreated={handleGroupCreated}
       />
     </div>
   );

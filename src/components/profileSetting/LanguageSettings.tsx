@@ -16,8 +16,8 @@ const LanguageSettings: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const languages = [
-    { name: "English", flag: "US" },
-    { name: "French", flag: "FR" },
+    { name: "English", flag: "/icons/us-flag-icon.svg" },
+    { name: "French", flag: "/icons/french-flag-icon.svg" },
   ];
 
   useEffect(() => {
@@ -64,11 +64,12 @@ const LanguageSettings: React.FC = () => {
         <h2 className="text-black text-2xl font-medium mb-2">Language</h2>
         <p className="text-[#666666] text-sm font-normal">
           Choose your preferred language to make your app experience more
-          comfortable and familiar.
+          comfortable and <br />
+          familiar.
         </p>
       </div>
 
-      <div className="space-y-3 max-w-2xl">
+      <div className="space-y-3 w-full pr-8">
         {languages.map((lang) => (
           <div
             key={lang.name}
@@ -80,7 +81,7 @@ const LanguageSettings: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">
                 <img
-                  src={`https://flagcdn.com/32x24/${lang.flag.toLowerCase()}.png`}
+                  src={lang.flag}
                   alt={lang.name}
                   className="w-full h-full object-cover"
                 />
@@ -89,7 +90,7 @@ const LanguageSettings: React.FC = () => {
             </div>
 
             {selectedLanguage === lang.name && (
-              <CheckOutlined className="text-purple-600 text-lg" />
+              <CheckOutlined className="text-[#22C55E] text-lg" />
             )}
           </div>
         ))}

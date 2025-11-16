@@ -66,7 +66,7 @@ const NotificationSettings: React.FC = () => {
         </p>
       </div>
 
-      <div className="flex items-center justify-between max-w-2xl">
+      <div className="flex items-center justify-between w-full pr-8">
         <div>
           <div className="text-black text-base font-normal">
             Push Notifications

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Radio, message } from "antd";
-import { GlobalOutlined, LockOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../store";
 import { setAuthData } from "../../store/Auth";
@@ -68,7 +67,7 @@ const PrivacySettings: React.FC = () => {
       <Radio.Group
         onChange={(e) => handleChange(e.target.value)}
         value={privacy}
-        className="space-y-6 max-w-2xl flex flex-col"
+        className="space-y-6 w-full pr-8 flex flex-col"
       >
         <div
           className={`flex items-center justify-between p-3 rounded-lg ${
@@ -76,15 +75,19 @@ const PrivacySettings: React.FC = () => {
           }`}
         >
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 bg-white p-2 rounded-full">
-              <GlobalOutlined className="text-lg text-gray-600" />
+            <div className="w-9 h-9 bg-white p-2 rounded-full border border-gray-300">
+              <img
+                src="/icons/public-icon.svg"
+                alt="Icon"
+                className="w-5 h-4"
+              />
             </div>
             <div>
               <div className="text-black text-base font-medium">
                 Public Account
               </div>
               <div className="text-[#666666] text-xs font-normal">
-                Anyone can view your profile and posts.
+                Anyone can view your profile and posts
               </div>
             </div>
           </div>
@@ -97,15 +100,20 @@ const PrivacySettings: React.FC = () => {
           }`}
         >
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 bg-white p-2 rounded-full">
-              <LockOutlined className="text-lg text-gray-600" />
+            <div className="w-9 h-9 bg-white p-2 rounded-full border border-gray-300">
+              <img
+                src="/icons/private-icon.svg"
+                alt="Icon"
+                className="w-5 h-5"
+              />
             </div>
             <div>
               <div className="text-black text-base font-medium">
                 Private Account
               </div>
               <div className="text-[#666666] text-xs font-normal">
-                Only contacts can see your posts and profile details.
+                Only contacts can see your posts and
+                <br /> profile details.
               </div>
             </div>
           </div>

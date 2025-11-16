@@ -54,7 +54,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="relative w-[285px] bg-white rounded-xl p-6 flex flex-col items-center space-y-4 h-full">
+    <aside className="relative w-[285px] bg-white rounded-xl pt-8 px-2 flex flex-col items-center space-y-4 h-full">
       <div className="flex flex-col items-center space-y-2">
         <Avatar
           size={120}
@@ -78,7 +78,7 @@ const Sidebar: React.FC = () => {
         />
         <div>
           <p className="text-black text-base font-normal">San Francisco, CA</p>
-          <p className="text-xs text-gray-500">Current Location</p>
+          <p className="text-[#666666] text-xs font-normal">Current Location</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ const Sidebar: React.FC = () => {
         />
       </nav>
 
-      <div className="w-full pt-4">
+      <div className="w-full pt-4 pb-2">
         <SidebarItem
           icon={LogoutIcon}
           label="Logout"
@@ -154,21 +154,28 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition 
+      className={`w-full flex items-center space-x-4 px-4 py-3 rounded-xl text-base font-normal transition
         ${
           active
             ? "bg-gradient-to-r from-purple-100 to-purple-50 text-[#8869F3]"
             : danger
             ? "text-red-500 hover:bg-red-50"
             : "text-gray-700 hover:bg-gray-50"
-        }`}
+        }
+      `}
     >
       <img
         src={icon}
         alt={label}
-        className={`w-5 h-5 ${
-          active ? "filter-purple" : danger ? "filter-red" : "opacity-80"
-        }`}
+        className={`w-5 h-5 transition-all duration-200 
+          ${
+            active
+              ? "[filter:brightness(0)_saturate(100%)_invert(57%)_sepia(69%)_saturate(4787%)_hue-rotate(236deg)_brightness(92%)_contrast(92%)]"
+              : danger
+              ? "[filter:brightness(0)_saturate(100%)_invert(33%)_sepia(70%)_saturate(3000%)_hue-rotate(350deg)_brightness(95%)_contrast(90%)]"
+              : "opacity-80 group-hover:opacity-100"
+          }
+        `}
       />
       <span>{label}</span>
     </button>

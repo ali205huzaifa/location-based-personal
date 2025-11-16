@@ -28,7 +28,7 @@ class ChatAPI {
   }
 
   static createGroup(data = {}) {
-    return axiosClient.post("/chat", data);
+    return axiosClient.post("/chat/group", data);
   }
 }
 

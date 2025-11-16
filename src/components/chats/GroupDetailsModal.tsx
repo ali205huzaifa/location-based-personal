@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Modal, Avatar, Input, message } from "antd";
-import { CameraOutlined, LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined } from "@ant-design/icons";
 import ChatAPI from "../../api/chatApi/ChatAPI";
 import AddPostAPI from "../../api/addPostApi/AddPostAPI";
 
@@ -64,20 +64,16 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
       setCreating(true);
       const payload = {
         members,
-        type: "Group",
         name,
-        desc,
+        description: desc,
         image,
       };
 
       const res = await ChatAPI.createGroup(payload);
       if (res?.data) {
-        message.success("Group created successfully!");
-        onClose();
+        message.success("Group created");
+        handleClose();
         onGroupCreated();
-        setName("");
-        setDesc("");
-        setImage(undefined);
       }
     } catch (error) {
       console.error("Group creation failed:", error);
@@ -87,10 +83,20 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    setName("");
+    setDesc("");
+    setImage(undefined);
+    setUploading(false);
+    setCreating(false);
+
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      onCancel={onClose}
+      onCancel={handleClose}
       footer={null}
       centered
       title={
@@ -106,7 +112,11 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
         </div>
         <div className="flex justify-start mb-4">
           <div className="relative inline-block">
-            <Avatar size={80} src={image} className="border-none" />
+            <Avatar
+              size={80}
+              src={image || "/images/default-chat-profile.svg"}
+              className="border-none"
+            />
             <div
               onClick={handleImageClick}
               className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full shadow-lg cursor-pointer hover:bg-purple-700 transition"
@@ -114,7 +124,11 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
               {uploading ? (
                 <LoadingOutlined className="text-sm p-1" />
               ) : (
-                <CameraOutlined className="text-sm p-1" />
+                <img
+                  src="/icons/image-edit-icon.svg"
+                  alt="Icon"
+                  className="w-6 h-6 text-sm p-1"
+                />
               )}
             </div>
             <input

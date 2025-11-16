@@ -51,7 +51,7 @@ const ChangePassword: React.FC = () => {
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
-        className="space-y-6 max-w-xl"
+        className="space-y-6 w-full pr-8"
       >
         <Form.Item
           label="Current Password"

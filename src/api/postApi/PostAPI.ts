@@ -9,6 +9,10 @@ class PostAPI {
     return axiosClient.get(`/post/user/${id}`, { params });
   }
 
+  static getMyInteractions(params = {}) {
+    return axiosClient.get("/interactions/", { params });
+  }
+
   static getMyContacts() {
     return axiosClient.get("/contacts/granted");
   }

@@ -114,3 +114,49 @@
 .custom-swiper .swiper-pagination-bullet-active {
   background-color: #8869f3;
 }
+
+.ant-radio-inner {
+  width: 18px !important;
+  height: 18px !important;
+  border: 1.5px solid #d9d9d9 !important;
+  background-color: #fff !important;
+}
+
+.ant-radio-checked .ant-radio-inner {
+  border-color: #8869f3 !important;
+}
+
+.ant-radio-inner::after {
+  width: 16px !important;
+  height: 16px !important;
+  background-color: #8869f3 !important;
+  transform: scale(0.65) !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-top: -8px !important;
+  margin-left: -8px !important;
+}
+
+.ant-radio:hover .ant-radio-inner {
+  border-color: #8869f3 !important;
+}
+
+.ant-radio-checked::after {
+  border: none !important;
+}
+
+.ant-radio-inner {
+  border-color: #999 !important;
+}
+
+.ant-radio-checked .ant-radio-inner {
+  border-color: #8869f3 !important;
+}
+
+.ant-radio-inner::after {
+  background-color: #8869f3 !important;
+}
+
+.custom-modal .ant-modal-close-x svg {
+  color: black !important;
+}

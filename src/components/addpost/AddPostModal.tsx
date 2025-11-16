@@ -9,12 +9,7 @@ import {
   Spin,
   Radio,
 } from "antd";
-import {
-  CloseCircleOutlined,
-  GlobalOutlined,
-  TeamOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { CloseCircleOutlined, SearchOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import type { RcFile } from "antd/es/upload";
 import {
@@ -180,7 +175,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
         footer={null}
         centered
         width={724}
-        className="!max-w-[724px] !h-[652px]"
+        className="!max-w-[724px] !h-[652px] custom-modal"
       >
         <Spin spinning={loading}>
           {step === 1 ? (
@@ -199,10 +194,11 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                   </h3>
                   <Button
                     size="small"
-                    className="rounded text-xs bg-gray-100 text-gray-700"
+                    className="rounded text-xs bg-[#8869F326] text-[#8869F3]"
                     onClick={() => setPrivacyModalVisible(true)}
                   >
                     {visibility === "public" ? "Public" : "Contacts Only"}
+                    <img src="/icons/postPrivacy-icon.svg" alt="Icon" />
                   </Button>
                 </div>
               </div>
@@ -364,7 +360,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
             <Button
               type="primary"
               block
-              className="!bg-[#8869F3] h-12 rounded-xl text-sm font-medium"
+              className="!bg-[#8869F3] h-12 rounded-xl text-sm font-light"
               onClick={() => setPrivacyModalVisible(false)}
             >
               Done
@@ -377,7 +373,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
             Post settings
           </span>
         }
-        className="rounded-xl overflow-hidden shadow-lg"
+        className="rounded-xl overflow-hidden shadow-lg custom-modal"
         width={350}
         styles={{
           body: { padding: "8px 0px 32px 0px" },
@@ -390,16 +386,28 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
         >
           <div className="flex justify-between items-center py-2 cursor-pointer">
             <div className="flex items-center gap-4">
-              <GlobalOutlined className="text-xl text-gray-700" />
-              <span className="font-normal text-black text-sm">Public</span>
+              <div className="w-9 h-9 bg-white p-2 rounded-full border border-gray-300">
+                <img
+                  src="/icons/public-icon.svg"
+                  alt="Icon"
+                  className="w-5 h-5"
+                />
+              </div>
+              <span className="ftext-black text-sm font-medium">Public</span>
             </div>
             <Radio value="public" className="custom-purple-radio" />
           </div>
 
           <div className="flex justify-between items-center py-2 cursor-pointer">
             <div className="flex items-center gap-4">
-              <TeamOutlined className="text-xl text-gray-700" />
-              <span className="font-normal text-black text-sm">
+              <div className="w-9 h-9 bg-white p-2 rounded-full border border-gray-300">
+                <img
+                  src="/icons/contact-icon.svg"
+                  alt="Icon"
+                  className="w-5 h-5"
+                />
+              </div>
+              <span className="text-black text-sm font-medium">
                 Contacts Only
               </span>
             </div>

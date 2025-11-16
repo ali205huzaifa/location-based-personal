@@ -20,6 +20,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
       footer={null}
       centered
       maskClosable={false}
+      className="custom-modal cursor-pointer"
     >
       <div className="text-center py-4">
         <p className="text-lg font-semibold mb-6">Do you want to Logout?</p>

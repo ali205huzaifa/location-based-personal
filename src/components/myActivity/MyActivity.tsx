@@ -10,10 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import {
   GoogleMap,
-  Marker,
   useJsApiLoader,
   MarkerClusterer,
-  InfoWindow,
 } from "@react-google-maps/api";
 import PostAPI from "../../api/postApi/PostAPI";
 import { OverlayView } from "@react-google-maps/api";
@@ -169,27 +167,37 @@ const MyActivity: React.FC = () => {
                 src={user?.image || "/icons/default-avatar.png"}
               />
               <div>
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-black text-base font-medium">
                   {user?.fullName}
                 </h2>
-                <p className="text-gray-500 text-sm">@{user?.username}</p>
-                <div className="flex justify-between mt-2 text-left w-64 text-gray-600 text-sm">
+                <p className="text-stone-500 text-sm font-normal">
+                  @{user?.username}
+                </p>
+                <div className="flex justify-between mt-4 text-left w-64 text-gray-600 text-sm">
                   <div className="flex flex-col">
-                    <strong className="text-lg text-gray-800">08</strong>
-                    <span>Circles Joined</span>
+                    <strong className="text-black text-base font-medium">
+                      08
+                    </strong>
+                    <span className="text-[#666666] text-xs font-medium">
+                      Circles Joined
+                    </span>
                   </div>
                   <div className="flex flex-col">
-                    <strong className="text-lg text-gray-800">18</strong>
-                    <span>Circle Size</span>
+                    <strong className="text-black text-base font-medium">
+                      18
+                    </strong>
+                    <span className="text-[#666666] text-xs font-medium">
+                      Circle Size
+                    </span>
                   </div>
                 </div>
-                <p className="text-gray-500 text-sm mt-1">{user?.bio}</p>
+                <p className="text-gray-500 text-sm mt-4">{user?.bio}</p>
               </div>
             </div>
 
             <Button
               type="primary"
-              className="w-full rounded-lg py-2 bg-white text-[#8869F3] border-[#8869F3] !h-8"
+              className="w-full rounded-lg py-2 bg-white text-[#8869F3] border-[#8869F3] !h-10"
               onClick={() => navigate("/settings")}
             >
               Edit Profile
