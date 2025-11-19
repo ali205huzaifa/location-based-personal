@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Modal, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import SharePostModal from "../home/SharePostModal";
-import ReportPostModal from "../home/ReportPostModal";
+// import ReportPostModal from "../home/ReportPostModal";
 
 interface PostModalProps {
   visible: boolean;
@@ -20,7 +20,7 @@ interface PostModalProps {
 
 const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [, setIsReportOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -221,10 +221,10 @@ const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
           visible={isShareOpen}
           onClose={() => setIsShareOpen(false)}
         />
-        <ReportPostModal
+        {/* <ReportPostModal
           visible={isReportOpen}
           onClose={() => setIsReportOpen(false)}
-        />
+        /> */}
       </div>
 
       <Modal
