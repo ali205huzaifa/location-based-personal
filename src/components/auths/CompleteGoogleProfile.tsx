@@ -116,7 +116,7 @@ const CompleteGoogleProfile: React.FC = () => {
             type="primary"
             htmlType="submit"
             loading={loading}
-            className="w-full mt-4 bg-[#8869F3] !h-10 rounded-xl"
+            className="w-full mt-4 !bg-[#8869F3] !h-10 rounded-xl"
           >
             Submit
           </Button>

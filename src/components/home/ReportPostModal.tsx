@@ -5,9 +5,11 @@ import { ExclamationCircleOutlined } from "@ant-design/icons";
 const ReportPostModal = ({
   visible,
   onClose,
+  onSubmit,
 }: {
   visible: boolean;
   onClose: () => void;
+  onSubmit: (reason: string, description: string) => void;
 }) => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [additionalInfo, setAdditionalInfo] = useState("");
@@ -30,8 +32,12 @@ const ReportPostModal = ({
   };
 
   const handleSubmit = () => {
-    console.log("Selected:", selectedOptions, "Info:", additionalInfo);
-    onClose();
+    if (selectedOptions.length === 0) return;
+
+    const reason = selectedOptions[0];
+    const description = additionalInfo;
+
+    onSubmit(reason, description);
   };
 
   return (
@@ -49,7 +55,6 @@ const ReportPostModal = ({
         </span>
       }
     >
-      {/* Warning Section */}
       <div className="bg-[#FFF7E6] border border-[#FFD591] rounded-lg p-4 mb-5 flex items-start space-x-3">
         <ExclamationCircleOutlined className="text-[#FAAD14] text-lg mt-0.5" />
         <div>
@@ -63,7 +68,6 @@ const ReportPostModal = ({
         </div>
       </div>
 
-      {/* Checkbox List */}
       <div className="flex flex-col space-y-3 mb-4">
         {options.map((option) => (
           <Checkbox
@@ -77,7 +81,6 @@ const ReportPostModal = ({
         ))}
       </div>
 
-      {/* Additional Info */}
       <div className="mb-4">
         <p className="font-medium text-gray-700 mb-1">
           Additional Information (optional)
@@ -91,12 +94,11 @@ const ReportPostModal = ({
         />
       </div>
 
-      {/* Submit Button */}
       <Button
         type="primary"
         block
         size="large"
-        className="rounded-xl bg-[#8869F3] hover:bg-[#7c5dee] font-medium"
+        className="rounded-xl !bg-[#8869F3] font-medium"
         onClick={handleSubmit}
       >
         Submit

@@ -1,17 +1,16 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Input, Spin } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
 import {
   GoogleMap,
-  Marker,
   useJsApiLoader,
   MarkerClusterer,
-  StandaloneSearchBox,
-  InfoWindow,
+  OverlayView,
 } from "@react-google-maps/api";
 import PostModal from "./PostModal";
 import SharePostModal from "./SharePostModal";
 import PostAPI from "../../api/postApi/PostAPI";
+import { motion, AnimatePresence } from "framer-motion";
+import SearchModal from "./SearchModal";
 
 interface MapCardProps {
   image: string;
@@ -31,7 +30,7 @@ const mapContainerStyle = {
   borderRadius: "8px",
 };
 
-const defaultCenter = { lat: 33.6844, lng: 73.0479 };
+const defaultCenter = { lat: 30.3753, lng: 69.3451 };
 
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +40,10 @@ const Home: React.FC = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mainSearchValue, setMainSearchValue] = useState("");
+
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
@@ -52,7 +54,7 @@ const Home: React.FC = () => {
     const fetchPosts = async () => {
       try {
         const res = await PostAPI.getPublicPosts();
-        setPosts(res.data.posts || []);
+        setPosts(res.data?.posts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {
@@ -70,59 +72,81 @@ const Home: React.FC = () => {
     shares,
     location,
     onClick,
-  }) => (
-    <div
-      onClick={onClick}
-      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-100 p-2"
-    >
-      <img
-        src={image}
-        alt="map post"
-        className="object-cover h-44 w-full rounded-xl"
-      />
-      <div className="pt-4 pb-2">
-        <div className="flex items-start justify-start text-gray-600 text-sm mb-1 gap-3">
-          <span className="flex items-center">
-            <img
-              src="/icons/heart-icon.svg"
-              alt="Likes"
-              className="w-4 h-4 mr-1"
-            />
-            {likes || 0}
-          </span>
-          <span className="flex items-center">
-            <img
-              src="/icons/comment-icon.svg"
-              alt="Comments"
-              className="w-4 h-4 mr-1"
-            />
-            {comments || 0}
-          </span>
-          <span className="flex items-center">
-            <img
-              src="/icons/share-icon.svg"
-              alt="Share"
-              className="w-4 h-4 mr-1"
+  }) => {
+    const hasImage = Boolean(image);
+    const trimmedCaption =
+      caption && caption.length > 80
+        ? caption.substring(0, 80) + "..."
+        : caption;
+
+    return (
+      <div
+        onClick={onClick}
+        className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-100 p-2"
+      >
+        {hasImage && (
+          <img
+            src={image}
+            alt="map post"
+            className="object-cover h-44 w-full rounded-xl"
+          />
+        )}
+
+        <div className="pt-3 pb-2">
+          <p className="text-[#000000] text-sm font-normal mb-2">
+            {trimmedCaption}
+          </p>
+          <div
+            className={`flex items-start justify-start text-gray-600 text-sm gap-3 ${
+              hasImage ? "mb-2" : "mt-1"
+            }`}
+          >
+            <span className="flex items-center">
+              <img
+                src="/icons/heart-icon.svg"
+                alt="Likes"
+                className="w-4 h-4 mr-1"
+              />
+              {likes || 0}
+            </span>
+
+            <span className="flex items-center">
+              <img
+                src="/icons/comment-icon.svg"
+                alt="Comments"
+                className="w-4 h-4 mr-1"
+              />
+              {comments || 0}
+            </span>
+
+            <span
+              className="flex items-center"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsShareOpen(true);
               }}
+            >
+              <img
+                src="/icons/share-icon.svg"
+                alt="Share"
+                className="w-4 h-4 mr-1"
+              />
+              {shares}
+            </span>
+          </div>
+
+          <p className="text-stone-500 text-xs font-normal mt-1 flex items-center">
+            <img
+              src="/icons/location-icon.svg"
+              alt="Location icon"
+              className="w-3.5 h-3.5 mr-1"
             />
-            {shares}
-          </span>
+            {location}
+          </p>
         </div>
-        <p className="text-[#000000] text-sm font-normal">{caption}</p>
-        <p className="text-stone-500 text-xs font-normal mt-2 flex items-center">
-          <img
-            src="/icons/location-icon.svg"
-            alt="Location icon"
-            className="w-3.5 h-3.5 mr-1"
-          />
-          {location}
-        </p>
       </div>
-    </div>
-  );
+    );
+  };
 
   const handlePostClick = (post: any) => {
     setSelectedPost(post);
@@ -140,19 +164,18 @@ const Home: React.FC = () => {
 
   const onUnmount = useCallback(() => setMap(null), []);
 
-  const handleSearchLoad = (ref: google.maps.places.SearchBox) => {
-    searchBoxRef.current = ref;
+  const handleSearchClose = () => {
+    setSearchOpen(false);
+    // setMainSearchValue("");
   };
 
-  const handlePlacesChanged = () => {
-    const places = searchBoxRef.current?.getPlaces();
-    if (places && places.length > 0) {
-      const place = places[0];
-      if (place.geometry?.location && map) {
-        map.panTo(place.geometry.location);
-        map.setZoom(14);
-      }
+  const handleLocationSelect = (place: google.maps.places.PlaceResult) => {
+    if (place.geometry?.location && map) {
+      map.panTo(place.geometry.location);
+      map.setZoom(14);
     }
+    setSearchOpen(false);
+    setMainSearchValue(place.name || place.formatted_address || "");
   };
 
   if (!isLoaded || loading) {
@@ -174,19 +197,67 @@ const Home: React.FC = () => {
   return (
     <div className="flex gap-4 bg-[#F9FAFB] md:ml-4 xl:ml-0 h-full">
       <div className="flex-1 flex flex-col">
-        <div className="flex justify-center py-4 w-full">
-          <div className="w-full">
-            <StandaloneSearchBox
-              onLoad={handleSearchLoad}
-              onPlacesChanged={handlePlacesChanged}
-            >
-              <Input
-                prefix={<SearchOutlined />}
-                placeholder="Search"
-                allowClear
-                className="!h-10 !text-sm !w-full outline-[#8869F3]"
-              />
-            </StandaloneSearchBox>
+        <div className="flex justify-center py-4 w-full relative z-10">
+          <div className="w-full" ref={searchContainerRef}>
+            <Input
+              prefix={
+                searchOpen ? (
+                  <img
+                    src="/icons/back-icon.svg"
+                    alt="Icon"
+                    className="cursor-pointer mr-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSearchClose();
+                    }}
+                  />
+                ) : (
+                  <img
+                    src="/icons/search-icon.svg"
+                    alt="Icon"
+                    className="mr-2"
+                  />
+                )
+              }
+              suffix={
+                mainSearchValue ? (
+                  <img
+                    src="/icons/cross-icon.svg"
+                    alt="Clear"
+                    className="w-4 h-4 cursor-pointer !rounded-full border bg-gray-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMainSearchValue("");
+                    }}
+                  />
+                ) : null
+              }
+              placeholder="Search"
+              onClick={() => setSearchOpen(true)}
+              onFocus={() => setSearchOpen(true)}
+              value={mainSearchValue}
+              onChange={(e) => {
+                setMainSearchValue(e.target.value);
+                setSearchOpen(true);
+              }}
+              className="!h-12 !text-sm !w-full !rounded-xl"
+            />
+
+            {searchOpen && (
+              <div
+                className="absolute top-full mt-1 left-0"
+                style={{
+                  width: searchContainerRef.current?.offsetWidth,
+                  zIndex: 20,
+                }}
+              >
+                <SearchModal
+                  searchValue={mainSearchValue}
+                  onClose={handleSearchClose}
+                  onLocationSelect={handleLocationSelect}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -194,86 +265,101 @@ const Home: React.FC = () => {
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={defaultCenter}
-            zoom={4}
+            zoom={6}
             onLoad={onLoad}
             onUnmount={onUnmount}
           >
-            <MarkerClusterer
-              averageCenter
-              enableRetinaIcons
-              gridSize={60}
-              minimumClusterSize={2}
-            >
-              {(clusterer) => (
+            <MarkerClusterer averageCenter enableRetinaIcons gridSize={60}>
+              {() => (
                 <>
-                  {posts.map((post) => (
-                    <Marker
-                      key={post._id}
-                      position={{
-                        lat: post.location?.coordinates[1],
-                        lng: post.location?.coordinates[0],
-                      }}
-                      clusterer={clusterer}
-                      icon={{
-                        url:
-                          post.media?.length > 0
-                            ? post.media[0].url
-                            : "/icons/default-pin.png",
-                        scaledSize: new google.maps.Size(50, 50),
-                      }}
-                      onClick={() => setPopupPostId(post._id)}
-                    />
-                  ))}
+                  {posts.map((post) => {
+                    const lat = post.location!.coordinates[1];
+                    const lng = post.location!.coordinates[0];
+
+                    const isHovered = popupPostId === post._id;
+
+                    return (
+                      <OverlayView
+                        key={post._id}
+                        position={{ lat, lng }}
+                        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                      >
+                        <div
+                          className="relative flex flex-col items-center"
+                          onMouseEnter={() => setPopupPostId(post._id)}
+                          onMouseLeave={() => setPopupPostId(null)}
+                        >
+                          <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
+                            <img
+                              src={
+                                post.media?.[0]?.url ||
+                                post.user?.image ||
+                                "/icons/default-avatar.png"
+                              }
+                              alt="pin"
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+
+                          <AnimatePresence>
+                            {isHovered && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 20 }}
+                                transition={{ duration: 0.25 }}
+                                className="absolute bottom-14 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
+                              >
+                                {post.media?.length > 0 && (
+                                  <img
+                                    src={post.media[0].url}
+                                    alt="Post"
+                                    className="w-full h-32 object-cover rounded-xl"
+                                  />
+                                )}
+
+                                <div className="pt-2 text-sm">
+                                  <div className="flex gap-3 text-xs mt-2 text-gray-500">
+                                    <span className="flex items-center">
+                                      <img
+                                        src="/icons/heart-icon.svg"
+                                        alt=""
+                                        className="w-4 h-4 mr-1"
+                                      />
+                                      {post.interaction?.likeCount || 0}
+                                    </span>
+                                    <span className="flex items-center">
+                                      <img
+                                        src="/icons/comment-icon.svg"
+                                        alt=""
+                                        className="w-4 h-4 mr-1"
+                                      />
+                                      {post.interaction?.commentCount || 0}
+                                    </span>
+                                    <span className="flex items-center">
+                                      <img
+                                        src="/icons/share-icon.svg"
+                                        alt=""
+                                        className="w-4 h-4 mr-1"
+                                      />
+                                      {post.interaction?.shareCount || 0}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-600 line-clamp-2">
+                                    {post.content}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </OverlayView>
+                    );
+                  })}
                 </>
               )}
             </MarkerClusterer>
-
-            {popupPostId && (
-              <InfoWindow
-                position={{
-                  lat: posts.find((p) => p._id === popupPostId)?.location
-                    ?.coordinates[1],
-                  lng: posts.find((p) => p._id === popupPostId)?.location
-                    ?.coordinates[0],
-                }}
-                onCloseClick={() => setPopupPostId(null)}
-              >
-                <div className="p-2 w-56">
-                  <p className="font-semibold text-sm mb-1">
-                    {posts.find((p) => p._id === popupPostId)?.user?.username}
-                  </p>
-                  <p className="text-xs text-gray-600 line-clamp-3">
-                    {posts.find((p) => p._id === popupPostId)?.content}
-                  </p>
-                  {posts.find((p) => p._id === popupPostId)?.media?.length >
-                    0 && (
-                    <img
-                      src={
-                        posts.find((p) => p._id === popupPostId)?.media[0].url
-                      }
-                      alt="Post"
-                      className="w-full h-24 object-cover mt-2 rounded"
-                    />
-                  )}
-                </div>
-              </InfoWindow>
-            )}
           </GoogleMap>
-
-          <div className="absolute bottom-6 right-6 flex flex-col space-y-2">
-            <button
-              className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow"
-              onClick={() => map && map.setZoom(map.getZoom()! + 1)}
-            >
-              +
-            </button>
-            <button
-              className="bg-white w-9 h-9 flex items-center justify-center rounded-md shadow"
-              onClick={() => map && map.setZoom(map.getZoom()! - 1)}
-            >
-              −
-            </button>
-          </div>
         </div>
       </div>
 
@@ -281,16 +367,12 @@ const Home: React.FC = () => {
         {posts.map((post) => (
           <MapCard
             key={post._id}
-            image={
-              post.media?.length
-                ? post.media[0].url
-                : "https://via.placeholder.com/150"
-            }
+            image={post.media?.length ? post.media[0].url : null}
             caption={post.content || "No content"}
             likes={post.interaction?.likeCount || 0}
             comments={post.interaction?.commentCount || 0}
             shares={0}
-            location={post.metadata?.publisherName || post.user?.fullName}
+            location={post.address}
             username={post.user?.username}
             onClick={() => handlePostClick(post)}
           />

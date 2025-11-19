@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Input, Avatar, Button, Segmented, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import SharePostModal from "../home/SharePostModal";
-import OwnPostModal from "./ownPostModal";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +14,7 @@ import {
 } from "@react-google-maps/api";
 import PostAPI from "../../api/postApi/PostAPI";
 import { OverlayView } from "@react-google-maps/api";
+import PostModal from "../home/PostModal";
 
 interface MapCardProps {
   image: string;
@@ -46,8 +46,8 @@ const MyActivity: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [popupPostId, setPopupPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [, setLoading] = useState(false);
+  const [, setMap] = useState<google.maps.Map | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
@@ -84,69 +84,85 @@ const MyActivity: React.FC = () => {
   const MapCard: React.FC<MapCardProps> = ({
     image,
     caption,
-    likes,
-    comments,
-    shares,
+    likes = 0,
+    comments = 0,
+    shares = 0,
     location,
     onClick,
     onShare,
-  }) => (
-    <div
-      onClick={onClick}
-      className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-100 p-2"
-    >
-      <img
-        src={image}
-        alt="map post"
-        className="object-cover h-44 w-full rounded-xl"
-      />
-      <div className="pt-4 pb-2">
-        <div className="flex items-start justify-start text-gray-600 text-sm mb-1 gap-3">
-          <span className="flex items-center">
-            <img
-              src="/icons/heart-icon.svg"
-              alt="Likes"
-              className="w-4 h-4 mr-1"
-            />
-            {likes || 0}
-          </span>
+  }) => {
+    const hasImage = Boolean(image);
 
-          <span className="flex items-center">
-            <img
-              src="/icons/comment-icon.svg"
-              alt="Comments"
-              className="w-4 h-4 mr-1"
-            />
-            {comments || 0}
-          </span>
+    const trimmedCaption =
+      caption && caption.length > 80
+        ? caption.substring(0, 80) + "..."
+        : caption;
 
-          <span
-            className="flex items-center"
-            onClick={(e) => {
-              e.stopPropagation();
-              onShare();
-            }}
-          >
-            <img
-              src="/icons/share-icon.svg"
-              alt="Share"
-              className="w-4 h-4 mr-1"
-            />
-            {shares || 0}
-          </span>
-        </div>
-        <p className="text-[#000000] text-sm font-normal">{caption}</p>
-        <p className="text-stone-500 text-xs font-normal mt-2 flex items-center">
+    return (
+      <div
+        onClick={onClick}
+        className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition border border-gray-100 p-2"
+      >
+        {hasImage && (
           <img
-            src="/icons/location-icon.svg"
-            alt="Location icon"
-            className="w-3.5 h-3.5 mr-1"
+            src={image}
+            alt="map post"
+            className="object-cover h-44 w-full rounded-xl"
           />
-          {location}
-        </p>
+        )}
+
+        <div className="pt-3 pb-2">
+          <p className="text-[#000000] text-sm font-normal mb-2">
+            {trimmedCaption}
+          </p>
+
+          <div className="flex items-start justify-start text-gray-600 text-sm gap-3 mb-2">
+            <span className="flex items-center">
+              <img
+                src="/icons/heart-icon.svg"
+                alt=""
+                className="w-4 h-4 mr-1"
+              />
+              {likes}
+            </span>
+
+            <span className="flex items-center">
+              <img
+                src="/icons/comment-icon.svg"
+                alt=""
+                className="w-4 h-4 mr-1"
+              />
+              {comments}
+            </span>
+
+            <span
+              className="flex items-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                onShare();
+              }}
+            >
+              <img
+                src="/icons/share-icon.svg"
+                alt=""
+                className="w-4 h-4 mr-1"
+              />
+              {shares}
+            </span>
+          </div>
+
+          <p className="text-stone-500 text-xs font-normal flex items-center">
+            <img
+              src="/icons/location-icon.svg"
+              alt=""
+              className="w-3.5 h-3.5 mr-1"
+            />
+            {location}
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const onLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
@@ -233,7 +249,7 @@ const MyActivity: React.FC = () => {
                 onUnmount={onUnmount}
               >
                 <MarkerClusterer averageCenter enableRetinaIcons gridSize={60}>
-                  {(clusterer) => (
+                  {() => (
                     <>
                       {posts.map((post) => {
                         const lat = post.location?.coordinates[1];
@@ -253,12 +269,11 @@ const MyActivity: React.FC = () => {
                               onMouseEnter={() => setPopupPostId(post._id)}
                               onMouseLeave={() => setPopupPostId(null)}
                             >
-                              {/* Circular Pin */}
                               <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
                                 <img
                                   src={
                                     post.media?.[0]?.url ||
-                                    "/icons/default-avatar.png"
+                                    "/images/default-chat-profile.svg"
                                   }
                                   alt="pin"
                                   className="object-cover w-full h-full"
@@ -281,17 +296,35 @@ const MyActivity: React.FC = () => {
                                       />
                                     )}
                                     <div className="pt-2 text-sm">
-                                      <p className="font-semibold text-gray-800">
-                                        @{post.user?.username}
-                                      </p>
-                                      <p className="text-gray-600 line-clamp-2">
+                                      <div className="flex gap-3 text-xs mt-2 text-gray-500">
+                                        <span className="flex items-center">
+                                          <img
+                                            src="/icons/heart-icon.svg"
+                                            alt=""
+                                            className="w-4 h-4 mr-1"
+                                          />
+                                          {post.likes || 0}
+                                        </span>
+                                        <span className="flex items-center">
+                                          <img
+                                            src="/icons/comment-icon.svg"
+                                            alt=""
+                                            className="w-4 h-4 mr-1"
+                                          />
+                                          {post.comments || 0}
+                                        </span>
+                                        <span className="flex items-center">
+                                          <img
+                                            src="/icons/share-icon.svg"
+                                            alt=""
+                                            className="w-4 h-4 mr-1"
+                                          />
+                                          {post.shares || 0}
+                                        </span>
+                                      </div>
+                                      <p className="text-gray-600 line-clamp-2 mt-1 mb-1">
                                         {post.content}
                                       </p>
-                                      <div className="flex gap-3 text-xs mt-2 text-gray-500">
-                                        <span>❤️ {post.likes || 0}</span>
-                                        <span>💬 {post.comments || 0}</span>
-                                        <span>🔁 {post.shares || 0}</span>
-                                      </div>
                                     </div>
                                   </motion.div>
                                 )}
@@ -303,42 +336,6 @@ const MyActivity: React.FC = () => {
                     </>
                   )}
                 </MarkerClusterer>
-
-                {/* {popupPostId && (
-                  <InfoWindow
-                    position={{
-                      lat: posts.find((p) => p._id === popupPostId)?.location
-                        ?.coordinates[1],
-                      lng: posts.find((p) => p._id === popupPostId)?.location
-                        ?.coordinates[0],
-                    }}
-                    onCloseClick={() => setPopupPostId(null)}
-                  >
-                    <div className="p-2 w-56">
-                      <p className="font-semibold text-sm mb-1">
-                        @
-                        {
-                          posts.find((p) => p._id === popupPostId)?.user
-                            ?.username
-                        }
-                      </p>
-                      <p className="text-xs text-gray-600 line-clamp-3">
-                        {posts.find((p) => p._id === popupPostId)?.content}
-                      </p>
-                      {posts.find((p) => p._id === popupPostId)?.media?.length >
-                        0 && (
-                        <img
-                          src={
-                            posts.find((p) => p._id === popupPostId)?.media[0]
-                              .url
-                          }
-                          alt="Post"
-                          className="w-full h-24 object-cover mt-2 rounded"
-                        />
-                      )}
-                    </div>
-                  </InfoWindow>
-                )} */}
               </GoogleMap>
             ) : (
               <div className="flex justify-center items-center h-full">
@@ -348,17 +345,17 @@ const MyActivity: React.FC = () => {
           </div>
         </div>
 
-        <div className="xl:w-80 w-72 h-full overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 xl:mr-8 md:mr-0">
-          {(activeTab === "posts" ? posts : posts.slice(0, 2)).map((post) => (
+        <div className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
+          {posts.map((post) => (
             <MapCard
               key={post._id}
-              image={post.media?.[0]?.url || "/icons/default-post.png"}
-              caption={post.content}
+              image={post.media?.length ? post.media[0].url : null}
+              caption={post.content || "No content"}
+              likes={post.interaction?.likeCount || 0}
+              comments={post.interaction?.commentCount || 0}
+              shares={0}
               location={post.address}
               username={post.user?.username}
-              likes={0}
-              comments={0}
-              shares={0}
               onClick={() => handlePostClick(post)}
               onShare={() => setIsShareOpen(true)}
             />
@@ -366,7 +363,7 @@ const MyActivity: React.FC = () => {
         </div>
       </div>
 
-      <OwnPostModal
+      <PostModal
         visible={isModalOpen}
         onClose={handleModalClose}
         post={selectedPost}

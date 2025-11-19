@@ -160,3 +160,8 @@
 .custom-modal .ant-modal-close-x svg {
   color: black !important;
 }
+
+.filter-purple {
+  filter: invert(53%) sepia(73%) saturate(6400%) hue-rotate(227deg)
+    brightness(102%) contrast(96%);
+}
