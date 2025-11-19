@@ -1,20 +1,20 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import LoginPage from "../components/auths/login";
-import ForgotPassword from "../components/auths/ForgotPassword";
-import VerifyOtp from "../components/auths/VerifyOtp";
-import Signup from "../components/auths/signUp";
+import LoginPage from "../components/auth/login";
+import ForgotPassword from "../components/auth/ForgotPassword";
+import VerifyOtp from "../components/auth/VerifyOtp";
+import Signup from "../components/auth/signUp";
 import MainLayout from "../layout/MainLayout";
-import UserVerification from "../components/auths/UserVerification";
+import UserVerification from "../components/auth/UserVerification";
 import ProtectedRoute from "./ProtectedRoutes";
 import Home from "../components/home/home";
-import CompleteGoogleProfile from "../components/auths/CompleteGoogleProfile";
+import CompleteGoogleProfile from "../components/auth/CompleteGoogleProfile";
 import ProfileOptions from "../components/profileSetting/ProfileOptions";
 import MyActivity from "../components/myActivity/MyActivity";
 import ChatLayout from "../components/chats/ChatLayout";
 import OthersProfile from "../components/othersProfile/othersProfile";
-import GoogleSuccess from "../components/auths/GoogleSuccess";
+import GoogleSuccess from "../components/auth/GoogleSuccess";
 
 const AppRouter: React.FC = () => {
   return (

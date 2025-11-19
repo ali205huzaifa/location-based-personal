@@ -11,7 +11,7 @@ import SettingIcon from "/icons/setting-icon.svg";
 import AddPostIcon from "/icons/Addpost-icon.svg";
 import LogoutIcon from "/icons/logout-icon.svg";
 import LogoutModal from "./LogoutModal";
-import AddPostModal from "../addposts/AddPostModal";
+import AddPostModal from "../addpost/AddPostModal";
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
