@@ -67,34 +67,7 @@
   border-radius: 10px;
 }
 
-/* .custom-swiper {
-  position: relative;
-}
-
-.custom-swiper .swiper-button-prev,
-.custom-swiper .swiper-button-next {
-  color: #8869f3 !important;
-  width: 25px !important;
-  height: 25px !important;
-}
-
-.custom-swiper .swiper-button-prev::after,
-.custom-swiper .swiper-button-next::after {
-  font-size: 16px !important;
-  font-weight: bold;
-}
-
-.custom-swiper .swiper-button-prev,
-.custom-swiper .swiper-button-next {
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.custom-swiper .swiper-button-prev:hover,
-.custom-swiper .swiper-button-next:hover {
-  color: #000 !important;
-} */
-
+/* Add Post Modal Swiper Button Styling */
 .custom-swiper .swiper-button-prev,
 .custom-swiper .swiper-button-next {
   color: #8869f3;
@@ -113,6 +86,34 @@
 
 .custom-swiper .swiper-pagination-bullet-active {
   background-color: #8869f3;
+}
+
+/* Post Modal Swiper Button Styling */
+.custom-prev,
+.custom-next {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  background: #f9fafb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.custom-prev {
+  left: 12px;
+}
+.custom-next {
+  right: 12px;
+}
+
+.custom-prev:hover,
+.custom-next:hover {
+  background: #ffffff;
 }
 
 .ant-radio-inner {

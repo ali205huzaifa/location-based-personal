@@ -34,8 +34,8 @@ const SearchModal = ({
 
     setLoadingUsers(true);
     try {
-      const res = await PostAPI.searchUsers({ username: value });
-      setUsers(res.data.users || []);
+      const res = await PostAPI.searchUsers({ q: value });
+      setUsers(res.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -109,31 +109,31 @@ const SearchModal = ({
               </p>
             )}
 
-            <div className="space-y-3">
-              {users.map((u: any) => (
-                <div
-                  key={u._id}
-                  className="flex items-center gap-3 p-1 cursor-pointer hover:bg-gray-100 rounded-lg"
-                  onClick={() => {
-                    onClose();
-                    navigate(`/profile/${u.username}`);
-                  }}
-                >
-                  <img
-                    src={u.profileImg || "/icons/default-avatar.png"}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="text-black text-base font-normal">
-                      {u.fullname}
-                    </p>
-                    <p className="text-stone-500 text-sm font-normal">
-                      @{u.username}
-                    </p>
-                  </div>
+            {users.map((u: any) => (
+              <div
+                key={u._id}
+                className="flex items-center gap-4 p-1 cursor-pointer hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  onClose();
+                  navigate(`/othersProfile/${u._id}`);
+                }}
+              >
+                <img
+                  src={u.image || "/images/default-chat-profile.svg"}
+                  className="w-11 h-11 rounded-full object-cover"
+                />
+
+                <div>
+                  <p className="text-black text-base font-normal">
+                    {u.fullName}
+                  </p>
+
+                  <p className="text-stone-500 text-sm font-normal">
+                    @{u.username}
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </>
         )}
 

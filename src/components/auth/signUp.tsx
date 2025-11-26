@@ -209,10 +209,9 @@ const Signup: React.FC = () => {
             </Form.Item>
 
             <Button
-              type="primary"
               htmlType="submit"
               loading={loading}
-              className="w-full h-12 mt-6 bg-[#8869F3] hover:!bg-[#6b3df7] text-white text-lg font-normal rounded-xl"
+              className="w-full !h-12 !bg-[#8869F3] border-none !text-white text-lg rounded-xl shadow-md !mt-6"
             >
               Signup
             </Button>

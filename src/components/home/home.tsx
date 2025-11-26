@@ -45,24 +45,64 @@ const Home: React.FC = () => {
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  const [offset, setOffset] = useState(0);
+  const limit = 10;
+  const [hasMore, setHasMore] = useState(true);
+  const rightSidebarRef = useRef<HTMLDivElement>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
     libraries: ["places"],
   });
 
+  const fetchPosts = async (offsetValue = 0) => {
+    try {
+      const res = await PostAPI.getPublicPosts({
+        limit,
+        offset: offsetValue,
+      });
+
+      const newPosts = res.data?.posts || [];
+      setPosts((prev) => {
+        const ids = new Set(prev.map((p) => p._id));
+        const filtered = newPosts.filter((p: any) => !ids.has(p._id));
+        return [...prev, ...filtered];
+      });
+
+      setOffset(offsetValue + limit);
+      if (res.data?.nextPage === null) {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await PostAPI.getPublicPosts();
-        setPosts(res.data?.posts || []);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        setLoading(false);
+    fetchPosts(0);
+  }, []);
+
+  useEffect(() => {
+    const div = rightSidebarRef.current;
+    if (!div) return;
+
+    const handleScroll = () => {
+      const bottomReached =
+        div.scrollTop + div.clientHeight >= div.scrollHeight - 50;
+
+      if (bottomReached && hasMore && !loadingMore) {
+        setLoadingMore(true);
+        fetchPosts(offset);
       }
     };
-    fetchPosts();
-  }, []);
+
+    div.addEventListener("scroll", handleScroll);
+    return () => div.removeEventListener("scroll", handleScroll);
+  }, [hasMore, offset, loadingMore]);
 
   const MapCard: React.FC<MapCardProps> = ({
     image,
@@ -156,6 +196,14 @@ const Home: React.FC = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedPost(null);
+  };
+
+  const refreshPosts = async () => {
+    setPosts([]);
+    setOffset(0);
+    setHasMore(true);
+    setLoading(true);
+    await fetchPosts(0);
   };
 
   const onLoad = useCallback((mapInstance: google.maps.Map) => {
@@ -326,7 +374,7 @@ const Home: React.FC = () => {
                                         alt=""
                                         className="w-4 h-4 mr-1"
                                       />
-                                      {post.interaction?.likeCount || 0}
+                                      {post.interaction?.likesCount || 0}
                                     </span>
                                     <span className="flex items-center">
                                       <img
@@ -363,26 +411,46 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
+      <div
+        ref={rightSidebarRef}
+        className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 no-scrollbar"
+      >
+        {posts.length === 0 && !loadingMore && (
+          <p className="text-center text-gray-400 py-4">No Posts yet...</p>
+        )}
+
         {posts.map((post) => (
           <MapCard
             key={post._id}
             image={post.media?.length ? post.media[0].url : null}
             caption={post.content || "No content"}
-            likes={post.interaction?.likeCount || 0}
+            likes={post.interaction?.likesCount || 0}
             comments={post.interaction?.commentCount || 0}
-            shares={0}
+            shares={post.interaction?.shareCount || 0}
             location={post.address}
             username={post.user?.username}
             onClick={() => handlePostClick(post)}
           />
         ))}
+
+        {loadingMore && (
+          <div className="w-full flex justify-center py-4 text-gray-500">
+            <Spin size="small" />
+          </div>
+        )}
+
+        {!hasMore && (
+          <p className="text-center text-xs text-gray-400 py-4">
+            No more posts to load.
+          </p>
+        )}
       </div>
 
       <PostModal
         visible={isModalOpen}
         onClose={handleModalClose}
         post={selectedPost}
+        onPostDeleted={refreshPosts}
       />
       <SharePostModal
         visible={isShareOpen}

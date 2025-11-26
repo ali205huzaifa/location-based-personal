@@ -1,16 +1,20 @@
 import axiosClient from "../axiosClient";
 
 class PostAPI {
-  static getPublicPosts() {
-    return axiosClient.get("/post");
+  static getPublicPosts(params = {}) {
+    return axiosClient.get("/post", { params });
   }
 
   static getPublicPostsByUser(id: string, params = {}) {
     return axiosClient.get(`/post/user/${id}`, { params });
   }
 
-  static getMyInteractions(params = {}) {
-    return axiosClient.get("/interactions/", { params });
+  static getPublicPrivateProfile(id: string, params = {}) {
+    return axiosClient.get(`/user/profile/${id}`, { params });
+  }
+
+  static getInteractions(id: string, params = {}) {
+    return axiosClient.get(`/interactions/target/${id}`, { params });
   }
 
   static getMyContacts() {
@@ -18,7 +22,7 @@ class PostAPI {
   }
 
   static searchUsers(params = {}) {
-    return axiosClient.get("/search", { params });
+    return axiosClient.get("/contacts/search", { params });
   }
 
   static getCommentforPost(id: string) {
@@ -30,7 +34,19 @@ class PostAPI {
   }
 
   static getPostInteractionsById(id: string) {
-    return axiosClient.get(`/interactions/count/${id}`);
+    return axiosClient.get(`/interactions/post/like/${id}`);
+  }
+
+  static getPostById(id: string) {
+    return axiosClient.get(`/post/${id}`);
+  }
+
+  static updatePostById(id: string, payload: any) {
+    return axiosClient.patch(`/post/${id}`, payload);
+  }
+
+  static deletePostById(id: string) {
+    return axiosClient.delete(`/post/${id}`);
   }
 
   static commentOnPost(id: string, payload: any) {

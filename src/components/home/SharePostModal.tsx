@@ -158,7 +158,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
         type="primary"
         block
         size="large"
-        className="mt-4 rounded-xl bg-[#8869F3]"
+        className="mt-4 rounded-xl !bg-[#8869F3]"
         onClick={handleShare}
         disabled={loading}
       >

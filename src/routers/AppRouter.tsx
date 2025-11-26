@@ -13,8 +13,8 @@ import CompleteGoogleProfile from "../components/auth/CompleteGoogleProfile";
 import ProfileOptions from "../components/profileSetting/ProfileOptions";
 import MyActivity from "../components/myActivity/MyActivity";
 import ChatLayout from "../components/chats/ChatLayout";
-import OthersProfile from "../components/othersProfile/othersProfile";
 import GoogleSuccess from "../components/auth/GoogleSuccess";
+import UserProfile from "../components/othersProfile/othersProfile";
 
 const AppRouter: React.FC = () => {
   return (
@@ -43,7 +43,7 @@ const AppRouter: React.FC = () => {
           <Route path="activity" element={<MyActivity />} />
           <Route path="chats" element={<ChatLayout />} />
           <Route path="settings" element={<ProfileOptions />} />
-          <Route path="/othersProfile/:username" element={<OthersProfile />} />
+          <Route path="/othersProfile/:userId" element={<UserProfile />} />
         </Route>
       </Routes>
     </Router>

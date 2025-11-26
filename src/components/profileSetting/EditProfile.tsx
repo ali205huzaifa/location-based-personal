@@ -202,10 +202,8 @@ const EditProfile: React.FC = () => {
 
         <div className="flex justify-end pt-2">
           <Button
-            type="primary"
-            size="large"
             onClick={handleSaveChanges}
-            className="!w-36 !h-12 sm:w-auto px-8 bg-[#8869F3] hover:bg-purple-700 border-none rounded-xl text-white text-sm font-normal"
+            className="!w-36 !h-12 sm:w-auto px-8 !bg-[#8869F3] border-none !text-white text-sm font-normal"
           >
             Save Changes
           </Button>

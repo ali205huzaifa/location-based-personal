@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Modal,
   Input,
@@ -26,15 +26,25 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation, Pagination } from "swiper/modules";
+import PostAPI from "../../api/postApi/PostAPI";
 
 interface PostModalProps {
   visible: boolean;
   onClose: () => void;
+  editPostData?: any | null;
+  onCloseAll: any;
+  postsRefetch: any;
 }
 
 const defaultCenter = { lat: 33.6844, lng: 73.0479 };
 
-const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
+const AddPostModal: React.FC<PostModalProps> = ({
+  visible,
+  onClose,
+  editPostData,
+  onCloseAll,
+  postsRefetch,
+}) => {
   const [step, setStep] = useState(1);
   const [text, setText] = useState("");
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -48,6 +58,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const user = useSelector((state: RootState) => state.auth.currentUser);
+  const isEditMode = Boolean(editPostData);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
@@ -71,6 +82,18 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
     const lng = place.geometry.location.lng();
     setCoords({ lat, lng });
     setLocation(place.formatted_address || "");
+  };
+
+  const reverseGeocode = (lat: number, lng: number) => {
+    const geocoder = new google.maps.Geocoder();
+
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === "OK" && results && results[0]) {
+        setLocation(results[0].formatted_address);
+      } else {
+        setLocation("");
+      }
+    });
   };
 
   const MAX_FILE_SIZE_MB = 10;
@@ -117,6 +140,41 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
     return false;
   };
 
+  useEffect(() => {
+    if (editPostData) {
+      const post = editPostData;
+      setText(post.data.content);
+      setVisibility(post.data.visibility);
+
+      const formattedFiles = Array.isArray(post.media)
+        ? post.data.media.map((m: any) => ({
+            uid: m._id,
+            name: m.type === "video" ? "video.mp4" : "image.jpg",
+            status: "done",
+            url: m.url,
+            type: m.type === "video" ? "video/mp4" : "image/jpeg",
+          }))
+        : [];
+
+      setFiles(formattedFiles);
+      if (post.data.location?.coordinates) {
+        setCoords({
+          lat: post.data.location.coordinates[1],
+          lng: post.data.location.coordinates[0],
+        });
+      }
+      setLocation(post.data.address || "");
+      setStep(1);
+    } else {
+      setText("");
+      setVisibility("private");
+      setFiles([]);
+      setLocation("");
+      setCoords(null);
+      setStep(1);
+    }
+  }, [editPostData, visible]);
+
   const removeFile = (uid: string) => {
     setFiles((prev) => prev.filter((f) => f.uid !== uid));
   };
@@ -131,19 +189,15 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
 
   const handlePost = async () => {
     if (!coords) {
-      message.warning("Please select a location before posting!");
+      message.warning("Please select a location.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const postPayload = {
+      const payload: any = {
         content: text,
-        media: files.map((file) => ({
-          url: file.url!,
-          type: file.type?.startsWith("video") ? "video" : "image",
-        })),
         visibility,
         location: {
           type: "Point",
@@ -151,17 +205,26 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
         },
       };
 
-      await AddPostAPI.createPost(postPayload);
-      message.success("Post created successfully!");
-      setText("");
-      setFiles([]);
-      setLocation("");
-      setCoords(null);
-      setStep(1);
+      if (!isEditMode) {
+        payload.media = files.map((f) => ({
+          url: f.url!,
+          type: f.type?.startsWith("video") ? "video" : "image",
+        }));
+      }
+
+      if (isEditMode) {
+        await PostAPI.updatePostById(editPostData.data._id, payload);
+        message.success("Post updated!");
+      } else {
+        await AddPostAPI.createPost(payload);
+        message.success("Post created!");
+      }
+
+      onCloseAll?.();
+      postsRefetch?.();
       onClose();
     } catch (err) {
-      console.error(err);
-      message.error("Failed to create post!");
+      message.error("Failed to submit.");
     } finally {
       setLoading(false);
     }
@@ -176,13 +239,14 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
         centered
         width={724}
         className="!max-w-[724px] !h-[652px] custom-modal"
+        maskClosable={false}
       >
         <Spin spinning={loading}>
           {step === 1 ? (
             <>
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-black text-base font-medium">
-                  Create Post
+                  {isEditMode ? "Edit Post" : "Create Post"}
                 </h2>
               </div>
 
@@ -194,7 +258,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                   </h3>
                   <Button
                     size="small"
-                    className="rounded text-xs bg-[#8869F326] text-[#8869F3]"
+                    className="rounded text-xs !bg-[#8869F326] text-[#8869F3]"
                     onClick={() => setPrivacyModalVisible(true)}
                   >
                     {visibility === "public" ? "Public" : "Contacts Only"}
@@ -249,10 +313,12 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                             />
                           )}
 
-                          <CloseCircleOutlined
-                            onClick={() => removeFile(file.uid)}
-                            className="absolute top-3 right-3 z-20 bg-gray-100 rounded-full border-gray-200 text-2xl cursor-pointer"
-                          />
+                          {!isEditMode && (
+                            <CloseCircleOutlined
+                              onClick={() => removeFile(file.uid)}
+                              className="absolute top-3 right-3 z-20 bg-gray-100 rounded-full text-2xl cursor-pointer"
+                            />
+                          )}
                         </SwiperSlide>
                       ))}
                     </Swiper>
@@ -260,22 +326,22 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                 </div>
               )}
 
-              <div className="w-10 h-10 rounded-full border border-Stroke-1 flex items-center justify-center">
-                <Upload
-                  beforeUpload={handleUpload}
-                  showUploadList={false}
-                  accept="image/*,video/*"
-                  className="flex items-center justify-center"
-                >
-                  <img
-                    src="/icons/attachment-icon.svg"
-                    alt="Show"
-                    width={20}
-                    height={20}
-                    className="flex items-center justify-center cursor-pointer"
-                  />
-                </Upload>
-              </div>
+              {!isEditMode && (
+                <div className="w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer">
+                  <Upload
+                    beforeUpload={handleUpload}
+                    showUploadList={false}
+                    accept="image/*,video/*"
+                    className="flex items-center justify-center"
+                  >
+                    <img
+                      src="/icons/attachment-icon.svg"
+                      alt="Show"
+                      width={20}
+                    />
+                  </Upload>
+                </div>
+              )}
 
               <div className="flex gap-2 w-full mt-2">
                 <Button
@@ -302,9 +368,9 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                   Choose Location
                 </h2>
               </div>
-
               {isLoaded ? (
                 <div className="w-full flex flex-col gap-3">
+                  {/* Search Input */}
                   <Autocomplete
                     onLoad={onLoadAutocomplete}
                     onPlaceChanged={onPlaceChanged}
@@ -318,10 +384,19 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                     />
                   </Autocomplete>
 
+                  {/* GOOGLE MAP WITH CLICK HANDLER */}
                   <GoogleMap
                     mapContainerStyle={{ width: "100%", height: "400px" }}
                     center={coords || defaultCenter}
                     zoom={14}
+                    onClick={(e) => {
+                      const lat = e.latLng?.lat();
+                      const lng = e.latLng?.lng();
+                      if (!lat || !lng) return;
+
+                      setCoords({ lat, lng });
+                      reverseGeocode(lat, lng); // Get address from click
+                    }}
                   >
                     {coords && <Marker position={coords} />}
                   </GoogleMap>
@@ -329,7 +404,6 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
               ) : (
                 <p>Loading map...</p>
               )}
-
               <div className="flex gap-3 mt-5">
                 <Button
                   block
@@ -344,7 +418,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
                   className="!bg-[#8869F3] h-12 rounded-xl"
                   onClick={handlePost}
                 >
-                  Post
+                  {isEditMode ? "Update Post" : "Post"}
                 </Button>
               </div>
             </>
@@ -354,6 +428,7 @@ const AddPostModal: React.FC<PostModalProps> = ({ visible, onClose }) => {
 
       <Modal
         open={privacyModalVisible}
+        maskClosable={false}
         onCancel={() => setPrivacyModalVisible(false)}
         footer={
           <div className="p-0 border-t-0">

@@ -165,7 +165,7 @@ const ChangePassword: React.FC = () => {
             htmlType="submit"
             size="large"
             loading={loading}
-            className="!h-12 sm:w-auto px-8 bg-[#8869F3] hover:bg-purple-700 border-none rounded-xl text-white text-sm font-normal"
+            className="!h-12 sm:w-auto px-8 !bg-[#8869F3] border-none rounded-xl !text-white text-sm font-normal"
           >
             Save Changes
           </Button>

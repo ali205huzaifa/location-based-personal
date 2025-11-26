@@ -178,10 +178,9 @@ const LoginPage: React.FC = () => {
             </div>
 
             <Button
-              type="primary"
               htmlType="submit"
               loading={loading}
-              className="w-full !h-12 bg-[#8869F3] border-none hover:!bg-[#6b3df7] text-white text-lg rounded-xl shadow-md !mt-12"
+              className="w-full !h-12 !bg-[#8869F3] border-none !text-white text-lg rounded-xl shadow-md !mt-12"
             >
               Login
             </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Input, Avatar, Button, Segmented, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import SharePostModal from "../home/SharePostModal";
@@ -35,6 +35,7 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = { lat: 30.3753, lng: 69.3451 };
+const libraries: "places"[] = ["places"];
 
 const MyActivity: React.FC = () => {
   const navigate = useNavigate();
@@ -46,26 +47,77 @@ const MyActivity: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [popupPostId, setPopupPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
+  const [interactions, setInteractions] = useState<any[]>([]);
   const [, setLoading] = useState(false);
   const [, setMap] = useState<google.maps.Map | null>(null);
 
+  const [offset, setOffset] = useState(0);
+  const limit = 10;
+  const [hasMore, setHasMore] = useState(true);
+  const rightSidebarRef = useRef<HTMLDivElement>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
-    libraries: ["places"],
+    libraries,
   });
 
-  const fetchPosts = useCallback(async () => {
-    if (!user?._id) return;
-    setLoading(true);
-    try {
-      const response = await PostAPI.getPublicPostsByUser(user._id);
-      setPosts(response.data?.data || []);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+  const fetchPosts = useCallback(
+    async (offsetValue = 0) => {
+      if (!user?._id) return;
+      setLoading(true);
+      try {
+        const response = await PostAPI.getPublicPostsByUser(user._id, {
+          limit,
+          offset: offsetValue,
+        });
+        setPosts(response.data?.data || []);
+
+        setOffset(offsetValue + limit);
+        if (response.data?.nextPage === null) {
+          setHasMore(false);
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user]
+  );
+
+  useEffect(() => {
+    const fetchInteractions = async () => {
+      if (activeTab !== "interactions" || !user?._id) return;
+
+      setLoading(true);
+      try {
+        const response = await PostAPI.getInteractions(user._id);
+        const rawPosts = response.data?.data?.posts || [];
+
+        const normalizedPosts = rawPosts.map((p: any) => ({
+          _id: p.postId,
+          user: p.postOwner,
+          content: p.content,
+          media: p.media || [],
+          location: p.location || null,
+          address: p.address || "",
+          interaction: {
+            likesCount: p.summary?.likesCount,
+            commentCount: p.summary?.commentCount,
+          },
+        }));
+
+        setInteractions(normalizedPosts);
+      } catch (error) {
+        console.error("Error fetching interactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInteractions();
+  }, [activeTab, user]);
 
   useEffect(() => {
     fetchPosts();
@@ -81,12 +133,38 @@ const MyActivity: React.FC = () => {
     setSelectedPost(null);
   };
 
+  const refreshPosts = async () => {
+    setPosts([]);
+    setOffset(0);
+    setHasMore(true);
+    setLoading(true);
+    await fetchPosts(0);
+  };
+
+  useEffect(() => {
+    const div = rightSidebarRef.current;
+    if (!div) return;
+
+    const handleScroll = () => {
+      const bottomReached =
+        div.scrollTop + div.clientHeight >= div.scrollHeight - 50;
+
+      if (bottomReached && hasMore && !loadingMore) {
+        setLoadingMore(true);
+        fetchPosts(offset);
+      }
+    };
+
+    div.addEventListener("scroll", handleScroll);
+    return () => div.removeEventListener("scroll", handleScroll);
+  }, [hasMore, offset, loadingMore]);
+
   const MapCard: React.FC<MapCardProps> = ({
     image,
     caption,
-    likes = 0,
-    comments = 0,
-    shares = 0,
+    likes,
+    comments,
+    shares,
     location,
     onClick,
     onShare,
@@ -213,7 +291,7 @@ const MyActivity: React.FC = () => {
 
             <Button
               type="primary"
-              className="w-full rounded-lg py-2 bg-white text-[#8869F3] border-[#8869F3] !h-10"
+              className="w-full rounded-lg py-2 !bg-white !text-[#8869F3] border-[#8869F3] !h-10"
               onClick={() => navigate("/settings")}
             >
               Edit Profile
@@ -251,88 +329,90 @@ const MyActivity: React.FC = () => {
                 <MarkerClusterer averageCenter enableRetinaIcons gridSize={60}>
                   {() => (
                     <>
-                      {posts.map((post) => {
-                        const lat = post.location?.coordinates[1];
-                        const lng = post.location?.coordinates[0];
-                        if (!lat || !lng) return null;
+                      {(activeTab === "posts" ? posts : interactions).map(
+                        (post) => {
+                          const lat = post.location?.coordinates[1];
+                          const lng = post.location?.coordinates[0];
+                          if (!lat || !lng) return null;
 
-                        const isHovered = popupPostId === post._id;
+                          const isHovered = popupPostId === post._id;
 
-                        return (
-                          <OverlayView
-                            key={post._id}
-                            position={{ lat, lng }}
-                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                          >
-                            <div
-                              className="relative flex flex-col items-center"
-                              onMouseEnter={() => setPopupPostId(post._id)}
-                              onMouseLeave={() => setPopupPostId(null)}
+                          return (
+                            <OverlayView
+                              key={post._id}
+                              position={{ lat, lng }}
+                              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                             >
-                              <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
-                                <img
-                                  src={
-                                    post.media?.[0]?.url ||
-                                    "/images/default-chat-profile.svg"
-                                  }
-                                  alt="pin"
-                                  className="object-cover w-full h-full"
-                                />
-                              </div>
-                              <AnimatePresence>
-                                {isHovered && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 20 }}
-                                    transition={{ duration: 0.25 }}
-                                    className="absolute bottom-14 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
-                                  >
-                                    {post.media?.length > 0 && (
-                                      <img
-                                        src={post.media[0].url}
-                                        alt="Post"
-                                        className="w-full h-32 object-cover rounded-xl"
-                                      />
-                                    )}
-                                    <div className="pt-2 text-sm">
-                                      <div className="flex gap-3 text-xs mt-2 text-gray-500">
-                                        <span className="flex items-center">
-                                          <img
-                                            src="/icons/heart-icon.svg"
-                                            alt=""
-                                            className="w-4 h-4 mr-1"
-                                          />
-                                          {post.likes || 0}
-                                        </span>
-                                        <span className="flex items-center">
-                                          <img
-                                            src="/icons/comment-icon.svg"
-                                            alt=""
-                                            className="w-4 h-4 mr-1"
-                                          />
-                                          {post.comments || 0}
-                                        </span>
-                                        <span className="flex items-center">
-                                          <img
-                                            src="/icons/share-icon.svg"
-                                            alt=""
-                                            className="w-4 h-4 mr-1"
-                                          />
-                                          {post.shares || 0}
-                                        </span>
+                              <div
+                                className="relative flex flex-col items-center"
+                                onMouseEnter={() => setPopupPostId(post._id)}
+                                onMouseLeave={() => setPopupPostId(null)}
+                              >
+                                <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
+                                  <img
+                                    src={
+                                      post.media?.[0]?.url ||
+                                      "/images/default-chat-profile.svg"
+                                    }
+                                    alt="pin"
+                                    className="object-cover w-full h-full"
+                                  />
+                                </div>
+                                <AnimatePresence>
+                                  {isHovered && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: 20 }}
+                                      transition={{ duration: 0.25 }}
+                                      className="absolute bottom-14 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
+                                    >
+                                      {post.media?.length > 0 && (
+                                        <img
+                                          src={post.media[0].url}
+                                          alt="Post"
+                                          className="w-full h-32 object-cover rounded-xl"
+                                        />
+                                      )}
+                                      <div className="pt-2 text-sm">
+                                        <div className="flex gap-3 text-xs mt-2 text-gray-500">
+                                          <span className="flex items-center">
+                                            <img
+                                              src="/icons/heart-icon.svg"
+                                              alt=""
+                                              className="w-4 h-4 mr-1"
+                                            />
+                                            {post.likes || 0}
+                                          </span>
+                                          <span className="flex items-center">
+                                            <img
+                                              src="/icons/comment-icon.svg"
+                                              alt=""
+                                              className="w-4 h-4 mr-1"
+                                            />
+                                            {post.comments || 0}
+                                          </span>
+                                          <span className="flex items-center">
+                                            <img
+                                              src="/icons/share-icon.svg"
+                                              alt=""
+                                              className="w-4 h-4 mr-1"
+                                            />
+                                            {post.shares || 0}
+                                          </span>
+                                        </div>
+                                        <p className="text-gray-600 line-clamp-2 mt-1 mb-1">
+                                          {post.content}
+                                        </p>
                                       </div>
-                                      <p className="text-gray-600 line-clamp-2 mt-1 mb-1">
-                                        {post.content}
-                                      </p>
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          </OverlayView>
-                        );
-                      })}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            </OverlayView>
+                          );
+                        }
+                      )}
                     </>
                   )}
                 </MarkerClusterer>
@@ -345,13 +425,16 @@ const MyActivity: React.FC = () => {
           </div>
         </div>
 
-        <div className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4">
-          {posts.map((post) => (
+        <div
+          ref={rightSidebarRef}
+          className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 no-scrollbar"
+        >
+          {(activeTab === "posts" ? posts : interactions).map((post) => (
             <MapCard
               key={post._id}
-              image={post.media?.length ? post.media[0].url : null}
-              caption={post.content || "No content"}
-              likes={post.interaction?.likeCount || 0}
+              image={post.media?.[0]?.url}
+              caption={post.content}
+              likes={post.interaction?.likesCount || 0}
               comments={post.interaction?.commentCount || 0}
               shares={0}
               location={post.address}
@@ -367,6 +450,7 @@ const MyActivity: React.FC = () => {
         visible={isModalOpen}
         onClose={handleModalClose}
         post={selectedPost}
+        onPostDeleted={refreshPosts}
       />
       <SharePostModal
         visible={isShareOpen}
