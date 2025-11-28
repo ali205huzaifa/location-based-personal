@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Avatar } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../store";
+import { useSelector, useDispatch } from "react-redux";
+import { persistor, type RootState } from "../../store";
 
 import HomeIcon from "/icons/home-icon.svg";
 import ActivityIcon from "/icons/activity-icon.svg";
@@ -12,8 +12,10 @@ import AddPostIcon from "/icons/Addpost-icon.svg";
 import LogoutIcon from "/icons/logout-icon.svg";
 import LogoutModal from "./LogoutModal";
 import AddPostModal from "../addpost/AddPostModal";
+import { clearAuthData } from "../../store/Auth";
 
 const Sidebar: React.FC = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [active, setActive] = useState("Home");
   const [showAddPostModal, setShowAddPostModal] = useState(false);
@@ -48,7 +50,8 @@ const Sidebar: React.FC = () => {
   };
 
   const handleLogoutConfirm = () => {
-    localStorage.removeItem("token");
+    dispatch(clearAuthData());
+    persistor.purge();
     setShowLogoutModal(false);
     navigate("/login");
   };
@@ -114,7 +117,7 @@ const Sidebar: React.FC = () => {
         />
       </nav>
 
-      <div className="w-full pt-4 pb-2">
+      <div className="w-full pb-2">
         <SidebarItem
           icon={LogoutIcon}
           label="Logout"
@@ -126,6 +129,8 @@ const Sidebar: React.FC = () => {
       <AddPostModal
         visible={showAddPostModal}
         onClose={() => setShowAddPostModal(false)}
+        postsRefetch={""}
+        onCloseAll={""}
       />
       <LogoutModal
         open={showLogoutModal}

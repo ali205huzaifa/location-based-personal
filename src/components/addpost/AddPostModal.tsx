@@ -53,7 +53,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
     null
   );
   const [loading, setLoading] = useState(false);
-  const [visibility, setVisibility] = useState<"public" | "private">("private");
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -167,7 +167,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
       setStep(1);
     } else {
       setText("");
-      setVisibility("private");
+      setVisibility("public");
       setFiles([]);
       setLocation("");
       setCoords(null);
@@ -218,6 +218,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
       } else {
         await AddPostAPI.createPost(payload);
         message.success("Post created!");
+        window.location.reload();
       }
 
       onCloseAll?.();
@@ -370,7 +371,6 @@ const AddPostModal: React.FC<PostModalProps> = ({
               </div>
               {isLoaded ? (
                 <div className="w-full flex flex-col gap-3">
-                  {/* Search Input */}
                   <Autocomplete
                     onLoad={onLoadAutocomplete}
                     onPlaceChanged={onPlaceChanged}
@@ -384,7 +384,6 @@ const AddPostModal: React.FC<PostModalProps> = ({
                     />
                   </Autocomplete>
 
-                  {/* GOOGLE MAP WITH CLICK HANDLER */}
                   <GoogleMap
                     mapContainerStyle={{ width: "100%", height: "400px" }}
                     center={coords || defaultCenter}
@@ -395,7 +394,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                       if (!lat || !lng) return;
 
                       setCoords({ lat, lng });
-                      reverseGeocode(lat, lng); // Get address from click
+                      reverseGeocode(lat, lng);
                     }}
                   >
                     {coords && <Marker position={coords} />}

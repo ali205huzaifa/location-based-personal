@@ -28,7 +28,12 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
           <Button type="primary" onClick={onConfirm} className="!bg-[#8869F3]">
             Yes
           </Button>
-          <Button onClick={onClose}>No</Button>
+          <Button
+            onClick={onClose}
+            className="!border-[#666666] !text-[#666666]"
+          >
+            No
+          </Button>
         </div>
       </div>
     </Modal>

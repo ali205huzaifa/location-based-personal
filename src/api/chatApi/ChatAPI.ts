@@ -1,22 +1,12 @@
 import axiosClient from "../axiosClient";
 
 class ChatAPI {
-  static getMyContacts() {
-    const token = localStorage.getItem("token");
-    return axiosClient.get("/contacts/mutual", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  static getMyContacts(params = {}) {
+    return axiosClient.get("/contacts/mutual", { params });
   }
 
   static getMyChats() {
-    const token = localStorage.getItem("token");
-    return axiosClient.get("/chat/", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    return axiosClient.get("/chat/");
   }
 
   static getMessagesbyChatId(chatId: string) {

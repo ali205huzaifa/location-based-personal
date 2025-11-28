@@ -39,6 +39,7 @@ const AppRouter: React.FC = () => {
             </ProtectedRoute>
           }
         >
+          <Route index element={<Home />} />
           <Route path="home" element={<Home />} />
           <Route path="activity" element={<MyActivity />} />
           <Route path="chats" element={<ChatLayout />} />

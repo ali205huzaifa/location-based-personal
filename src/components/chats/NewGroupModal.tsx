@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Input, Spin, Modal } from "antd";
+import debounce from "lodash/debounce";
 import ChatAPI from "../../api/chatApi/ChatAPI";
 
 interface Contact {
   grantedTo: string;
-  userDetails: {
+  user: {
     _id: string;
     fullName: string;
     username: string;
@@ -28,44 +29,55 @@ const NewGroupModal: React.FC<NewGroupModalProps> = ({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isFirstOpen = useRef(false);
+
+  const fetchContacts = async (username?: string) => {
+    setLoading(true);
+    try {
+      const response = await ChatAPI.getMyContacts(username);
+      if (response && Array.isArray(response.data?.data)) {
+        setContacts(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = useCallback(
+    debounce((value: string) => {
+      if (!open) return;
+
+      if (!value.trim()) {
+        fetchContacts();
+      } else {
+        fetchContacts(value.trim());
+      }
+    }, 300),
+    [open]
+  );
+
   useEffect(() => {
     if (!open) return;
+    handleSearch(search);
+  }, [search, open, handleSearch]);
 
-    const fetchContacts = async () => {
-      setLoading(true);
-      try {
-        const response = await ChatAPI.getMyContacts();
-        if (response && Array.isArray(response.data)) {
-          setContacts(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching contacts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContacts();
+  useEffect(() => {
+    if (open) {
+      isFirstOpen.current = true;
+      fetchContacts();
+    }
   }, [open]);
 
   useEffect(() => {
-    if (!open) {
+    if (!open && isFirstOpen.current) {
       setSelected([]);
       setSearch("");
       setContacts([]);
       setLoading(false);
     }
   }, [open]);
-
-  const filteredContacts = useMemo(() => {
-    if (!search.trim()) return contacts;
-
-    return contacts.filter(
-      (c) =>
-        c.userDetails.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        c.userDetails.username.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search, contacts]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) =>
@@ -103,39 +115,35 @@ const NewGroupModal: React.FC<NewGroupModalProps> = ({
           </div>
         ) : (
           <div className="max-h-[450px] overflow-y-auto space-y-2 no-scrollbar">
-            {filteredContacts.length === 0 ? (
+            {contacts.length === 0 ? (
               <p className="text-center text-gray-400 text-sm">
                 No contacts found
               </p>
             ) : (
-              filteredContacts.map(({ userDetails }) => {
-                const avatar =
-                  userDetails.image || "/images/default-chat-profile.svg";
+              contacts.map(({ user }) => {
+                const avatar = user.image || "/images/default-chat-profile.svg";
 
                 return (
                   <div
-                    key={userDetails._id}
-                    onClick={() => toggleSelect(userDetails._id)}
-                    className="flex items-center justify-between py-2 px-2 rounded-lg cursor-pointer"
+                    key={user._id}
+                    onClick={() => toggleSelect(user._id)}
+                    className="flex items-center justify-between py-2 px-2 rounded-lg cursor-pointer hover:bg-gray-100"
                   >
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={avatar}
-                        alt={userDetails.fullName}
-                        className="w-11 h-11 rounded-full"
-                      />
+                      <img src={avatar} className="w-11 h-11 rounded-full" />
                       <div>
                         <p className="text-black text-base font-normal">
-                          {userDetails.fullName}
+                          {user.fullName}
                         </p>
                         <p className="text-stone-500 text-sm font-normal">
-                          @{userDetails.username}
+                          @{user.username}
                         </p>
                       </div>
                     </div>
+
                     <input
                       type="checkbox"
-                      checked={selected.includes(userDetails._id)}
+                      checked={selected.includes(user._id)}
                       readOnly
                       className="accent-[#8869F3] w-4 h-4"
                     />

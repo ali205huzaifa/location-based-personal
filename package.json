@@ -23,6 +23,8 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
     "jspdf": "^3.0.2",
+    "libsodium-wrappers": "^0.7.15",
+    "libsodium-wrappers-sumo": "^0.7.15",
     "lodash": "^4.17.21",
     "quill-image-resize-module-react": "^3.0.0",
     "react": "^18.3.1",
@@ -43,6 +45,7 @@
   "devDependencies": {
     "@eslint/js": "^9.30.1",
     "@tailwindcss/postcss": "^4.1.11",
+    "@types/libsodium-wrappers-sumo": "^0.7.8",
     "@types/lodash": "^4.17.20",
     "@types/react": "^19.1.8",
     "@types/react-date-range": "^1.4.10",

@@ -416,7 +416,9 @@ const Home: React.FC = () => {
         className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 no-scrollbar"
       >
         {posts.length === 0 && !loadingMore && (
-          <p className="text-center text-gray-400 py-4">No Posts yet...</p>
+          <p className="text-center !text-[#8869F3] text-base mt-8">
+            No posts yet — check back soon!
+          </p>
         )}
 
         {posts.map((post) => (
@@ -439,7 +441,7 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        {!hasMore && (
+        {!hasMore && posts.length >= 10 && (
           <p className="text-center text-xs text-gray-400 py-4">
             No more posts to load.
           </p>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
 import { Form, Input, Button, Divider, message } from "antd";
 import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
 import AuthAPI from "../../api/authApi/AuthAPI";
+import { decryptPrivateKeyHybrid } from "../../util/Decryption";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -65,6 +67,21 @@ const LoginPage: React.FC = () => {
           token,
         })
       );
+      const password = _form.getFieldValue("password");
+
+      if (password) {
+        const privateKey = await decryptPrivateKeyHybrid({
+          password,
+          encryptedPrivateKey: user.encryptedPrivateKey,
+          wrappedMasterKey: user.wrappedMasterKey,
+          nonce: user.nonce,
+          masterKeyNonce: user.masterKeyNonce,
+          salt: user.salt,
+        });
+
+        localStorage.setItem("privateKey", privateKey);
+        localStorage.setItem("publicKey", user.userPublicKey);
+      }
       localStorage.setItem("token", token);
       message.success("Login successful!");
       navigate("/home");
@@ -91,23 +108,23 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="md:w-1/2 w-full flex flex-col justify-center items-start bg-violet-500/10 p-6 sm:p-8">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center">
+      <div className="md:w-1/2 w-full flex flex-col justify-end items-start bg-violet-500/10 p-6 sm:p-8 2xl:!pb-64 xl:!pb-32 lg:!pb-48 md:!pb-60 !pb-64">
+        <div className="max-w-xl mx-auto">
+          <div className="flex items-center mb-12 mt-12">
             <img
               src="/icons/logo.svg"
               alt="Logo"
-              className="h-24 w-auto object-contain cursor-pointer mb-8"
+              className="h-24 w-auto object-contain cursor-pointer"
             />
           </div>
           <h1 className="text-4xl font-semibold text-black">Welcome Back!</h1>
-          <p className="py-8 text-[#666666] text-2xl mb-16">
+          <p className=" max-w-[442px] py-8 !text-[#666666] lg:text-2xl md:text-lg !font-light mb-4">
             Login to continue exploring what's happening around you.
           </p>
           <img
             src="/images/login.svg"
             alt="Login"
-            className="xl:max-w-lg lg:max-w-md md:max-w-xs mx-auto"
+            className="xl:max-w-[596px] lg:max-w-[466px] md:max-w-[350px] mx-auto"
           />
         </div>
       </div>
@@ -116,7 +133,12 @@ const LoginPage: React.FC = () => {
         <div className="w-full max-w-sm">
           <h2 className="text-black text-4xl font-medium mb-8">Login</h2>
 
-          <Form layout="vertical" onFinish={handleFinish} className="space-y-4">
+          <Form
+            form={_form}
+            layout="vertical"
+            onFinish={handleFinish}
+            className="space-y-4"
+          >
             <Form.Item
               name="username"
               label={
@@ -217,16 +239,17 @@ const LoginPage: React.FC = () => {
                 className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF]"
               />
             </div>
-
-            <p className="text-center mt-8 text-gray-600 text-sm">
-              Don’t have an account?{" "}
-              <span
-                onClick={() => navigate("/signup")}
-                className="text-[#8869F3] cursor-pointer hover:underline"
-              >
-                Sign up
-              </span>
-            </p>
+            <div className="!mt-12">
+              <p className="text-center text-gray-600 text-sm">
+                Don’t have an account?{" "}
+                <span
+                  onClick={() => navigate("/signup")}
+                  className="text-[#8869F3] cursor-pointer hover:underline"
+                >
+                  Sign up
+                </span>
+              </p>
+            </div>
           </Form>
         </div>
       </div>
