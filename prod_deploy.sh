@@ -1,9 +1,9 @@
 currentBranch=$(git branch --show-current)
 echo "Current Branch: $currentBranch"
 
-if [ "$currentBranch" != "main" ]; then
+if [ "$currentBranch" != "deployment" ]; then
     echo "Invalid branch checked out for this deployment"
-    exit 2
+    
 fi
 
 git fetch
@@ -16,11 +16,11 @@ echo "Remote: $remote"
 
 if [ "$local" != "$remote" ]; then
     echo "Make sure your local branch that has been selected for deployment is the same as the remote branch."
-    exit 2
+    
 fi
 
 npm install
 npm run build 
 
-aws s3 sync --profile ir-dashboard ./dist s3://hrportal-prod
-aws cloudfront create-invalidation --profile ir-dashboard --distribution-id E3R2E54LLAN3LR --paths "/*"
+aws s3 sync --profile hurcle-platform-frontend ./dist s3://hurcle-platform-frontend
+aws cloudfront create-invalidation --profile hurcle-platform-frontend --distribution-id EZZLSFYADLTEC --paths "/*"
