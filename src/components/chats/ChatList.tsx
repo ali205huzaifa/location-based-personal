@@ -149,15 +149,27 @@ const ChatList: React.FC<ChatListProps> = ({
 
   return (
     <div className="xl:w-80 md:w-72 flex flex-col h-full px-2">
-      <Input
-        placeholder="Search"
-        prefix={
-          <img src="/icons/search-icon.svg" alt="Icon" className="w-6 h-6" />
-        }
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666]"
-      />
+      <div className="relative w-full">
+        <Input
+          placeholder="Search"
+          prefix={
+            <img src="/icons/search-icon.svg" alt="Icon" className="w-6 h-6" />
+          }
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666]"
+        />
+
+        {/* Clear Icon (shows only when there is text) */}
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
       <div
         onClick={onOpenNewGroup}

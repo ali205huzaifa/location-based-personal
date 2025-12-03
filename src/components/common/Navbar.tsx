@@ -1,13 +1,25 @@
-import { Avatar } from "antd";
 import type { FC } from "react";
 import { useState } from "react";
 import NotificationDrawer from "./NotificationDrawer";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../store";
+import LogoutModal from "./LogoutModal";
+
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { persistor } from "../../store";
+import { clearAuthData } from "../../store/Auth";
 
 const Navbar: FC = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const user = useSelector((state: RootState) => state.auth.currentUser);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogoutConfirm = () => {
+    dispatch(clearAuthData());
+    persistor.purge();
+    setShowLogoutModal(false);
+    navigate("/login");
+  };
 
   return (
     <header className="flex items-center justify-between px-14 py-3 shadow-sm bg-white">
@@ -19,7 +31,7 @@ const Navbar: FC = () => {
         />
       </div>
 
-      <div className="flex items-center space-x-5">
+      <div className="flex items-center gap-6">
         <div
           className="relative rounded-full bg-[#F9FAFB] p-3"
           onClick={() => setIsNotifOpen(true)}
@@ -32,22 +44,19 @@ const Navbar: FC = () => {
           <span className="absolute top-2 right-3 h-3 w-3 bg-[#8869F3] rounded-full border-2 border-white"></span>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <div className="flex flex-col text-right leading-tight">
-            <span className="text-black text-base font-normal">
-              {user?.fullName}
-            </span>
-            <span className="text-[#666666] text-sm font-normal">
-              @{user?.username}
-            </span>
-          </div>
-          <Avatar
-            size={50}
-            src={user?.image}
-            alt="Profile"
-            className="border border-gray-200 shadow-sm"
-          />
+        <div
+          className="flex items-center gap-2 cursor-pointer px-2 py-3 hover:bg-red-100 max-w-[145px] hover:rounded-xl"
+          onClick={() => setShowLogoutModal(true)}
+        >
+          <img src="/icons/logout-icon.svg" alt="icon" width={24} height={24} />
+          <p className="text-[#FF5D5D] text-base font-normal">Logout</p>
         </div>
+
+        <LogoutModal
+          open={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleLogoutConfirm}
+        />
       </div>
 
       <NotificationDrawer

@@ -15,6 +15,7 @@ import MyActivity from "../components/myActivity/MyActivity";
 import ChatLayout from "../components/chats/ChatLayout";
 import GoogleSuccess from "../components/auth/GoogleSuccess";
 import UserProfile from "../components/othersProfile/othersProfile";
+import ContactsList from "../components/contacts/Contactlist";
 
 const AppRouter: React.FC = () => {
   return (
@@ -43,6 +44,7 @@ const AppRouter: React.FC = () => {
           <Route path="home" element={<Home />} />
           <Route path="activity" element={<MyActivity />} />
           <Route path="chats" element={<ChatLayout />} />
+          <Route path="contacts" element={<ContactsList />} />
           <Route path="settings" element={<ProfileOptions />} />
           <Route path="/othersProfile/:userId" element={<UserProfile />} />
         </Route>

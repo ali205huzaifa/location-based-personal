@@ -64,6 +64,10 @@ class PostAPI {
   static checkRelation(id: string) {
     return axiosClient.get(`/contacts/relationships/${id}`);
   }
+
+  static RemoveContact(id: string) {
+    return axiosClient.delete(`/contacts/${id}`);
+  }
 }
 
 export default PostAPI;

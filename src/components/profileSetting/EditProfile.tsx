@@ -134,8 +134,9 @@ const EditProfile: React.FC = () => {
           <div className="text-[#000000] text-sm font-normal mb-3">
             Display Image
           </div>
-          <div className="flex justify-start">
-            <div className="relative inline-block">
+
+          <div className="flex items-center space-x-12 w-full">
+            <div className="relative">
               <Avatar size={80} src={image} className="border-none" />
 
               <button
@@ -149,14 +150,31 @@ const EditProfile: React.FC = () => {
                   className="w-6 h-6 text-sm p-1"
                 />
               </button>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                onChange={handleImageChange}
-              />
             </div>
+
+            <div className="flex items-center bg-white rounded-xl px-4 py-3 space-x-3 flex-1">
+              <img
+                src="/icons/location-icon.svg"
+                alt="location"
+                className="w-5 h-5"
+              />
+              <div>
+                <p className="text-black text-base font-normal">
+                  {currentUser?.location || "unknown"}
+                </p>
+                <p className="text-[#666666] text-xs font-normal">
+                  Current Location
+                </p>
+              </div>
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleImageChange}
+            />
           </div>
         </div>
 

@@ -59,11 +59,6 @@ const NewGroupModal: React.FC<NewGroupModalProps> = ({
   );
 
   useEffect(() => {
-    if (!open) return;
-    handleSearch(search);
-  }, [search, open, handleSearch]);
-
-  useEffect(() => {
     if (open) {
       isFirstOpen.current = true;
       fetchContacts();
@@ -71,13 +66,12 @@ const NewGroupModal: React.FC<NewGroupModalProps> = ({
   }, [open]);
 
   useEffect(() => {
-    if (!open && isFirstOpen.current) {
-      setSelected([]);
-      setSearch("");
-      setContacts([]);
-      setLoading(false);
+    if (!open) return;
+
+    if (search.trim() !== "") {
+      handleSearch(search);
     }
-  }, [open]);
+  }, [search, open, handleSearch]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) =>

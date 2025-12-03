@@ -11,7 +11,7 @@ const ProfileOptions: React.FC = () => {
   const menuItems = [
     {
       key: "Edit Profile",
-      icon: <img src="/icons/profile-icon.svg" alt="Notifications" />,
+      icon: <img src="/icons/profile-icon.svg" alt="Profile" />,
       label: "Edit Profile",
     },
     {
@@ -54,8 +54,8 @@ const ProfileOptions: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-6 px-2 pb-2 rounded-xl min-h-[600px]">
-      <div className="xl:w-80 md:w-64 border-r border-l border-gray-200 xl:px-4 md:px-2 pt-4">
+    <div className="flex gap-6 px-2 pb-2 rounded-xl h-full">
+      <div className="xl:w-80 md:w-64 border-r border-l border-gray-200 xl:px-4 md:px-2 pt-4 flex-shrink-0">
         <div className="flex flex-col space-y-2 gap-1">
           {menuItems.map((item) => (
             <div
@@ -75,7 +75,7 @@ const ProfileOptions: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
         <div className="w-full h-full rounded-xl border-gray-100 shadow-none">
           {renderContent()}
         </div>

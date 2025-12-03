@@ -9,8 +9,8 @@ class ChatAPI {
     return axiosClient.get("/chat/");
   }
 
-  static getMessagesbyChatId(chatId: string) {
-    return axiosClient.get(`/chat/${chatId}/messages`);
+  static getMessagesbyChatId(chatId: string, params = {}) {
+    return axiosClient.get(`/chat/${chatId}/messages`, { params });
   }
 
   static OnetoOneChat(data = {}) {

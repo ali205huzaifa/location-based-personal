@@ -159,6 +159,15 @@ const MyActivity: React.FC = () => {
     return () => div.removeEventListener("scroll", handleScroll);
   }, [hasMore, offset, loadingMore]);
 
+  // useEffect(() => {
+  //   if (
+  //     (activeTab === "posts" ? posts : interactions).length === 0 &&
+  //     loadingMore
+  //   ) {
+  //     setLoadingMore(false);
+  //   }
+  // }, [activeTab, posts, interactions, loadingMore]);
+
   const MapCard: React.FC<MapCardProps> = ({
     image,
     caption,
@@ -251,13 +260,14 @@ const MyActivity: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col bg-[#F9FAFB] h-full">
-      <div className="flex gap-4 px-2 flex-1">
+    <div className="flex flex-col h-full min-h-0 bg-[#F9FAFB]">
+      <div className="flex gap-4 px-2 flex-1 min-h-0">
         <div className="flex-1 flex flex-col gap-4 w-full min-w-0">
-          <div className="flex flex-col gap-4 xl:px-20 lg:px-4 md:px-2">
-            <div className="flex items-center lg:gap-2 xl:gap-6 md:gap-1">
+          <div className="flex flex-col gap-4 xl:px-20 px-0">
+            <div className="flex items-center lg:gap-2 xl:gap-6 md:gap-4">
               <Avatar
                 size={120}
+                className="shrink-0"
                 src={user?.image || "/icons/default-avatar.png"}
               />
               <div>
@@ -285,13 +295,19 @@ const MyActivity: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <p className="text-gray-500 text-sm mt-4">{user?.bio}</p>
+
+                <p className="text-gray-500 text-sm mt-4">
+                  {user?.bio
+                    ? user.bio.slice(0, 81) +
+                      (user.bio.length > 81 ? "..." : "")
+                    : ""}
+                </p>
               </div>
             </div>
 
             <Button
               type="primary"
-              className="w-full rounded-lg py-2 !bg-white !text-[#8869F3] border-[#8869F3] !h-10"
+              className="w-full rounded-lg py-2 !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3] !h-10"
               onClick={() => navigate("/settings")}
             >
               Edit Profile
@@ -317,7 +333,7 @@ const MyActivity: React.FC = () => {
             />
           </div>
 
-          <div className="relative w-full h-full rounded-lg overflow-hidden">
+          <div className="relative w-full flex-1 min-h-0 rounded-lg">
             {isLoaded ? (
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
@@ -347,16 +363,45 @@ const MyActivity: React.FC = () => {
                                 className="relative flex flex-col items-center"
                                 onMouseEnter={() => setPopupPostId(post._id)}
                                 onMouseLeave={() => setPopupPostId(null)}
+                                onClick={() => handlePostClick(post)}
                               >
-                                <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
-                                  <img
-                                    src={
-                                      post.media?.[0]?.url ||
-                                      "/images/default-chat-profile.svg"
-                                    }
-                                    alt="pin"
-                                    className="object-cover w-full h-full"
-                                  />
+                                <div
+                                  className="
+        w-[4.5rem] h-[4.5rem] rounded-full 
+        p-[4px] bg-white shadow-xl 
+        border-4 border-[#8869F3]/80 
+        overflow-hidden relative
+      "
+                                  style={{
+                                    transform: "translateY(-10px)",
+                                  }}
+                                >
+                                  <div className="w-full h-full rounded-full overflow-hidden">
+                                    <img
+                                      src={
+                                        post.media?.[0]?.url ||
+                                        "/images/default-chat-profile.svg"
+                                      }
+                                      alt="pin"
+                                      className="object-cover w-full h-full"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="absolute bottom-[-15px] w-10 h-10 rounded-full flex items-center justify-center">
+                                  <div
+                                    className="absolute w-full h-full rounded-full"
+                                    style={{
+                                      backgroundColor: "#8869F3",
+                                      opacity: 0.25,
+                                      boxShadow:
+                                        "0 0 10px 10px rgba(136, 105, 243, 0.5)",
+                                    }}
+                                  ></div>
+
+                                  <div className="absolute w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                                    <div className="w-4 h-4 rounded-full bg-[#8869F3]"></div>
+                                  </div>
                                 </div>
                                 <AnimatePresence>
                                   {isHovered && (
@@ -382,7 +427,7 @@ const MyActivity: React.FC = () => {
                                               alt=""
                                               className="w-4 h-4 mr-1"
                                             />
-                                            {post.likes || 0}
+                                            {post.interaction?.likesCount}
                                           </span>
                                           <span className="flex items-center">
                                             <img
@@ -390,7 +435,7 @@ const MyActivity: React.FC = () => {
                                               alt=""
                                               className="w-4 h-4 mr-1"
                                             />
-                                            {post.comments || 0}
+                                            {post.interaction?.commentCount}
                                           </span>
                                           <span className="flex items-center">
                                             <img
@@ -398,7 +443,7 @@ const MyActivity: React.FC = () => {
                                               alt=""
                                               className="w-4 h-4 mr-1"
                                             />
-                                            {post.shares || 0}
+                                            {post.interaction?.shareCount}
                                           </span>
                                         </div>
                                         <p className="text-gray-600 line-clamp-2 mt-1 mb-1">
@@ -429,20 +474,48 @@ const MyActivity: React.FC = () => {
           ref={rightSidebarRef}
           className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 no-scrollbar"
         >
-          {(activeTab === "posts" ? posts : interactions).map((post) => (
-            <MapCard
-              key={post._id}
-              image={post.media?.[0]?.url}
-              caption={post.content}
-              likes={post.interaction?.likesCount || 0}
-              comments={post.interaction?.commentCount || 0}
-              shares={0}
-              location={post.address}
-              username={post.user?.username}
-              onClick={() => handlePostClick(post)}
-              onShare={() => setIsShareOpen(true)}
-            />
-          ))}
+          {(() => {
+            const list = activeTab === "posts" ? posts : interactions;
+            const isEmpty = list.length === 0;
+            const label = activeTab === "posts" ? "posts" : "interactions";
+
+            return (
+              <>
+                {isEmpty && !loadingMore && (
+                  <p className="text-center !text-[#8869F3] text-base mt-8">
+                    No {label} yet — check back soon!
+                  </p>
+                )}
+
+                {list.map((item) => (
+                  <MapCard
+                    key={item._id}
+                    image={item.media?.[0]?.url}
+                    caption={item.content}
+                    likes={item.interaction?.likesCount || 0}
+                    comments={item.interaction?.commentCount || 0}
+                    shares={0}
+                    location={item.address}
+                    username={item.user?.username}
+                    onClick={() => handlePostClick(item)}
+                    onShare={() => setIsShareOpen(true)}
+                  />
+                ))}
+
+                {/* {loadingMore && (
+                  <div className="w-full flex justify-center py-4 text-gray-500">
+                    <Spin size="small" />
+                  </div>
+                )}
+
+                {!hasMore && list.length >= 10 && (
+                  <p className="text-center text-xs text-gray-400 py-4">
+                    No more {label} to load.
+                  </p>
+                )} */}
+              </>
+            );
+          })()}
         </div>
       </div>
 

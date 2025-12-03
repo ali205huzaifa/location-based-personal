@@ -7,24 +7,106 @@ const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          reject(error.message || "Unable to fetch location.");
+        }
+      );
+    });
+  };
+
+  const getLocationString = async (
+    lat: number,
+    lng: number
+  ): Promise<string> => {
+    try {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+      if (!apiKey) {
+        console.error("Google Maps API Key is missing!");
+        return "Unknown";
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+      );
+
+      const data = await response.json();
+
+      if (!data.results || data.results.length === 0) return "Unknown";
+
+      const addressComponents = data.results[0].address_components;
+
+      let city = "Unknown";
+      let country = "Unknown";
+
+      addressComponents.forEach((component: any) => {
+        if (component.types.includes("locality")) {
+          city = component.long_name;
+        }
+
+        // Fallback if locality missing (common in some countries)
+        if (
+          component.types.includes("administrative_area_level_2") &&
+          city === "Unknown"
+        ) {
+          city = component.long_name;
+        }
+
+        if (component.types.includes("country")) {
+          country = component.long_name;
+        }
+      });
+
+      return `${city}, ${country}`;
+    } catch (error) {
+      console.error("Google Maps reverse geocoding error:", error);
+      return "Unknown";
+    }
+  };
+
   const handleSignup = async (values: any) => {
-    const payload = {
-      fullName: values.fullName,
-      username: values.username,
-      email: values.email,
-      password: values.password,
-      dob: values.dob,
-    };
+    setLoading(true);
 
     try {
-      setLoading(true);
+      const coords: any = await getUserLocation().catch(() => {
+        // message.error(
+        //   "Location access is required for signup. Please allow location access and try again."
+        // );
+        throw new Error("Location permission denied");
+      });
+
+      const locationString = await getLocationString(coords.lat, coords.lng);
+
+      const payload = {
+        fullName: values.fullName,
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        dob: values.dob,
+        location: locationString,
+      };
+
       const { data } = await AuthAPI.SignUp(payload);
       message.success(data.message || "Account created successfully!");
-
       navigate("/verify", { state: { email: values.email } });
     } catch (error: any) {
       const errMsg =
         error?.response?.data?.message ||
+        error?.message ||
         "Something went wrong. Please try again.";
       message.error(errMsg);
     } finally {
@@ -34,32 +116,32 @@ const Signup: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="md:w-1/2 w-full flex flex-col justify-center items-start text-left bg-violet-500/10 p-10 sm:p-8">
-        <div className="max-w-xl">
-          <div className="flex items-center">
+      <div className="md:w-1/2 w-full flex flex-col justify-center items-center text-left bg-violet-500/10 px-8">
+        <div className="max-w-xl mx-auto">
+          <div className="flex items-center py-8">
             <img
               src="/icons/logo.svg"
               alt="Logo"
-              className="h-24 w-auto object-contain cursor-pointer mb-4"
+              className="h-24 w-auto object-contain cursor-pointer"
             />
           </div>
           <h2 className="text-[#000000] text-4xl font-semibold mb-3 leading-snug">
             Join the Community, Start Connecting
           </h2>
-          <p className="text-[#666666] text-2xl font-normal leading-relaxed mb-16">
+          <p className="text-[#666666] text-2xl font-normal leading-relaxed mb-4">
             Create your account and explore people, posts, and stories around
             you — your local world is waiting!
           </p>
 
           <img
             src="/images/login.svg"
-            alt="Signup illustration"
-            className="xl:max-w-lg lg:max-w-md md:max-w-xs mx-auto"
+            alt="Login"
+            className="xl:max-w-[596px] lg:max-w-[466px] md:max-w-[350px] mx-auto"
           />
         </div>
       </div>
 
-      <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 py-10 bg-white">
+      <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 bg-white">
         <div className="w-full max-w-md">
           <h2 className="text-black text-4xl font-medium mb-8">Signup</h2>
 
@@ -248,15 +330,17 @@ const Signup: React.FC = () => {
               />
             </div>
 
-            <p className="text-center !mt-8 text-gray-600 text-sm font-normal">
-              Already have an account?{" "}
-              <span
-                onClick={() => navigate("/login")}
-                className="text-[#7C4DFF] cursor-pointer hover:underline"
-              >
-                Login
-              </span>
-            </p>
+            <div className="!mt-12">
+              <p className="text-center !mt-8 text-gray-600 text-sm font-normal">
+                Already have an account?{" "}
+                <span
+                  onClick={() => navigate("/login")}
+                  className="text-[#7C4DFF] cursor-pointer hover:underline"
+                >
+                  Login
+                </span>
+              </p>
+            </div>
           </Form>
         </div>
       </div>

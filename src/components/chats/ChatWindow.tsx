@@ -29,9 +29,8 @@ interface Member {
 interface ChatData {
   _id: string;
   type?: string;
-  members?: string[];
   messages?: MessageFromAPI[];
-  memberDetails?: Member[];
+  members?: Member[];
 }
 
 interface ChatWindowProps {
@@ -51,12 +50,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true);
   const socketRef = useRef<Socket | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [offset, setOffset] = useState(0);
+  const limit = 10;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isFetchingMoreRef = useRef(false);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatData?.messages]);
+    if (isUserAtBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    }
+  }, [chatData?.messages, isUserAtBottom]);
 
   useEffect(() => {
     (async () => {
@@ -182,83 +190,88 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setChatData(null);
 
       try {
-        let data: any = null;
+        let chatIdToFetch = selectedChatId;
+        let chatDataResponse: any = null;
 
-        if (isExistingChat) {
-          const res = await ChatAPI.getMessagesbyChatId(selectedChatId);
+        if (!isExistingChat) {
+          const res = await ChatAPI.OnetoOneChat({
+            participantId: selectedChatId,
+          });
+          chatDataResponse = res?.data;
 
-          const apiMessages = Array.isArray(res.data?.data)
-            ? res.data.data
-            : Array.isArray(res.data)
-            ? res.data
-            : [];
+          if (typeof chatDataResponse === "string") {
+            chatIdToFetch = chatDataResponse;
+          } else {
+            chatIdToFetch = chatDataResponse?._id || chatIdToFetch;
+          }
 
-          const members =
-            apiMessages[0]?.chat?.members?.map((m: any) => ({
+          if (socketRef.current && chatIdToFetch) {
+            socketRef.current.emit("joinChat", chatIdToFetch);
+          }
+        }
+
+        const res2 = await ChatAPI.getMessagesbyChatId(chatIdToFetch, {
+          limit,
+          offset: 0,
+        });
+        setOffset(limit);
+
+        const messages = Array.isArray(res2.data?.data) ? res2.data.data : [];
+
+        const members = Array.isArray(res2.data?.members)
+          ? res2.data.members.map((m: any) => ({
               _id: m._id,
               fullName: m.fullName,
               username: m.username,
               userPublicKey: m.userPublicKey,
               image: m.image,
-            })) || [];
+            }))
+          : [];
+        const data = {
+          _id: res2.data?.chat?._id || chatIdToFetch,
+          type: res2.data?.chat?.type || "direct",
+          messages,
+          members: members,
+        };
 
-          data = {
-            _id: selectedChatId,
-            messages: apiMessages,
-            memberDetails: members,
-          };
-        } else {
-          const res = await ChatAPI.OnetoOneChat({
-            participantId: selectedChatId,
-          });
-          data = res?.data;
-          if (data && socketRef.current)
-            socketRef.current.emit("joinChat", data._id);
+        setChatData(data);
+
+        const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
+        if (!myPrivateKeyBase64) {
+          console.warn("Missing private key — skipping decryption.");
+          return;
         }
 
-        if (data) {
-          setChatData(data);
+        (window as any)._decryptedMessages =
+          (window as any)._decryptedMessages || {};
 
-          const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
-          if (!myPrivateKeyBase64) {
-            console.warn(
-              "Private key missing - skipping decryption of fetched messages"
-            );
-            return;
-          }
+        for (const msg of data.messages || []) {
+          try {
+            const isSender = msg.senderId?._id === user._id;
+            const ciphertext = isSender
+              ? msg.ciphertext?.forSender
+              : msg.ciphertext?.forRecipient;
+            const nonce = isSender
+              ? msg.nonce?.forSender
+              : msg.nonce?.forRecipient;
+            const senderPublicKey = msg.senderId?.userPublicKey;
 
-          (window as any)._decryptedMessages =
-            (window as any)._decryptedMessages || {};
-
-          for (const msg of data.messages || []) {
-            try {
-              const isSender = msg.senderId?._id === user._id;
-              const ciphertext = isSender
-                ? msg.ciphertext?.forSender
-                : msg.ciphertext?.forRecipient;
-              const nonce = isSender
-                ? msg.nonce?.forSender
-                : msg.nonce?.forRecipient;
-              const senderPublicKey = msg.senderId?.userPublicKey;
-
-              if (ciphertext && nonce && senderPublicKey) {
-                const plaintext = await decryptMessage(
-                  ciphertext,
-                  nonce,
-                  senderPublicKey,
-                  myPrivateKeyBase64,
-                  msg._id
-                );
-                (window as any)._decryptedMessages[msg._id] = plaintext;
-              } else {
-                (window as any)._decryptedMessages[msg._id] =
-                  "[Missing encryption data]";
-              }
-            } catch (err) {
-              console.error("Failed to decrypt message", msg._id, err);
+            if (ciphertext && nonce && senderPublicKey) {
+              const plaintext = await decryptMessage(
+                ciphertext,
+                nonce,
+                senderPublicKey,
+                myPrivateKeyBase64,
+                msg._id
+              );
+              (window as any)._decryptedMessages[msg._id] = plaintext;
+            } else {
               (window as any)._decryptedMessages[msg._id] =
-                "[Failed to decrypt]";
+                "[Missing encryption data]";
             }
+          } catch (err) {
+            console.error("Failed decrypt:", msg._id, err);
+            (window as any)._decryptedMessages[msg._id] = "[Failed to decrypt]";
           }
         }
       } catch (error) {
@@ -282,7 +295,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       return;
     }
 
-    const other = chatData.memberDetails?.find((m) => m._id !== user._id);
+    const other = chatData.members?.find((m) => m._id !== user._id);
     const receiverPublicKey = other?.userPublicKey?.trim();
     if (!receiverPublicKey) {
       console.error("Receiver public key missing");
@@ -353,7 +366,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
       const myPublicKeyBase64 = localStorage.getItem("publicKey")?.trim();
-      const other = chatData.memberDetails?.find((m) => m._id !== user._id);
+      const other = chatData.members?.find((m) => m._id !== user._id);
       const receiverPublicKey = other?.userPublicKey?.trim();
 
       if (!myPrivateKeyBase64 || !myPublicKeyBase64 || !receiverPublicKey) {
@@ -423,7 +436,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
     );
 
-  const otherUser = chatData?.memberDetails?.find((m) => m._id !== user?._id);
+  const otherUser = chatData?.members?.find((m) => m._id !== user?._id);
   const avatar = otherUser?.image || "/images/default-chat-profile.svg";
   const username = otherUser?.username;
   const fullName = otherUser?.fullName;
@@ -445,6 +458,81 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return "[Encrypted message]";
   };
 
+  const loadMoreMessages = async () => {
+    if (!chatData?._id || isFetchingMoreRef.current) return;
+
+    isFetchingMoreRef.current = true;
+
+    try {
+      const res = await ChatAPI.getMessagesbyChatId(chatData._id, {
+        limit,
+        offset,
+      });
+
+      const newMessages = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+
+      if (!newMessages.length) {
+        isFetchingMoreRef.current = false;
+        return;
+      }
+
+      setOffset((p) => p + limit);
+
+      const container = containerRef.current;
+      const oldScrollHeight = container?.scrollHeight ?? 0;
+
+      setChatData((prev) =>
+        prev
+          ? { ...prev, messages: [...newMessages, ...(prev.messages || [])] }
+          : prev
+      );
+
+      setTimeout(() => {
+        if (container) {
+          const newScrollHeight = container.scrollHeight;
+          container.scrollTop = newScrollHeight - oldScrollHeight;
+        }
+      }, 0);
+
+      const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
+      if (myPrivateKeyBase64) {
+        for (const msg of newMessages) {
+          try {
+            const isSender = msg.senderId?._id === user!._id;
+            const ciphertext = isSender
+              ? msg.ciphertext?.forSender
+              : msg.ciphertext?.forRecipient;
+            const nonce = isSender
+              ? msg.nonce?.forSender
+              : msg.nonce?.forRecipient;
+            const senderPublicKey = msg.senderId?.userPublicKey;
+
+            let plaintext = "[Failed to decrypt]";
+            if (ciphertext && nonce && senderPublicKey) {
+              plaintext = await decryptMessage(
+                ciphertext,
+                nonce,
+                senderPublicKey,
+                myPrivateKeyBase64,
+                msg._id
+              );
+            }
+
+            (window as any)._decryptedMessages[msg._id] = plaintext;
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.error("Lazy loading failed", err);
+    } finally {
+      isFetchingMoreRef.current = false;
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-white rounded-xl ml-4 mr-4 mb-4">
       <div className="flex items-center p-4 border-b">
@@ -459,7 +547,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
+      <div
+        className="flex-1 overflow-y-auto p-4 no-scrollbar"
+        ref={containerRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const threshold = 120;
+
+          const distanceFromBottom =
+            el.scrollHeight - el.scrollTop - el.clientHeight;
+          setIsUserAtBottom(distanceFromBottom < threshold);
+          if (el.scrollTop <= 0) loadMoreMessages();
+        }}
+      >
         {chatData && chatData.messages && chatData.messages.length > 0 ? (
           chatData.messages.map((msg, index) => {
             const isMine = msg.senderId?._id === user?._id;

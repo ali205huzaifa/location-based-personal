@@ -288,7 +288,7 @@ const Home: React.FC = () => {
                 setMainSearchValue(e.target.value);
                 setSearchOpen(true);
               }}
-              className="!h-12 !text-sm !w-full !rounded-xl"
+              className="!h-12 !text-sm !w-full !rounded-xl custom-input"
             />
 
             {searchOpen && (
@@ -336,17 +336,45 @@ const Home: React.FC = () => {
                           className="relative flex flex-col items-center"
                           onMouseEnter={() => setPopupPostId(post._id)}
                           onMouseLeave={() => setPopupPostId(null)}
+                          onClick={() => handlePostClick(post)}
                         >
-                          <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
-                            <img
-                              src={
-                                post.media?.[0]?.url ||
-                                post.user?.image ||
-                                "/icons/default-avatar.png"
-                              }
-                              alt="pin"
-                              className="object-cover w-full h-full"
-                            />
+                          <div
+                            className="
+        w-[4.5rem] h-[4.5rem] rounded-full 
+        p-[4px] bg-white shadow-xl 
+        border-4 border-[#8869F3]/80 
+        overflow-hidden relative
+      "
+                            style={{
+                              transform: "translateY(-10px)",
+                            }}
+                          >
+                            <div className="w-full h-full rounded-full overflow-hidden">
+                              <img
+                                src={
+                                  post.media?.[0]?.url ||
+                                  "/images/default-chat-profile.svg"
+                                }
+                                alt="pin"
+                                className="object-cover w-full h-full"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="absolute bottom-[-15px] w-10 h-10 rounded-full flex items-center justify-center">
+                            <div
+                              className="absolute w-full h-full rounded-full"
+                              style={{
+                                backgroundColor: "#8869F3",
+                                opacity: 0.25,
+                                boxShadow:
+                                  "0 0 10px 10px rgba(136, 105, 243, 0.5)",
+                              }}
+                            ></div>
+
+                            <div className="absolute w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                              <div className="w-4 h-4 rounded-full bg-[#8869F3]"></div>
+                            </div>
                           </div>
 
                           <AnimatePresence>

@@ -108,9 +108,9 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="md:w-1/2 w-full flex flex-col justify-end items-start bg-violet-500/10 p-6 sm:p-8 2xl:!pb-64 xl:!pb-32 lg:!pb-48 md:!pb-60 !pb-64">
+      <div className="md:w-1/2 w-full flex flex-col justify-center items-center bg-violet-500/10 px-8">
         <div className="max-w-xl mx-auto">
-          <div className="flex items-center mb-12 mt-12">
+          <div className="flex items-center py-8">
             <img
               src="/icons/logo.svg"
               alt="Logo"
@@ -118,7 +118,7 @@ const LoginPage: React.FC = () => {
             />
           </div>
           <h1 className="text-4xl font-semibold text-black">Welcome Back!</h1>
-          <p className=" max-w-[442px] py-8 !text-[#666666] lg:text-2xl md:text-lg !font-light mb-4">
+          <p className=" max-w-[442px] py-4 !text-[#666666] lg:text-2xl md:text-lg !font-light">
             Login to continue exploring what's happening around you.
           </p>
           <img
@@ -129,7 +129,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 py-10 bg-white">
+      <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 bg-white">
         <div className="w-full max-w-sm">
           <h2 className="text-black text-4xl font-medium mb-8">Login</h2>
 
@@ -152,7 +152,7 @@ const LoginPage: React.FC = () => {
               <Input
                 placeholder="Enter your Email"
                 size="large"
-                className="rounded-xl !h-12 border border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
+                className="rounded-xl !h-12 border border-gray-300 focus:border-![#7C4DFF] hover:!border-[#7C4DFF]"
               />
             </Form.Item>
 
@@ -185,7 +185,7 @@ const LoginPage: React.FC = () => {
                   )
                 }
                 size="large"
-                className="rounded-xl !h-12 border border-gray-300 focus:border-[#7C4DFF] hover:border-[#7C4DFF]"
+                className="rounded-xl !h-12 border border-gray-300 focus:border-![#7C4DFF] hover:!border-[#7C4DFF]"
               />
             </Form.Item>
 
