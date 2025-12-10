@@ -21,7 +21,7 @@ export interface User {
   bio?: string;
   image?: string;
   language?: string;
-  location?: string;
+  location?: any;
 }
 
 export interface Interviewer {

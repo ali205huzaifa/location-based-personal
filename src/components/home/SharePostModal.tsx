@@ -48,7 +48,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
         id: contact.grantedTo?._id || contact._id,
         name: contact.grantedTo?.fullName || "Unknown",
         username: contact.grantedTo?.username || "",
-        avatar: contact.grantedTo?.avatar || "",
+        avatar: contact.grantedTo?.image || "",
       }));
 
       setUsers(formattedUsers);

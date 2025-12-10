@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, Input, Button, Divider, DatePicker, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthAPI from "../../api/authApi/AuthAPI";
@@ -6,6 +6,26 @@ import AuthAPI from "../../api/authApi/AuthAPI";
 const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const [userLocation, setUserLocation] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchLocationOnLoad = async () => {
+      try {
+        const coords: any = await getUserLocation();
+        const locationString = await getLocationString(coords.lat, coords.lng);
+
+        setUserLocation({
+          coords,
+          locationString,
+        });
+      } catch (error) {
+        message.warning("Please allow location access for better experience.");
+      }
+    };
+
+    fetchLocationOnLoad();
+  }, []);
 
   const getUserLocation = () => {
     return new Promise((resolve, reject) => {
@@ -82,14 +102,10 @@ const Signup: React.FC = () => {
     setLoading(true);
 
     try {
-      const coords: any = await getUserLocation().catch(() => {
-        // message.error(
-        //   "Location access is required for signup. Please allow location access and try again."
-        // );
-        throw new Error("Location permission denied");
-      });
-
-      const locationString = await getLocationString(coords.lat, coords.lng);
+      if (!userLocation) {
+        message.error("Location is required. Please allow location access.");
+        return;
+      }
 
       const payload = {
         fullName: values.fullName,
@@ -97,7 +113,7 @@ const Signup: React.FC = () => {
         email: values.email,
         password: values.password,
         dob: values.dob,
-        location: locationString,
+        location: userLocation.locationString,
       };
 
       const { data } = await AuthAPI.SignUp(payload);

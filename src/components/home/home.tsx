@@ -5,12 +5,15 @@ import {
   useJsApiLoader,
   MarkerClusterer,
   OverlayView,
+  Marker,
 } from "@react-google-maps/api";
 import PostModal from "./PostModal";
 import SharePostModal from "./SharePostModal";
 import PostAPI from "../../api/postApi/PostAPI";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchModal from "./SearchModal";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 
 interface MapCardProps {
   image: string;
@@ -22,6 +25,8 @@ interface MapCardProps {
   onClick: () => void;
   isAd?: boolean;
   username: string;
+  isLiked: boolean;
+  onLike: () => void;
 }
 
 const mapContainerStyle = {
@@ -30,9 +35,9 @@ const mapContainerStyle = {
   borderRadius: "8px",
 };
 
-const defaultCenter = { lat: 30.3753, lng: 69.3451 };
-
 const Home: React.FC = () => {
+  const currentUser = useSelector((state: RootState) => state.auth.currentUser);
+  const [mapCenter, setMapCenter] = useState({ lat: 24.7136, lng: 46.6753 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -55,6 +60,29 @@ const Home: React.FC = () => {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
     libraries: ["places"],
   });
+
+  useEffect(() => {
+    if (!currentUser?.location) return;
+
+    const geocodeLocation = async () => {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            currentUser.location
+          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+        );
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const { lat, lng } = data.results[0].geometry.location;
+          setMapCenter({ lat, lng });
+        }
+      } catch (error) {
+        console.error("Error geocoding location:", error);
+      }
+    };
+
+    geocodeLocation();
+  }, [currentUser?.location]);
 
   const fetchPosts = async (offsetValue = 0) => {
     try {
@@ -86,6 +114,63 @@ const Home: React.FC = () => {
     fetchPosts(0);
   }, []);
 
+  const handleLikeUpdate = (
+    postId: string,
+    liked: boolean,
+    likeCount: number
+  ) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p._id === postId
+          ? {
+              ...p,
+              interaction: {
+                ...p.interaction,
+                likesCount: likeCount,
+              },
+              isLikedByMe: liked,
+            }
+          : p
+      )
+    );
+
+    setSelectedPost((prev: any) =>
+      prev && prev._id === postId
+        ? {
+            ...prev,
+            interaction: {
+              ...prev.interaction,
+              likesCount: likeCount,
+            },
+            isLikedByMe: liked,
+          }
+        : prev
+    );
+  };
+
+  const handleLike = async (post: any) => {
+    const postId = post._id;
+
+    const prevLikeState = {
+      liked: post.isLikedByMe,
+      likeCount: post.interaction?.likesCount,
+    };
+
+    const newLikedState = !prevLikeState.liked;
+    const newLikeCount = prevLikeState.liked
+      ? prevLikeState.likeCount - 1
+      : prevLikeState.likeCount + 1;
+
+    handleLikeUpdate(postId, newLikedState, newLikeCount);
+
+    try {
+      await PostAPI.likePost(postId);
+    } catch (err) {
+      console.error("Error updating like:", err);
+      handleLikeUpdate(postId, prevLikeState.liked, prevLikeState.likeCount);
+    }
+  };
+
   useEffect(() => {
     const div = rightSidebarRef.current;
     if (!div) return;
@@ -112,6 +197,8 @@ const Home: React.FC = () => {
     shares,
     location,
     onClick,
+    isLiked,
+    onLike,
   }) => {
     const hasImage = Boolean(image);
     const trimmedCaption =
@@ -141,13 +228,21 @@ const Home: React.FC = () => {
               hasImage ? "mb-2" : "mt-1"
             }`}
           >
-            <span className="flex items-center">
+            <span
+              className="flex items-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                onLike();
+              }}
+            >
               <img
-                src="/icons/heart-icon.svg"
+                src={
+                  isLiked ? "/icons/redheart-icon.svg" : "/icons/heart-icon.svg"
+                }
                 alt="Likes"
                 className="w-4 h-4 mr-1"
               />
-              {likes || 0}
+              {likes}
             </span>
 
             <span className="flex items-center">
@@ -312,11 +407,21 @@ const Home: React.FC = () => {
         <div className="relative w-full h-full rounded-lg overflow-hidden">
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
-            center={defaultCenter}
-            zoom={6}
+            center={mapCenter}
+            zoom={12}
             onLoad={onLoad}
             onUnmount={onUnmount}
           >
+            {currentUser?.location && mapCenter && (
+              <Marker
+                position={mapCenter}
+                icon={{
+                  url: "/icons/location-marker.svg",
+                  scaledSize: new window.google.maps.Size(44, 44),
+                }}
+              />
+            )}
+
             <MarkerClusterer averageCenter enableRetinaIcons gridSize={60}>
               {() => (
                 <>
@@ -337,19 +442,10 @@ const Home: React.FC = () => {
                           onMouseEnter={() => setPopupPostId(post._id)}
                           onMouseLeave={() => setPopupPostId(null)}
                           onClick={() => handlePostClick(post)}
+                          style={{ transform: "translate(-50%, -100%)" }}
                         >
-                          <div
-                            className="
-        w-[4.5rem] h-[4.5rem] rounded-full 
-        p-[4px] bg-white shadow-xl 
-        border-4 border-[#8869F3]/80 
-        overflow-hidden relative
-      "
-                            style={{
-                              transform: "translateY(-10px)",
-                            }}
-                          >
-                            <div className="w-full h-full rounded-full overflow-hidden">
+                          <div className="h-24 w-24 rounded-full bg-white p-1.5 shadow-lg relative z-20">
+                            <div className="h-full w-full rounded-full border-4 border-[#8869F3] overflow-hidden">
                               <img
                                 src={
                                   post.media?.[0]?.url ||
@@ -361,7 +457,13 @@ const Home: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="absolute bottom-[-15px] w-10 h-10 rounded-full flex items-center justify-center">
+                          <div
+                            className="-mt-1.5 h-0 w-0
+      border-l-[24px] border-l-transparent
+      border-r-[20px] border-r-transparent
+      border-t-[24px] border-t-white relative z-20"
+                          ></div>
+                          <div className="absolute bottom-[-15px] -left-4 w-8 h-8 rounded-full flex items-center justify-center">
                             <div
                               className="absolute w-full h-full rounded-full"
                               style={{
@@ -457,9 +559,11 @@ const Home: React.FC = () => {
             likes={post.interaction?.likesCount || 0}
             comments={post.interaction?.commentCount || 0}
             shares={post.interaction?.shareCount || 0}
+            isLiked={post.isLikedByMe}
             location={post.address}
             username={post.user?.username}
             onClick={() => handlePostClick(post)}
+            onLike={() => handleLike(post)}
           />
         ))}
 
@@ -481,7 +585,9 @@ const Home: React.FC = () => {
         onClose={handleModalClose}
         post={selectedPost}
         onPostDeleted={refreshPosts}
+        onLikeUpdate={handleLikeUpdate}
       />
+
       <SharePostModal
         visible={isShareOpen}
         onClose={() => setIsShareOpen(false)}

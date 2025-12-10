@@ -8,24 +8,25 @@ const { Text } = Typography;
 
 interface ChatListProps {
   selectedChatId: string | null;
-  onSelectChat: (id: string, isChat: boolean) => void;
+  onSelectChat: (id: string, isChat: boolean, type: "direct" | "Group") => void;
   onOpenNewGroup: () => void;
   refreshChats: boolean;
 }
 
 interface Contact {
-  grantedTo: string;
-  user: {
-    _id: string;
-    fullName: string;
-    username: string;
-    image?: string;
-  };
+  _id: string;
+  fullName: string;
+  username: string;
+  image?: string;
+  type?: string;
+  chatId: string;
+  chatName: string;
+  chatType: string;
 }
 
 interface Chat {
   _id: string;
-  type: string;
+  type: "direct" | "Group";
   name?: string;
   members: {
     _id: string;
@@ -74,9 +75,9 @@ const ChatList: React.FC<ChatListProps> = ({
       setLoadingContacts(true);
 
       try {
-        const res = await ChatAPI.getMyContacts({ username: search });
-        if (Array.isArray(res?.data?.data)) {
-          setContacts(res.data.data);
+        const res = await ChatAPI.getSearchedCotacts({ q: search });
+        if (Array.isArray(res?.data)) {
+          setContacts(res.data);
         } else {
           setContacts([]);
         }
@@ -107,7 +108,7 @@ const ChatList: React.FC<ChatListProps> = ({
 
     return (
       <List.Item
-        onClick={() => onSelectChat(chat._id, true)}
+        onClick={() => onSelectChat(chat._id, true, chat.type)}
         className={`cursor-pointer px-2 !py-10 transition-colors !h-16 !border-none ${
           selectedChatId === chat._id ? "bg-gray-100" : "!hover:bg-[#EFEFEF]"
         }`}
@@ -127,20 +128,44 @@ const ChatList: React.FC<ChatListProps> = ({
     );
   };
 
-  const renderContactItem = (contact: Contact) => {
-    const u = contact.user;
-    const avatar = u.image || "/images/default-chat-profile.svg";
+  const renderContactItem = (item: Contact) => {
+    const isGroup = item.type === "chat" && item.chatType === "Group";
+    const GroupImage = item.image || "/images/default-chat-profile.svg";
+    if (isGroup) {
+      return (
+        <List.Item
+          onClick={() => onSelectChat(item.chatId, false, "Group")}
+          className="cursor-pointer px-2 !py-10 transition-colors !h-16 !border-none hover:bg-gray-50"
+        >
+          <List.Item.Meta
+            avatar={<Avatar src={GroupImage} size={50} />}
+            title={
+              <div className="text-black text-base mt-1">
+                {item.chatName || "Unnamed Group"}
+              </div>
+            }
+            description={
+              <div className="text-stone-500 text-sm">Group Chat</div>
+            }
+          />
+        </List.Item>
+      );
+    }
+
+    const avatar = item.image || "/images/default-chat-profile.svg";
 
     return (
       <List.Item
-        onClick={() => onSelectChat(u._id, false)}
+        onClick={() => onSelectChat(item._id, false, "direct")}
         className="cursor-pointer px-2 !py-10 transition-colors !h-16 !border-none hover:bg-gray-50"
       >
         <List.Item.Meta
           avatar={<Avatar src={avatar} size={50} />}
-          title={<div className="text-black text-base mt-1">{u.fullName}</div>}
+          title={
+            <div className="text-black text-base mt-1">{item.fullName}</div>
+          }
           description={
-            <div className="text-stone-500 text-sm">@{u.username}</div>
+            <div className="text-stone-500 text-sm">@{item.username}</div>
           }
         />
       </List.Item>
@@ -160,13 +185,12 @@ const ChatList: React.FC<ChatListProps> = ({
           className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666]"
         />
 
-        {/* Clear Icon (shows only when there is text) */}
         {search && (
           <button
             onClick={() => setSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-[24px] -translate-y-1/2 !text-gray-400"
           >
-            ✕
+            <img src="/icons/cross-icon.svg" alt="Icon" className="w-5 h-5" />
           </button>
         )}
       </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
-import { Spin } from "antd";
+import { Spin, message } from "antd";
 import { io, Socket } from "socket.io-client";
 import sodium from "libsodium-wrappers";
 import ChatAPI from "../../api/chatApi/ChatAPI";
@@ -197,6 +197,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           const res = await ChatAPI.OnetoOneChat({
             participantId: selectedChatId,
           });
+
           chatDataResponse = res?.data;
 
           if (typeof chatDataResponse === "string") {
@@ -227,6 +228,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               image: m.image,
             }))
           : [];
+
         const data = {
           _id: res2.data?.chat?._id || chatIdToFetch,
           type: res2.data?.chat?.type || "direct",
@@ -274,8 +276,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             (window as any)._decryptedMessages[msg._id] = "[Failed to decrypt]";
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching chat:", error);
+        const apiMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "Something went wrong";
+
+        message.error(apiMessage);
       } finally {
         setLoading(false);
       }

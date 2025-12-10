@@ -195,23 +195,23 @@ const AddPostModal: React.FC<PostModalProps> = ({
 
     setLoading(true);
 
+    const payload: any = {
+      content: text,
+      visibility,
+      location: {
+        type: "Point",
+        coordinates: [coords.lng, coords.lat],
+      },
+    };
+
+    if (!isEditMode) {
+      payload.media = files.map((f) => ({
+        url: f.url!,
+        type: f.type?.startsWith("video") ? "video" : "image",
+      }));
+    }
+
     try {
-      const payload: any = {
-        content: text,
-        visibility,
-        location: {
-          type: "Point",
-          coordinates: [coords.lng, coords.lat],
-        },
-      };
-
-      if (!isEditMode) {
-        payload.media = files.map((f) => ({
-          url: f.url!,
-          type: f.type?.startsWith("video") ? "video" : "image",
-        }));
-      }
-
       if (isEditMode) {
         await PostAPI.updatePostById(editPostData.data._id, payload);
         message.success("Post updated!");
@@ -219,16 +219,24 @@ const AddPostModal: React.FC<PostModalProps> = ({
         await AddPostAPI.createPost(payload);
         message.success("Post created!");
         window.location.reload();
+        return;
       }
+    } catch (err) {
+      console.error("Submit error:", err);
+      message.error("Failed to submit.");
+      setLoading(false);
+      return;
+    }
 
+    try {
       onCloseAll?.();
       postsRefetch?.();
-      onClose();
-    } catch (err) {
-      message.error("Failed to submit.");
-    } finally {
-      setLoading(false);
+      onClose?.();
+    } catch (uiError) {
+      console.warn("UI cleanup error:", uiError);
     }
+
+    setLoading(false);
   };
 
   return (

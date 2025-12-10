@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input, Spin, Popover, Button, Modal } from "antd";
 import SharePostModal from "./SharePostModal";
@@ -19,6 +19,7 @@ interface PostModalProps {
   onClose: () => void;
   post: any | null;
   onPostDeleted: any;
+  onLikeUpdate: (postId: string, liked: boolean, likeCount: number) => void;
 }
 
 const MediaRenderer: React.FC<any> = ({ mediaItem }) => {
@@ -39,6 +40,7 @@ const PostModal: React.FC<PostModalProps> = ({
   onClose,
   post,
   onPostDeleted,
+  onLikeUpdate,
 }) => {
   if (!post) return null;
   const navigate = useNavigate();
@@ -68,31 +70,27 @@ const PostModal: React.FC<PostModalProps> = ({
     "none" | "added" | "friends"
   >("none");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible && post?._id) {
       fetchComments(post._id);
       fetchPostInteraction(post._id);
     }
-  }, [visible, post]);
+  }, [visible]);
 
-  React.useEffect(() => {
-    if (post) {
+  useEffect(() => {
+    if (visible && post) {
       setLikeCount(post?.interaction?.likesCount ?? 0);
-      setIsLiked(post?.interaction?.isLiked ?? false);
+      setIsLiked(post?.interaction?.liked ?? false);
     }
-  }, [post]);
+  }, [visible]);
 
-  React.useEffect(() => {
-    if (post?.user?._id) {
+  useEffect(() => {
+    if (visible && post?.user?._id) {
       PostAPI.checkRelation(post.user._id)
-        .then((res) => {
-          setContactStatus(res.data.status);
-        })
-        .catch((err) => {
-          console.error("Error checking relation:", err);
-        });
+        .then((res) => setContactStatus(res.data.status))
+        .catch((err) => console.error("Error checking relation:", err));
     }
-  }, [post]);
+  }, [visible]);
 
   const user = post.user || {};
   const mediaItems = post.media || [];
@@ -135,33 +133,31 @@ const PostModal: React.FC<PostModalProps> = ({
   const handleLike = async () => {
     const previousIsLiked = isLiked;
     const previousLikeCount = likeCount;
-
-    setIsLiked(!previousIsLiked);
-    setLikeCount(
-      previousIsLiked ? previousLikeCount - 1 : previousLikeCount + 1
-    );
-
+    const newIsLiked = !previousIsLiked;
+    console.log(newIsLiked);
+    const newLikeCount = newIsLiked
+      ? previousLikeCount + 1
+      : previousLikeCount - 1;
+    setIsLiked(newIsLiked);
+    setLikeCount(newLikeCount);
+    onLikeUpdate(post._id, newIsLiked, newLikeCount);
     try {
       const res = await PostAPI.likePost(post._id);
       const data = res?.data?.data;
-
       if (data) {
         setIsLiked(data.liked);
         setLikeCount(data.likesCount);
+        onLikeUpdate(post._id, data.liked, data.likesCount);
       }
     } catch (err: any) {
-      console.error(err);
-      message.error(
-        err.response?.data?.message || "Failed to process like/unlike"
-      );
-
       setIsLiked(previousIsLiked);
       setLikeCount(previousLikeCount);
+      onLikeUpdate(post._id, previousIsLiked, previousLikeCount);
     }
   };
 
   const handleSubmitComment = async () => {
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || post.isCommentDisabled) return;
 
     const payload = {
       content: commentText,
@@ -172,6 +168,9 @@ const PostModal: React.FC<PostModalProps> = ({
       await PostAPI.commentOnPost(post._id, payload);
       setCommentText("");
       setParentCommentId(null);
+      setLikeCount((prev: any) => prev);
+      post.interaction.commentCount = (post.interaction.commentCount || 0) + 1;
+
       fetchComments(post._id);
     } catch (err) {
       console.error("Error posting comment:", err);
@@ -179,7 +178,7 @@ const PostModal: React.FC<PostModalProps> = ({
   };
 
   const handleSubmitReply = async (parentId: string) => {
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || post.isCommentDisabled) return;
 
     const payload = {
       content: commentText,
@@ -189,6 +188,9 @@ const PostModal: React.FC<PostModalProps> = ({
     try {
       await PostAPI.commentOnPost(post._id, payload);
       setCommentText("");
+
+      post.interaction.commentCount = (post.interaction.commentCount || 0) + 1;
+
       fetchComments(post._id);
     } catch (err) {
       console.error("Error posting reply:", err);
@@ -306,7 +308,7 @@ const PostModal: React.FC<PostModalProps> = ({
               </span>
             </div>
 
-            {activeReplyId === c._id && (
+            {activeReplyId === c._id && !post.isCommentDisabled && (
               <div className="mt-3">
                 <Input
                   value={commentText}
@@ -314,14 +316,14 @@ const PostModal: React.FC<PostModalProps> = ({
                   placeholder={`Reply to @${c.user.username}`}
                   suffix={
                     <span
-                      className="text-purple-600 cursor-pointer"
+                      className="text-[#8869F3] cursor-pointer"
                       onClick={() => {
                         handleSubmitReply(c._id);
                         setActiveReplyId(null);
                         setCommentText("");
                       }}
                     >
-                      Post
+                      Submit
                     </span>
                   }
                   className="rounded-xl h-10"
@@ -425,105 +427,109 @@ const PostModal: React.FC<PostModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                {currentUser && user && currentUser._id === user._id ? (
-                  <Popover
-                    open={popoverVisible}
-                    onOpenChange={setPopoverVisible}
-                    content={
-                      <div className="flex flex-col items-start gap-1 text-base! font-normal!">
-                        <Button
-                          type="text"
-                          className="ml-1 !text-black text-base! font-normal!"
-                          icon={
-                            <img
-                              src="/icons/edit-icon.svg"
-                              alt="edit"
-                              className="w-4 h-4"
-                            />
-                          }
-                          onClick={async () => {
-                            setPopoverVisible(false);
-                            try {
-                              const res = await PostAPI.getPostById(post._id);
-                              setPostData(res.data);
-                              setEditModalVisible(true);
-                            } catch (err) {
-                              message.error("Failed to fetch post details!");
+              {!post.systemGenerated && (
+                <div className="flex items-center justify-between">
+                  {currentUser && user && currentUser._id === user._id ? (
+                    <Popover
+                      open={popoverVisible}
+                      onOpenChange={setPopoverVisible}
+                      content={
+                        <div className="flex flex-col items-start gap-1 text-base! font-normal!">
+                          <Button
+                            type="text"
+                            className="ml-1 !text-black text-base! font-normal!"
+                            icon={
+                              <img
+                                src="/icons/edit-icon.svg"
+                                alt="edit"
+                                className="w-4 h-4"
+                              />
                             }
-                          }}
-                        >
-                          Edit Post
-                        </Button>
-                        <Button
-                          type="text"
-                          className="!text-[#FF5D5D] text-base! font-normal!"
-                          danger
-                          icon={
-                            <img
-                              src="/icons/delete-icon.svg"
-                              alt="edit"
-                              className="w-5 h-5"
-                            />
-                          }
-                          onClick={() => {
-                            setPopoverVisible(false);
-                            setDeleteModalVisible(true);
-                          }}
-                        >
-                          Delete Post
-                        </Button>{" "}
-                      </div>
-                    }
-                    trigger="click"
-                    placement="bottomRight"
-                  >
-                    <Button
-                      shape="circle"
-                      icon={
-                        <img
-                          src="/icons/dots-icon.svg"
-                          alt="edit"
-                          className="w-5 h-5"
-                        />
+                            onClick={async () => {
+                              setPopoverVisible(false);
+                              try {
+                                const res = await PostAPI.getPostById(post._id);
+                                setPostData(res.data);
+                                setEditModalVisible(true);
+                              } catch (err) {
+                                message.error("Failed to fetch post details!");
+                              }
+                            }}
+                          >
+                            Edit Post
+                          </Button>
+                          <Button
+                            type="text"
+                            className="!text-[#FF5D5D] text-base! font-normal!"
+                            danger
+                            icon={
+                              <img
+                                src="/icons/delete-icon.svg"
+                                alt="edit"
+                                className="w-5 h-5"
+                              />
+                            }
+                            onClick={() => {
+                              setPopoverVisible(false);
+                              setDeleteModalVisible(true);
+                            }}
+                          >
+                            Delete Post
+                          </Button>{" "}
+                        </div>
                       }
-                      className="mr-2"
-                    />{" "}
-                  </Popover>
-                ) : (
-                  <div
-                    className="flex items-center gap-6 cursor-pointer"
-                    onClick={
-                      contactStatus === "none" ? handleAddToContact : undefined
-                    }
-                  >
-                    <img
-                      src={
+                      trigger="click"
+                      placement="bottomRight"
+                    >
+                      <Button
+                        shape="circle"
+                        icon={
+                          <img
+                            src="/icons/dots-icon.svg"
+                            alt="edit"
+                            className="w-5 h-5"
+                          />
+                        }
+                        className="mr-2"
+                      />{" "}
+                    </Popover>
+                  ) : (
+                    <div
+                      className="flex items-center gap-6 cursor-pointer"
+                      onClick={
                         contactStatus === "none"
-                          ? "/icons/AddUser-icon.svg"
-                          : contactStatus === "added"
-                          ? "/icons/contactAdded-icon.svg"
-                          : "/icons/contactAdded-icon.svg"
+                          ? handleAddToContact
+                          : undefined
                       }
-                      alt={
-                        contactStatus === "none"
+                    >
+                      <img
+                        src={
+                          contactStatus === "none"
+                            ? "/icons/AddUser-icon.svg"
+                            : contactStatus === "added"
+                            ? "/icons/contactAdded-icon.svg"
+                            : "/icons/contactAdded-icon.svg"
+                        }
+                        alt={
+                          contactStatus === "none"
+                            ? "Add to contact"
+                            : contactStatus === "added"
+                            ? "Request sent"
+                            : "Friends"
+                        }
+                        className="w-5 h-5"
+                      />{" "}
+                      <span className="text-[#8869F3] text-base font-light">
+                        {contactStatus === "none"
                           ? "Add to contact"
                           : contactStatus === "added"
-                          ? "Request sent"
-                          : "Friends"
-                      }
-                      className="w-5 h-5"
-                    />{" "}
-                    <span className="text-[#8869F3] text-base font-light">
-                      {contactStatus === "none"
-                        ? "Add to contact"
-                        : contactStatus === "added"
-                        ? "Request Sent"
-                        : "Friends"}{" "}
-                    </span>{" "}
-                  </div>
-                )}
-              </div>
+                          ? "Request Sent"
+                          : "Friends"}{" "}
+                      </span>{" "}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="max-h-60 overflow-y-auto px-4 py-4 border-b border-gray-200 flex-shrink-0">
@@ -620,16 +626,23 @@ const PostModal: React.FC<PostModalProps> = ({
               <Input
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Add a comment..."
+                placeholder={
+                  post.isCommentDisabled
+                    ? "Comments are disabled"
+                    : "Add a comment..."
+                }
                 suffix={
-                  <span
-                    className="text-purple-600 font-medium cursor-pointer"
-                    onClick={handleSubmitComment}
-                  >
-                    Submit
-                  </span>
+                  !post.isCommentDisabled && (
+                    <span
+                      className="text-[#8869F3] font-medium cursor-pointer"
+                      onClick={handleSubmitComment}
+                    >
+                      Submit
+                    </span>
+                  )
                 }
                 className="rounded-xl py-1 px-3 h-12"
+                disabled={post.isCommentDisabled}
               />
             </div>
           </div>

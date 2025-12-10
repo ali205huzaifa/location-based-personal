@@ -12,6 +12,7 @@ import {
   GoogleMap,
   useJsApiLoader,
   MarkerClusterer,
+  Marker,
 } from "@react-google-maps/api";
 import PostAPI from "../../api/postApi/PostAPI";
 import { OverlayView } from "@react-google-maps/api";
@@ -27,6 +28,8 @@ interface MapCardProps {
   onClick: () => void;
   onShare: () => void;
   username: string;
+  isLiked: boolean;
+  onLike: () => void;
 }
 
 const mapContainerStyle = {
@@ -35,12 +38,12 @@ const mapContainerStyle = {
   borderRadius: "12px",
 };
 
-const defaultCenter = { lat: 30.3753, lng: 69.3451 };
 const libraries: "places"[] = ["places"];
 
 const UserProfile: React.FC = () => {
   const { userId } = useParams();
   const user = useSelector((state: RootState) => state.auth.currentUser);
+  const [mapCenter, setMapCenter] = useState({ lat: 24.7136, lng: 46.6753 });
   const [activeTab, setActiveTab] = useState<"posts" | "interactions">("posts");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -72,6 +75,29 @@ const UserProfile: React.FC = () => {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
     libraries,
   });
+
+  useEffect(() => {
+    if (!user?.location) return;
+
+    const geocodeLocation = async () => {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            user.location
+          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+        );
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const { lat, lng } = data.results[0].geometry.location;
+          setMapCenter({ lat, lng });
+        }
+      } catch (error) {
+        console.error("Error geocoding location:", error);
+      }
+    };
+
+    geocodeLocation();
+  }, [user?.location]);
 
   const fetchProfile = useCallback(async () => {
     if (!userId) return;
@@ -110,14 +136,23 @@ const UserProfile: React.FC = () => {
           limit,
           offset: offsetValue,
         });
-        setPosts(postsResponse.data?.data || []);
+
+        const newPosts = postsResponse.data?.data?.posts || [];
+
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p._id));
+          const filtered = newPosts.filter((p: any) => !existingIds.has(p._id));
+          return [...prev, ...filtered];
+        });
 
         setOffset(offsetValue + limit);
-        if (postsResponse.data?.nextPage === null) {
+        if (postsResponse.data?.data?.nextPage === null) {
           setHasMore(false);
         }
       } catch (error) {
         console.error("Error fetching posts:", error);
+      } finally {
+        setLoadingMore(false);
       }
     },
     [userId, profileUser, isOwnProfile, contactStatus]
@@ -147,9 +182,9 @@ const UserProfile: React.FC = () => {
         media: p.media || [],
         location: p.location || null,
         address: p.address || "",
-        interactions: {
-          likesCount: p.summary?.likesCount || 0,
-          commentCount: p.summary?.commentCount || 0,
+        interaction: {
+          likesCount: p.summary?.likesCount,
+          commentCount: p.summary?.commentCount,
         },
       }));
 
@@ -199,6 +234,63 @@ const UserProfile: React.FC = () => {
     setSelectedPost(null);
   };
 
+  const handleLikeUpdate = (
+    postId: string,
+    liked: boolean,
+    likeCount: number
+  ) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p._id === postId
+          ? {
+              ...p,
+              interaction: {
+                ...p.interaction,
+                likesCount: likeCount,
+              },
+              isLikedByMe: liked,
+            }
+          : p
+      )
+    );
+
+    setSelectedPost((prev: any) =>
+      prev && prev._id === postId
+        ? {
+            ...prev,
+            interaction: {
+              ...prev.interaction,
+              likesCount: likeCount,
+            },
+            isLikedByMe: liked,
+          }
+        : prev
+    );
+  };
+
+  const handleLike = async (post: any) => {
+    const postId = post._id;
+
+    const prevLikeState = {
+      liked: post.isLikedByMe,
+      likeCount: post.interaction?.likesCount,
+    };
+
+    const newLikedState = !prevLikeState.liked;
+    const newLikeCount = prevLikeState.liked
+      ? prevLikeState.likeCount - 1
+      : prevLikeState.likeCount + 1;
+
+    handleLikeUpdate(postId, newLikedState, newLikeCount);
+
+    try {
+      await PostAPI.likePost(postId);
+    } catch (err) {
+      console.error("Error updating like:", err);
+      handleLikeUpdate(postId, prevLikeState.liked, prevLikeState.likeCount);
+    }
+  };
+
   useEffect(() => {
     const div = rightSidebarRef.current;
     if (!div) return;
@@ -217,14 +309,14 @@ const UserProfile: React.FC = () => {
     return () => div.removeEventListener("scroll", handleScroll);
   }, [hasMore, offset, loadingMore]);
 
-  // useEffect(() => {
-  //   if (
-  //     (activeTab === "posts" ? posts : interactions).length === 0 &&
-  //     loadingMore
-  //   ) {
-  //     setLoadingMore(false);
-  //   }
-  // }, [activeTab, posts, interactions, loadingMore]);
+  useEffect(() => {
+    if (
+      (activeTab === "posts" ? posts : interactions).length === 0 &&
+      loadingMore
+    ) {
+      setLoadingMore(false);
+    }
+  }, [activeTab, posts, interactions, loadingMore]);
 
   const MapCard: React.FC<MapCardProps> = ({
     image,
@@ -235,6 +327,8 @@ const UserProfile: React.FC = () => {
     location,
     onClick,
     onShare,
+    isLiked,
+    onLike,
   }) => {
     const hasImage = Boolean(image);
 
@@ -262,10 +356,18 @@ const UserProfile: React.FC = () => {
           </p>
 
           <div className="flex items-start justify-start text-gray-600 text-sm gap-3 mb-2">
-            <span className="flex items-center">
+            <span
+              className="flex items-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                onLike();
+              }}
+            >
               <img
-                src="/icons/heart-icon.svg"
-                alt=""
+                src={
+                  isLiked ? "/icons/redheart-icon.svg" : "/icons/heart-icon.svg"
+                }
+                alt="Likes"
                 className="w-4 h-4 mr-1"
               />
               {likes}
@@ -440,11 +542,20 @@ const UserProfile: React.FC = () => {
                 {isLoaded ? (
                   <GoogleMap
                     mapContainerStyle={mapContainerStyle}
-                    center={defaultCenter}
-                    zoom={6}
+                    center={mapCenter}
+                    zoom={12}
                     onLoad={onLoad}
                     onUnmount={onUnmount}
                   >
+                    {user?.location && mapCenter && (
+                      <Marker
+                        position={mapCenter}
+                        icon={{
+                          url: "/icons/location-marker.svg",
+                          scaledSize: new window.google.maps.Size(44, 44),
+                        }}
+                      />
+                    )}
                     <MarkerClusterer
                       averageCenter
                       enableRetinaIcons
@@ -473,19 +584,12 @@ const UserProfile: React.FC = () => {
                                     }
                                     onMouseLeave={() => setPopupPostId(null)}
                                     onClick={() => handlePostClick(post)}
+                                    style={{
+                                      transform: "translate(-50%, -100%)",
+                                    }}
                                   >
-                                    <div
-                                      className="
-        w-[4.5rem] h-[4.5rem] rounded-full 
-        p-[4px] bg-white shadow-xl 
-        border-4 border-[#8869F3]/80 
-        overflow-hidden relative
-      "
-                                      style={{
-                                        transform: "translateY(-10px)",
-                                      }}
-                                    >
-                                      <div className="w-full h-full rounded-full overflow-hidden">
+                                    <div className="h-24 w-24 rounded-full bg-white p-1.5 shadow-lg relative z-20">
+                                      <div className="h-full w-full rounded-full border-4 border-[#8869F3] overflow-hidden">
                                         <img
                                           src={
                                             post.media?.[0]?.url ||
@@ -497,7 +601,13 @@ const UserProfile: React.FC = () => {
                                       </div>
                                     </div>
 
-                                    <div className="absolute bottom-[-15px] w-10 h-10 rounded-full flex items-center justify-center">
+                                    <div
+                                      className="-mt-1.5 h-0 w-0
+      border-l-[24px] border-l-transparent
+      border-r-[20px] border-r-transparent
+      border-t-[24px] border-t-white relative z-20"
+                                    ></div>
+                                    <div className="absolute bottom-[-15px] -left-4 w-8 h-8 rounded-full flex items-center justify-center">
                                       <div
                                         className="absolute w-full h-full rounded-full"
                                         style={{
@@ -606,25 +716,27 @@ const UserProfile: React.FC = () => {
                       caption={item.content}
                       likes={item.interaction?.likesCount || 0}
                       comments={item.interaction?.commentCount || 0}
+                      isLiked={item.isLikedByMe}
                       shares={0}
                       location={item.address}
                       username={item.user?.username}
                       onClick={() => handlePostClick(item)}
                       onShare={() => setIsShareOpen(true)}
+                      onLike={() => handleLike(item)}
                     />
                   ))}
 
-                  {/* {loadingMore && (
-                  <div className="w-full flex justify-center py-4 text-gray-500">
-                    <Spin size="small" />
-                  </div>
-                )}
+                  {loadingMore && (
+                    <div className="w-full flex justify-center py-4 text-gray-500">
+                      <Spin size="small" />
+                    </div>
+                  )}
 
-                {!hasMore && list.length >= 10 && (
-                  <p className="text-center text-xs text-gray-400 py-4">
-                    No more {label} to load.
-                  </p>
-                )} */}
+                  {!hasMore && list.length >= 10 && (
+                    <p className="text-center text-xs text-gray-400 py-4">
+                      No more {label} to load.
+                    </p>
+                  )}
                 </>
               );
             })()}
@@ -637,6 +749,7 @@ const UserProfile: React.FC = () => {
         onClose={handleModalClose}
         post={selectedPost}
         onPostDeleted={""}
+        onLikeUpdate={handleLikeUpdate}
       />
       <SharePostModal
         visible={isShareOpen}

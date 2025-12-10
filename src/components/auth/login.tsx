@@ -24,9 +24,15 @@ const LoginPage: React.FC = () => {
   }) => {
     try {
       setLoading(true);
+
+      const fcmPushToken = "123";
+      const platform = "web";
+
       const loginRes = await AuthAPI.logIn({
         email: values.username,
         password: values.password,
+        fcmPushToken,
+        platform,
       });
 
       const api_token = loginRes.data.data.token;

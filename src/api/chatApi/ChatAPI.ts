@@ -20,6 +20,10 @@ class ChatAPI {
   static createGroup(data = {}) {
     return axiosClient.post("/chat/group", data);
   }
+
+  static getSearchedCotacts(params = {}) {
+    return axiosClient.get("/chat/search", { params });
+  }
 }
 
 export default ChatAPI;
