@@ -182,6 +182,7 @@ const UserProfile: React.FC = () => {
         media: p.media || [],
         location: p.location || null,
         address: p.address || "",
+        isLikedByMe: p.isLikedByMe || false,
         interaction: {
           likesCount: p.summary?.likesCount,
           commentCount: p.summary?.commentCount,
@@ -240,6 +241,21 @@ const UserProfile: React.FC = () => {
     likeCount: number
   ) => {
     setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p._id === postId
+          ? {
+              ...p,
+              interaction: {
+                ...p.interaction,
+                likesCount: likeCount,
+              },
+              isLikedByMe: liked,
+            }
+          : p
+      )
+    );
+
+    setInteractions((prevPosts) =>
       prevPosts.map((p) =>
         p._id === postId
           ? {
@@ -546,6 +562,14 @@ const UserProfile: React.FC = () => {
                     zoom={12}
                     onLoad={onLoad}
                     onUnmount={onUnmount}
+                    options={{
+                      minZoom: 14,
+                      maxZoom: 18,
+                      zoomControl: false,
+                      mapTypeControl: false,
+                      streetViewControl: false,
+                      fullscreenControl: false,
+                    }}
                   >
                     {user?.location && mapCenter && (
                       <Marker
@@ -629,7 +653,7 @@ const UserProfile: React.FC = () => {
                                           animate={{ opacity: 1, y: 0 }}
                                           exit={{ opacity: 0, y: 20 }}
                                           transition={{ duration: 0.25 }}
-                                          className="absolute bottom-14 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
+                                          className="absolute bottom-28 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
                                         >
                                           {post.media?.length > 0 && (
                                             <img

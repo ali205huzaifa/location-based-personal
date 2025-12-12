@@ -5,7 +5,9 @@ import { decryptMessage } from "../../util/Decryption";
 import { encryptForChat } from "../../util/Encryption";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
-import { Spin } from "antd";
+import { Spin, message } from "antd";
+import { MediaType } from "./chat-enum";
+import AddPostAPI from "../../api/addPostApi/AddPostAPI";
 
 interface ChatMember {
   _id: string;
@@ -18,9 +20,19 @@ interface Chat {
   _id: string;
   type: string;
   members: ChatMember[];
+  messages?: Message[];
   keyId?: { keyId: string }[];
   name?: string;
   description?: string;
+  GroupName?: string;
+  image?: string;
+}
+
+interface MediaItem {
+  url: string;
+  type: string;
+  _id?: string;
+  publicId?: string;
 }
 
 interface Message {
@@ -30,6 +42,7 @@ interface Message {
   senderUsername?: string;
   content: string;
   createdAt: string;
+  media?: MediaItem[];
 }
 
 interface GroupChatWindowProps {
@@ -52,6 +65,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   const [hasMore, setHasMore] = useState(true);
   const socketRef = useRef<Socket | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -206,23 +220,41 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         return null;
       }
 
-      //   const isSender = sender._id.toString() === user?._id;
-      //   const isGroupChat =
-      //     (chatData.chat?.type ?? msg.chat?.type)?.toLowerCase() === "group";
+      if (Array.isArray(msg.media) && msg.media.length > 0) {
+        return {
+          _id: msg._id,
+          sender: sender._id,
+          senderName: sender.fullName,
+          senderUsername: sender.username,
+          content: "",
+          media: msg.media.map((m: any) => ({
+            url: m.url,
+            type: m.type,
+            _id: m._id,
+            publicId: m.publicId,
+          })),
+          createdAt: msg.createdAt,
+        };
+      }
 
-      //   console.log(
-      //     `\n[GROUP] Processing msg ${msg._id}`,
-      //     "Sender:",
-      //     sender?.username,
-      //     "IsSender:",
-      //     isSender
-      //   );
-
-      let content: string;
-
-      const keyId =
-        msg.groupCiphertext?.keyId || chatData.chat?.keyVersions?.[0]?.keyId;
-      content = await decryptGroupMessage(msg, chatData.chat._id, keyId);
+      let content = "[Failed to decrypt]";
+      const isGroup = !!(
+        msg.groupCiphertext && Object.keys(msg.groupCiphertext).length
+      );
+      if (isGroup) {
+        const keyId =
+          msg.groupCiphertext?.keyId || chatData?.chat?.keyVersions?.[0]?.keyId;
+        content = await decryptGroupMessage(msg, chatData?.chat?._id, keyId);
+      } else {
+        const isSender = String(sender._id) === String(user?._id);
+        content = await decryptMessage(
+          isSender ? msg.ciphertext?.forSender : msg.ciphertext?.forRecipient,
+          isSender ? msg.nonce?.forSender : msg.nonce?.forRecipient,
+          sender.userPublicKey,
+          myPrivateKeyBase64 ?? "",
+          msg._id
+        );
+      }
 
       return {
         _id: msg._id,
@@ -239,10 +271,22 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   };
 
   const loadMoreMessages = async (chatId: string) => {
-    const res = await fetch(`${API_BASE}/chat/${chatId}/messages`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE}/chat/${chatId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const decrypted = await Promise.all(
+        (data.data ?? []).map((m: any) => processMessage(m, data))
+      );
+      const cleaned = decrypted.filter(Boolean) as Message[];
+      setMessages((prev) => [...cleaned, ...prev]);
+
+      setOffset((data.offset ?? 0) + (data.limit ?? cleaned.length));
+      setHasMore(Boolean(data.nextPage));
+    } catch (err) {
+      console.error("GROUP-ERROR loadMoreMessages", err);
+    }
   };
 
   const sendMessage = async () => {
@@ -255,7 +299,6 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
     try {
       if (isGroupChat) {
         const keyId = activeChat.keyId?.[0]?.keyId;
-        console.log(keyId);
         if (!keyId) {
           alert("Group key not available");
           return;
@@ -339,7 +382,41 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
     const handleNewMessage = async (msg: any) => {
       if (!msg) return;
+
+      const chatId = msg.chat?._id;
+
+      if (!activeChat || String(chatId) !== String(activeChat._id)) return;
+
       try {
+        if (Array.isArray(msg.media) && msg.media.length > 0) {
+          const newMsg: Message = {
+            _id: msg._id,
+            sender: msg.sender?._id,
+            senderName: msg.sender?.fullName,
+            senderUsername: msg.sender?.username,
+            content: "",
+            media: msg.media.map((m: any) => ({
+              url: m.url,
+              type: m.type,
+              _id: m._id,
+              publicId: m.publicId,
+            })),
+            createdAt: msg.createdAt,
+          };
+
+          setMessages((prev) => [...prev, newMsg]);
+          setActiveChat((prev) =>
+            prev
+              ? { ...prev, messages: [...(prev.messages || []), newMsg] }
+              : prev
+          );
+
+          if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+          }
+          return;
+        }
+
         const isGroup = msg.chat?.type?.toLowerCase() === "group";
         const isSender = String(msg.sender?._id) === String(myUserId);
         let content = "[Failed to decrypt]";
@@ -347,43 +424,40 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         if (isGroup) {
           const keyId =
             msg.groupCiphertext?.keyId || msg.chat?.keyVersions?.[0]?.keyId;
-          if (!keyId) {
-            content = "[Missing keyId]";
-          } else {
-            const groupSymKey = await getMyGroupSymKey(msg.chat._id, keyId);
-            if (!groupSymKey) {
-              content = "[Key decrypt failed]";
-            } else {
-              const uid = String(myUserId);
-              const cipherBase64 = msg.groupCiphertext?.ciphertexts?.[uid];
-              const nonceBase64 = msg.groupNonce?.nonces?.[uid];
 
-              if (!cipherBase64 || !nonceBase64) {
-                content = "[Missing cipher/nonce]";
-              } else {
-                try {
-                  const cipher = sodium.from_base64(
-                    cipherBase64,
-                    sodium.base64_variants.ORIGINAL
-                  );
-                  const nonce = sodium.from_base64(
-                    nonceBase64,
-                    sodium.base64_variants.ORIGINAL
-                  );
-                  const plain = sodium.crypto_secretbox_open_easy(
-                    cipher,
-                    nonce,
-                    groupSymKey
-                  );
-                  content = new TextDecoder().decode(plain);
-                } catch (e) {
-                  content = "[Decrypt failed]";
-                } finally {
-                  if (sodium.memzero) sodium.memzero(groupSymKey);
-                }
-              }
+          if (!keyId) return;
+
+          const groupSymKey = await getMyGroupSymKey(chatId, keyId);
+          if (!groupSymKey) return;
+
+          const uid = String(myUserId);
+          const cipherBase64 = msg.groupCiphertext?.ciphertexts?.[uid];
+          const nonceBase64 = msg.groupNonce?.nonces?.[uid];
+
+          if (!cipherBase64 || !nonceBase64) {
+            content = "[Decrypt failed]";
+          } else {
+            try {
+              const cipher = sodium.from_base64(
+                cipherBase64,
+                sodium.base64_variants.ORIGINAL
+              );
+              const nonce = sodium.from_base64(
+                nonceBase64,
+                sodium.base64_variants.ORIGINAL
+              );
+              const plain = sodium.crypto_secretbox_open_easy(
+                cipher,
+                nonce,
+                groupSymKey
+              );
+              content = new TextDecoder().decode(plain);
+            } catch {
+              content = "[Decrypt failed]";
             }
           }
+
+          if (sodium.memzero) sodium.memzero(groupSymKey);
         } else {
           content = await decryptMessage(
             isSender ? msg.ciphertext?.forSender : msg.ciphertext?.forRecipient,
@@ -393,18 +467,21 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
             msg._id
           );
         }
+        const newMsg: Message = {
+          _id: msg._id,
+          sender: msg.sender?._id,
+          senderName: msg.sender?.fullName,
+          senderUsername: msg.sender?.username,
+          content,
+          createdAt: msg.createdAt,
+        };
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            _id: msg._id,
-            sender: msg.sender?._id,
-            senderName: msg.sender?.fullName,
-            senderUsername: msg.sender?.username,
-            content,
-            createdAt: msg.createdAt,
-          },
-        ]);
+        setMessages((prev) => [...prev, newMsg]);
+        setActiveChat((prev) =>
+          prev
+            ? { ...prev, messages: [...(prev.messages || []), newMsg] }
+            : prev
+        );
       } catch (err) {
         console.error("handleNewMessage error", err);
       }
@@ -415,31 +492,85 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
     return () => {
       s.off("newMessage", handleNewMessage);
     };
-  }, [myUserId, myPrivateKeyBase64, members]);
+  }, [myUserId, myPrivateKeyBase64, members, activeChat]);
 
-  //   useEffect(() => {
-  //     if (!socketRef.current) return;
-  //     const s = socketRef.current;
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
 
-  //      const onTyping = (payload: any) => {
-  //        handle typing indicators (payload: { chatId, userId, isTyping })
-  //        implement UI as needed
-  //        console.debug("typing", payload);
-  //      };
+  const sendMediaMessage = async (
+    mediaUrl: string,
+    mediaType: MediaType,
+    publicId?: string
+  ) => {
+    if (!activeChat || !user?._id) return;
 
-  //      const onMessageSeen = (payload: any) => {
-  //        handle seen messages update
-  //         console.debug("seen", payload);
-  //      };
+    const media = [
+      {
+        url: mediaUrl,
+        type: mediaType,
+        publicId,
+      },
+    ];
 
-  //      s.on("typing", onTyping);
-  //      s.on("messageSeen", onMessageSeen);
+    socketRef.current?.emit("sendMessage", {
+      chatId: activeChat._id,
+      media,
+    });
 
-  //      return () => {
-  //        s.off("typing", onTyping);
-  //        s.off("messageSeen", onMessageSeen);
-  //     };
-  //   }, []);
+    const localMsg: Message = {
+      _id: `local-${Date.now()}`,
+      sender: user._id,
+      senderName: user.fullName,
+      senderUsername: user.username,
+      content: "",
+      media,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, localMsg]);
+    setActiveChat((prev: any) =>
+      prev ? { ...prev, messages: [...(prev.messages || []), localMsg] } : prev
+    );
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !activeChat || !user?._id) return;
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "video/mp4"];
+    if (!allowedTypes.includes(file.type)) {
+      message.error("Only PNG, JPEG/JPG, or MP4 files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      const uploadRes = await AddPostAPI.multiUploadMedia([file]);
+      const media = Array.isArray(uploadRes?.data) ? uploadRes.data[0] : null;
+
+      if (!media?.url) {
+        message.error("Upload failed — no URL returned!");
+        return;
+      }
+
+      let mediaType: MediaType;
+
+      if (file.type.startsWith("image")) mediaType = MediaType.IMAGE;
+      else if (file.type.startsWith("video")) mediaType = MediaType.VIDEO;
+      else if (file.type.startsWith("audio")) mediaType = MediaType.AUDIO;
+      else mediaType = MediaType.OTHER;
+
+      await sendMediaMessage(media.url, mediaType, media.publicId);
+    } catch (error) {
+      console.error("MEDIA UPLOAD ERROR:", error);
+      message.error("Failed to upload media.");
+    } finally {
+      e.target.value = "";
+    }
+  };
 
   if (!chatId)
     return (
@@ -455,14 +586,21 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
       </div>
     );
 
-  const otherTitle =
-    activeChat?.type === "group" ? (activeChat as any).name ?? "Group" : "Chat";
+  const isGroup = activeChat?.type?.toLowerCase() === "group";
+
+  const groupName = isGroup ? activeChat?.GroupName ?? "Group" : "Chat";
+  const groupImage = isGroup ? activeChat?.image ?? "" : "";
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white rounded-xl ml-4 mr-4 mb-4">
       <div className="flex items-center p-4 border-b">
+        <img
+          src={groupImage}
+          alt="image"
+          className="w-10 h-10 rounded-full mr-3"
+        />
         <div>
-          <h3 className="text-black text-base font-normal">{otherTitle}</h3>
+          <h3 className="text-black text-base font-normal">{groupName}</h3>
           <p className="text-[#666666] text-sm font-normal">
             {members.length ? `${members.length} members` : "Group"}
           </p>
@@ -500,7 +638,46 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
                     <div className="text-sm font-normal">
                       {msg.senderName ?? "Unknown"}{" "}
                     </div>
-                    {msg.content}
+                    {msg.content ? (
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    ) : null}
+
+                    {Array.isArray(msg.media) &&
+                      msg.media.length > 0 &&
+                      msg.media.map((m) => {
+                        if (!m?.url) return null;
+                        if ((m.type || "").startsWith("image")) {
+                          return (
+                            <img
+                              key={m._id ?? m.url}
+                              src={m.url}
+                              alt="shared"
+                              className="max-w-sm rounded-md mt-2"
+                            />
+                          );
+                        } else if ((m.type || "").startsWith("video")) {
+                          return (
+                            <video
+                              key={m._id ?? m.url}
+                              controls
+                              src={m.url}
+                              className="max-w-sm rounded-md mt-2"
+                            />
+                          );
+                        } else {
+                          return (
+                            <a
+                              key={m._id ?? m.url}
+                              href={m.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block mt-2 text-xs underline"
+                            >
+                              View file
+                            </a>
+                          );
+                        }
+                      })}
                   </div>
                 </div>
                 <div className="text-stone-500 text-xs font-light mt-1">
@@ -526,7 +703,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         <div className="relative w-full">
           <span
             className="absolute inset-y-0 left-3 flex items-center"
-            // onClick={handleAttachmentClick}
+            onClick={handleAttachmentClick}
           >
             <img
               src="/icons/attachment-icon.svg"
@@ -536,6 +713,13 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
               className="cursor-pointer"
             />
           </span>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
 
           <input
             type="text"

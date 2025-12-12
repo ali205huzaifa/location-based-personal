@@ -7,6 +7,8 @@ import sodium from "libsodium-wrappers";
 import ChatAPI from "../../api/chatApi/ChatAPI";
 import { encryptForChat } from "../../util/Encryption";
 import { decryptMessage } from "../../util/Decryption";
+import AddPostAPI from "../../api/addPostApi/AddPostAPI";
+import { MediaType } from "./chat-enum";
 
 interface MessageFromAPI {
   _id?: string;
@@ -358,103 +360,96 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     fileInputRef.current?.click();
   };
 
+  const sendMediaMessage = async (
+    mediaUrl: string,
+    mediaType: MediaType,
+    publicId?: string
+  ) => {
+    if (!chatData || !user?._id) return;
+
+    const media = [
+      {
+        url: mediaUrl,
+        type: mediaType,
+        publicId,
+      },
+    ];
+
+    socketRef.current?.emit("sendMessage", {
+      chatId: chatData._id,
+      media,
+    });
+
+    const localMsg: MessageFromAPI = {
+      _id: `local-${Date.now()}`,
+      chatId: chatData._id,
+      senderId: {
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+      },
+      media,
+      createdAt: new Date().toISOString(),
+    };
+
+    setChatData((prev) =>
+      prev ? { ...prev, messages: [...(prev.messages || []), localMsg] } : prev
+    );
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !chatData || !user?._id) return;
+
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = ["image/png", "image/jpeg", "video/mp4"];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "video/mp4"];
     if (!allowedTypes.includes(file.type)) {
-      alert("Only PNG, JPEG, or MP4 files are allowed.");
+      message.error("Only PNG, JPEG/JPG, or MP4 files are allowed.");
+      e.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64File = reader.result as string;
+    try {
+      const uploadRes = await AddPostAPI.multiUploadMedia([file]);
+      const media = Array.isArray(uploadRes?.data) ? uploadRes.data[0] : null;
 
-      const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
-      const myPublicKeyBase64 = localStorage.getItem("publicKey")?.trim();
-      const other = chatData.members?.find((m) => m._id !== user._id);
-      const receiverPublicKey = other?.userPublicKey?.trim();
-
-      if (!myPrivateKeyBase64 || !myPublicKeyBase64 || !receiverPublicKey) {
-        console.error("Keys missing - cannot send attachment");
+      if (!media?.url) {
+        message.error("Upload failed — no URL returned!");
         return;
       }
 
-      try {
-        const encrypted = await encryptForChat({
-          message: base64File,
-          myPrivateKeyBase64,
-          myPublicKeyBase64,
-          receiverPublicKeyBase64: receiverPublicKey,
-        });
+      let mediaType: MediaType;
 
-        socketRef.current?.emit("sendMessage", {
-          chatId: chatData._id,
-          ciphertext: encrypted.ciphertext,
-          nonce: encrypted.nonce,
-          media: [{ name: file.name, mime: file.type }],
-        });
+      if (file.type.startsWith("image")) mediaType = MediaType.IMAGE;
+      else if (file.type.startsWith("video")) mediaType = MediaType.VIDEO;
+      else if (file.type.startsWith("audio")) mediaType = MediaType.AUDIO;
+      else mediaType = MediaType.OTHER;
 
-        const localMsg: MessageFromAPI = {
-          _id: `local-${Date.now()}`,
-          chatId: chatData._id,
-          senderId: {
-            _id: user._id,
-            fullName: user.fullName,
-            username: user.username,
-          },
-          ciphertext: encrypted.ciphertext,
-          nonce: encrypted.nonce,
-          createdAt: new Date().toISOString(),
-          media: [{ name: file.name, mime: file.type }],
-        };
-
-        (window as any)._decryptedMessages =
-          (window as any)._decryptedMessages || {};
-        (window as any)._decryptedMessages[localMsg._id!] = base64File;
-
-        setChatData((prev) =>
-          prev
-            ? { ...prev, messages: [...(prev.messages || []), localMsg] }
-            : prev
-        );
-      } catch (err) {
-        console.error("Failed encrypting file", err);
-        alert("Failed to encrypt attachment");
-      }
-    };
-
-    reader.readAsDataURL(file);
-    e.target.value = "";
+      await sendMediaMessage(media.url, mediaType, media.publicId);
+    } catch (error) {
+      console.error("MEDIA UPLOAD ERROR:", error);
+      message.error("Failed to upload media.");
+    } finally {
+      e.target.value = "";
+    }
   };
-
-  if (!selectedChatId)
-    return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
-        Select a chat to start messaging
-      </div>
-    );
-
-  if (loading)
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <Spin size="large" />
-      </div>
-    );
-
-  const otherUser = chatData?.members?.find((m) => m._id !== user?._id);
-  const avatar = otherUser?.image || "/images/default-chat-profile.svg";
-  const username = otherUser?.username;
-  const fullName = otherUser?.fullName;
 
   const getDecrypted = (msgId?: string, ciphertext?: any) => {
     (window as any)._decryptedMessages =
       (window as any)._decryptedMessages || {};
-    if (msgId && (window as any)._decryptedMessages[msgId])
-      return (window as any)._decryptedMessages[msgId];
+    const cached = msgId && (window as any)._decryptedMessages[msgId];
+    if (cached) {
+      if (typeof cached === "string") {
+        try {
+          const parsed = JSON.parse(cached);
+          return parsed;
+        } catch {
+          return cached;
+        }
+      }
+      return cached;
+    }
 
     if (ciphertext && typeof ciphertext === "string") {
       try {
@@ -542,6 +537,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
+  if (!selectedChatId)
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
+        Select a chat to start messaging
+      </div>
+    );
+
+  if (loading)
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <Spin size="large" />
+      </div>
+    );
+
+  const otherUser = chatData?.members?.find((m) => m._id !== user?._id);
+  const avatar = otherUser?.image || "/images/default-chat-profile.svg";
+  const username = otherUser?.username;
+  const fullName = otherUser?.fullName;
+
   return (
     <div className="flex-1 flex flex-col h-full bg-white rounded-xl ml-4 mr-4 mb-4">
       <div className="flex items-center p-4 border-b">
@@ -569,18 +583,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           if (el.scrollTop <= 0) loadMoreMessages();
         }}
       >
-        {chatData && chatData.messages && chatData.messages.length > 0 ? (
+        {chatData?.messages?.length ? (
           chatData.messages.map((msg, index) => {
             const isMine = msg.senderId?._id === user?._id;
 
-            const decrypted = getDecrypted(msg._id, msg.ciphertext);
+            let mediaUrl: string | null = msg.media?.[0]?.url ?? null;
+            let mediaType: MediaType | null = msg.media?.[0]?.type ?? null;
 
-            let isImage = false;
-            let isVideo = false;
-            if (typeof decrypted === "string") {
-              if (decrypted.startsWith("data:image/")) isImage = true;
-              else if (decrypted.startsWith("data:video/")) isVideo = true;
+            const decrypted = msg.ciphertext
+              ? getDecrypted(msg._id, msg.ciphertext)
+              : null;
+
+            if (
+              !mediaUrl &&
+              decrypted &&
+              typeof decrypted === "object" &&
+              decrypted.media
+            ) {
+              mediaUrl = decrypted.media.url ?? null;
+              mediaType = decrypted.media.type ?? null;
             }
+
+            const textMessage =
+              !mediaUrl && typeof decrypted === "string" ? decrypted : null;
+
+            const isImage = mediaType === MediaType.IMAGE;
+            const isVideo = mediaType === MediaType.VIDEO;
 
             return (
               <div
@@ -596,22 +624,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "bg-zinc-100 text-black rounded-2xl rounded-bl-none"
                   }`}
                 >
-                  {isImage ? (
-                    <img
-                      src={decrypted as string}
-                      alt="Sent media"
-                      className="max-w-xs max-h-60 rounded-lg object-cover"
-                    />
-                  ) : isVideo ? (
-                    <video
-                      src={decrypted as string}
-                      controls
-                      className="max-w-xs max-h-60 rounded-lg"
-                    />
+                  {mediaUrl ? (
+                    isImage ? (
+                      <img
+                        src={mediaUrl}
+                        alt="Sent media"
+                        className="max-w-xs max-h-60 rounded-lg object-cover"
+                      />
+                    ) : isVideo ? (
+                      <video
+                        src={mediaUrl}
+                        controls
+                        className="max-w-xs max-h-60 rounded-lg"
+                      />
+                    ) : null
                   ) : (
-                    <span>{decrypted}</span>
+                    <span>{textMessage ?? "[Encrypted message]"}</span>
                   )}
                 </div>
+
                 <div
                   className={`text-stone-500 text-xs font-normal mt-1 ${
                     isMine ? "text-right" : "text-left"

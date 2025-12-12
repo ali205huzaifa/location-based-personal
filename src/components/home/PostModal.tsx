@@ -532,7 +532,7 @@ const PostModal: React.FC<PostModalProps> = ({
               )}
             </div>
 
-            <div className="max-h-60 overflow-y-auto px-4 py-4 border-b border-gray-200 flex-shrink-0">
+            <div className="max-h-60 overflow-y-auto px-4 py-4 border-b border-gray-200 flex-shrink-0 custom-scrollbar">
               <p className="text-black text-base font-light">{caption}</p>
               <div className="flex justify-between items-center mt-1">
                 <span className="flex items-center text-stone-500 text-sm font-normal">

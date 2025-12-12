@@ -411,6 +411,14 @@ const Home: React.FC = () => {
             zoom={12}
             onLoad={onLoad}
             onUnmount={onUnmount}
+            options={{
+              minZoom: 14,
+              maxZoom: 18,
+              zoomControl: false,
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
+            }}
           >
             {currentUser?.location && mapCenter && (
               <Marker
@@ -486,7 +494,7 @@ const Home: React.FC = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 20 }}
                                 transition={{ duration: 0.25 }}
-                                className="absolute bottom-14 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
+                                className="absolute bottom-28 w-64 bg-white rounded-2xl shadow-lg p-2 border border-gray-100"
                               >
                                 {post.media?.length > 0 && (
                                   <img

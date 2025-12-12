@@ -34,6 +34,7 @@ interface Chat {
     username: string;
     image?: string;
   }[];
+  image?: string;
 }
 
 const ChatList: React.FC<ChatListProps> = ({
@@ -98,7 +99,7 @@ const ChatList: React.FC<ChatListProps> = ({
     const isGroup = chat.type === "Group";
 
     let displayName = chat.name;
-    let avatarSrc = "/images/default-chat-profile.svg";
+    let avatarSrc = chat.image;
 
     if (!isGroup) {
       const otherUser = chat.members.find((m) => m._id !== user?._id);

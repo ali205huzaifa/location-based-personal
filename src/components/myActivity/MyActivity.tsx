@@ -117,12 +117,83 @@ const MyActivity: React.FC = () => {
     [user]
   );
 
+  useEffect(() => {
+    const fetchInteractions = async () => {
+      if (activeTab !== "interactions" || !user?._id) return;
+
+      setLoading(true);
+      try {
+        const response = await PostAPI.getInteractions(user._id);
+        const rawPosts = response.data?.data?.posts || [];
+
+        const normalizedPosts = rawPosts.map((p: any) => ({
+          _id: p.postId,
+          user: p.postOwner,
+          content: p.content,
+          media: p.media || [],
+          location: p.location || null,
+          address: p.address || "",
+          isLikedByMe: p.isLikedByMe || false,
+          interaction: {
+            likesCount: p.summary?.likesCount,
+            commentCount: p.summary?.commentCount,
+          },
+        }));
+
+        setInteractions(normalizedPosts);
+      } catch (error) {
+        console.error("Error fetching interactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInteractions();
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const handlePostClick = (post: any) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedPost(null);
+  };
+
+  const refreshPosts = async () => {
+    setPosts([]);
+    setOffset(0);
+    setHasMore(true);
+    setLoading(true);
+    await fetchPosts(0);
+  };
+
   const handleLikeUpdate = (
     postId: string,
     liked: boolean,
     likeCount: number
   ) => {
     setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p._id === postId
+          ? {
+              ...p,
+              interaction: {
+                ...p.interaction,
+                likesCount: likeCount,
+              },
+              isLikedByMe: liked,
+            }
+          : p
+      )
+    );
+
+    setInteractions((prevPosts) =>
       prevPosts.map((p) =>
         p._id === postId
           ? {
@@ -172,61 +243,6 @@ const MyActivity: React.FC = () => {
       console.error("Error updating like:", err);
       handleLikeUpdate(postId, prevLikeState.liked, prevLikeState.likeCount);
     }
-  };
-
-  useEffect(() => {
-    const fetchInteractions = async () => {
-      if (activeTab !== "interactions" || !user?._id) return;
-
-      setLoading(true);
-      try {
-        const response = await PostAPI.getInteractions(user._id);
-        const rawPosts = response.data?.data?.posts || [];
-
-        const normalizedPosts = rawPosts.map((p: any) => ({
-          _id: p.postId,
-          user: p.postOwner,
-          content: p.content,
-          media: p.media || [],
-          location: p.location || null,
-          address: p.address || "",
-          interaction: {
-            likesCount: p.summary?.likesCount,
-            commentCount: p.summary?.commentCount,
-          },
-        }));
-
-        setInteractions(normalizedPosts);
-      } catch (error) {
-        console.error("Error fetching interactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInteractions();
-  }, [activeTab, user]);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
-
-  const handlePostClick = (post: any) => {
-    setSelectedPost(post);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedPost(null);
-  };
-
-  const refreshPosts = async () => {
-    setPosts([]);
-    setOffset(0);
-    setHasMore(true);
-    setLoading(true);
-    await fetchPosts(0);
   };
 
   useEffect(() => {
@@ -439,6 +455,14 @@ const MyActivity: React.FC = () => {
                 zoom={12}
                 onLoad={onLoad}
                 onUnmount={onUnmount}
+                options={{
+                  minZoom: 14,
+                  maxZoom: 18,
+                  zoomControl: false,
+                  mapTypeControl: false,
+                  streetViewControl: false,
+                  fullscreenControl: false,
+                }}
               >
                 {user?.location && mapCenter && (
                   <Marker
