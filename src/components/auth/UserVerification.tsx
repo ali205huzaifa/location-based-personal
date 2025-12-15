@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Button, notification } from "antd";
+import { Button, notification, message } from "antd";
+import { useDispatch } from "react-redux";
+import { setAuthData } from "../../store/Auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthAPI from "../../api/authApi/AuthAPI";
 import ClipLoader from "react-spinners/ClipLoader";
+import { decryptPrivateKeyHybrid } from "../../util/Decryption";
 
 const UserVerification: React.FC = () => {
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [timer, setTimer] = useState(60);
-  const [, setOtpVerified] = useState(false);
-
-  const location = useLocation();
-  const navigate = useNavigate();
 
   const email = location.state?.email;
+  const signupPassword = location.state?.password;
 
   useEffect(() => {
     if (timer > 0) {
@@ -41,14 +44,25 @@ const UserVerification: React.FC = () => {
   const handleVerifyOTP = async (enteredOtp: string) => {
     try {
       setLoading(true);
-      await AuthAPI.VerifyUserOTP({ email, otp: Number(enteredOtp) });
+
+      const res = await AuthAPI.VerifyUserOTP({
+        email,
+        otp: Number(enteredOtp),
+      });
+
+      const token = res?.data?.data?.token;
+
+      if (!token) {
+        message.error("Token not returned from OTP verification");
+      }
+
       notification.success({
         message: "OTP Verified Successfully",
-        description: "Your account has been verified. Please login now.",
+        description: "Logging you in...",
         placement: "topRight",
       });
-      setOtpVerified(true);
-      navigate("/login");
+
+      await handleLoginSuccess(token);
     } catch (err: any) {
       notification.error({
         message: "Invalid OTP",
@@ -58,6 +72,32 @@ const UserVerification: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLoginSuccess = async (token: string) => {
+    const verifyRes = await AuthAPI.verifyToken(token);
+    const user = verifyRes.data;
+
+    dispatch(setAuthData({ currentUser: user, token }));
+    localStorage.setItem("token", token);
+    localStorage.setItem("publicKey", user.userPublicKey);
+
+    if (signupPassword) {
+      const privateKey = await decryptPrivateKeyHybrid({
+        password: signupPassword,
+        encryptedPrivateKey: user.encryptedPrivateKey,
+        wrappedMasterKey: user.wrappedMasterKey,
+        nonce: user.nonce,
+        masterKeyNonce: user.masterKeyNonce,
+        salt: user.salt,
+      });
+
+      localStorage.setItem("privateKey", privateKey);
+
+      window.history.replaceState({}, document.title);
+    }
+
+    navigate("/home");
   };
 
   const handleResendOTP = async () => {

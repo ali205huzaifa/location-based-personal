@@ -91,7 +91,6 @@ const LoginPage: React.FC = () => {
       message.success("Login successful!");
       navigate("/home");
     } catch (error: any) {
-      console.error("Token verification failed:", error);
       message.error("Invalid or expired Google token. Please try again.");
     }
   };

@@ -118,7 +118,12 @@ const Signup: React.FC = () => {
 
       const { data } = await AuthAPI.SignUp(payload);
       message.success(data.message || "Account created successfully!");
-      navigate("/verify", { state: { email: values.email } });
+      navigate("/verify", {
+        state: {
+          email: values.email,
+          password: values.password,
+        },
+      });
     } catch (error: any) {
       const errMsg =
         error?.response?.data?.message ||
