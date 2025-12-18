@@ -589,7 +589,9 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   const isGroup = activeChat?.type?.toLowerCase() === "group";
 
   const groupName = isGroup ? activeChat?.GroupName ?? "Group" : "Chat";
-  const groupImage = isGroup ? activeChat?.image ?? "" : "";
+  const groupImage = isGroup
+    ? activeChat?.image || "/images/default-chat-profile.svg"
+    : "";
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white rounded-xl ml-4 mr-4 mb-4">

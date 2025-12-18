@@ -99,7 +99,7 @@ const ChatList: React.FC<ChatListProps> = ({
     const isGroup = chat.type === "Group";
 
     let displayName = chat.name;
-    let avatarSrc = chat.image;
+    let avatarSrc = chat.image || "/images/default-chat-profile.svg";
 
     if (!isGroup) {
       const otherUser = chat.members.find((m) => m._id !== user?._id);
@@ -131,6 +131,7 @@ const ChatList: React.FC<ChatListProps> = ({
 
   const renderContactItem = (item: Contact) => {
     const isGroup = item.type === "chat" && item.chatType === "Group";
+
     const GroupImage = item.image || "/images/default-chat-profile.svg";
     if (isGroup) {
       return (
@@ -154,7 +155,6 @@ const ChatList: React.FC<ChatListProps> = ({
     }
 
     const avatar = item.image || "/images/default-chat-profile.svg";
-
     return (
       <List.Item
         onClick={() => onSelectChat(item._id, false, "direct")}
@@ -183,7 +183,7 @@ const ChatList: React.FC<ChatListProps> = ({
           }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666]"
+          className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666] focus:border-![#8869F3] hover:!border-[#8869F3]"
         />
 
         {search && (

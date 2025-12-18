@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Input, Avatar, Button, Segmented, Spin } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Avatar, Button, Segmented, Spin } from "antd";
 import SharePostModal from "../home/SharePostModal";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
@@ -456,7 +455,7 @@ const UserProfile: React.FC = () => {
                 <div className="flex justify-between mt-4 text-left w-64 text-gray-600 text-sm">
                   <div className="flex flex-col">
                     <strong className="text-black text-base font-medium">
-                      08
+                      {profileUser?.circleJoined}
                     </strong>
                     <span className="text-[#666666] text-xs font-medium">
                       Circles Joined
@@ -464,7 +463,7 @@ const UserProfile: React.FC = () => {
                   </div>
                   <div className="flex flex-col">
                     <strong className="text-black text-base font-medium">
-                      18
+                      {profileUser?.circleSize}
                     </strong>
                     <span className="text-[#666666] text-xs font-medium">
                       Circle Size
@@ -481,7 +480,7 @@ const UserProfile: React.FC = () => {
               </div>
             </div>
 
-            <Button
+            {/* <Button
               type="primary"
               className="w-full rounded-lg py-2 !h-10 flex items-center justify-center gap-2
   !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3]"
@@ -511,17 +510,48 @@ const UserProfile: React.FC = () => {
                 : contactStatus === "added"
                 ? "Request Sent"
                 : "Friends"}
-            </Button>
+            </Button> */}
           </div>
 
           {!shouldHideContent && (
             <div className="w-full flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 rounded-lg">
-              <Input
+              {/* <Input
                 prefix={<SearchOutlined />}
                 placeholder="Search"
                 allowClear
                 className="!h-11 !text-sm w-full xl:!w-80 outline-[#8869F3]"
-              />
+              /> */}
+              <Button
+                type="primary"
+                className="w-80 rounded-lg py-2 !h-10 flex items-center justify-center gap-2
+  !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3]"
+                onClick={
+                  contactStatus === "none" ? handleAddToContact : undefined
+                }
+                disabled={contactStatus !== "none"}
+              >
+                <img
+                  src={
+                    contactStatus === "none"
+                      ? "/icons/AddUser-icon.svg"
+                      : "/icons/contactAdded-icon.svg"
+                  }
+                  alt={
+                    contactStatus === "none"
+                      ? "Add to contact"
+                      : contactStatus === "added"
+                      ? "Request sent"
+                      : "Friends"
+                  }
+                  className="w-5 h-5"
+                />
+
+                {contactStatus === "none"
+                  ? "Add to Contact"
+                  : contactStatus === "added"
+                  ? "Request Sent"
+                  : "Friends"}
+              </Button>
               <Segmented
                 value={activeTab}
                 onChange={(val) =>

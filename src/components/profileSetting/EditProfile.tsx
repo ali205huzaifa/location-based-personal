@@ -184,7 +184,7 @@ const EditProfile: React.FC = () => {
           rules={[{ required: true, message: "Please enter your full name" }]}
         >
           <Input
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF]"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:border-![#8869F3] hover:!border-[#8869F3]"
             placeholder="Enter full name"
           />
         </Form.Item>
@@ -195,7 +195,7 @@ const EditProfile: React.FC = () => {
           rules={[{ required: true, message: "Please choose a username" }]}
         >
           <Input
-            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF]"
+            className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:border-![#8869F3] hover:!border-[#8869F3]"
             placeholder="Choose a username"
           />
         </Form.Item>
@@ -209,7 +209,7 @@ const EditProfile: React.FC = () => {
 
         <Form.Item name="bio" label="Bio">
           <TextArea
-            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF]"
+            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:border-![#8869F3] hover:!border-[#8869F3]"
             placeholder="Tell us about yourself..."
           />
         </Form.Item>

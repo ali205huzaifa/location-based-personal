@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Input, Avatar, Button, Segmented, Spin } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Avatar, Button, Segmented, Spin } from "antd";
 import SharePostModal from "../home/SharePostModal";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
@@ -394,7 +393,7 @@ const MyActivity: React.FC = () => {
                 <div className="flex justify-between mt-4 text-left w-64 text-gray-600 text-sm">
                   <div className="flex flex-col">
                     <strong className="text-black text-base font-medium">
-                      08
+                      {user?.circleJoined}
                     </strong>
                     <span className="text-[#666666] text-xs font-medium">
                       Circles Joined
@@ -402,7 +401,7 @@ const MyActivity: React.FC = () => {
                   </div>
                   <div className="flex flex-col">
                     <strong className="text-black text-base font-medium">
-                      18
+                      {user?.circleSize}
                     </strong>
                     <span className="text-[#666666] text-xs font-medium">
                       Circle Size
@@ -419,22 +418,32 @@ const MyActivity: React.FC = () => {
               </div>
             </div>
 
-            <Button
+            {/* <Button
               type="primary"
               className="w-full rounded-lg py-2 !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3] !h-10"
               onClick={() => navigate("/settings")}
             >
               Edit Profile
-            </Button>
+            </Button> */}
           </div>
 
           <div className="w-full flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 rounded-lg">
-            <Input
-              prefix={<SearchOutlined />}
+            {/* <Input
+              prefix={
+                <img src="/icons/search-icon.svg" alt="Icon" className="mr-2" />
+              }
               placeholder="Search"
               allowClear
               className="!h-11 !text-sm w-full xl:!w-80 outline-[#8869F3]"
-            />
+            /> */}
+
+            <Button
+              type="primary"
+              className="xl:!w-80 rounded-lg py-2 !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3] !h-10"
+              onClick={() => navigate("/settings")}
+            >
+              Edit Profile
+            </Button>
             <Segmented
               value={activeTab}
               onChange={(val) => setActiveTab(val as "posts" | "interactions")}

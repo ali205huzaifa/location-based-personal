@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Drawer, Avatar, Spin, Tooltip } from "antd";
-import { CheckOutlined } from "@ant-design/icons";
 import PostAPI from "../../api/postApi/PostAPI";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -100,11 +99,23 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               disabled={!unreadCount || markingAll}
               className={`p-2 rounded-lg transition ${
                 unreadCount
-                  ? "hover:bg-gray-100 text-gray-700"
+                  ? "hover:bg-gray-100 text-[#8869F3]"
                   : "text-gray-300 cursor-not-allowed"
               }`}
             >
-              {markingAll ? <Spin size="small" /> : <CheckOutlined />}
+              {markingAll ? (
+                <Spin size="small" />
+              ) : (
+                <img
+                  src={
+                    unreadCount
+                      ? "/icons/double-check-icon.svg"
+                      : "/icons/single-tick-icon.svg"
+                  }
+                  alt="Icon"
+                  className="h-6 w-6"
+                />
+              )}
             </button>
           </Tooltip>
         </div>

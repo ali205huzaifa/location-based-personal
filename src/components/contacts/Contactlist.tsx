@@ -93,7 +93,7 @@ const ContactsList: React.FC<Props> = ({ username }) => {
         placeholder="Search"
         value={search}
         onChange={handleSearch}
-        className="!h-12 !text-sm !w-full !rounded-xl custom-input"
+        className="!h-12 !text-sm !w-full !rounded-xl custom-input focus:border-![#8869F3] hover:!border-[#8869F3]"
       />
 
       {loading ? (

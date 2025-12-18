@@ -22,6 +22,8 @@ export interface User {
   image?: string;
   language?: string;
   location?: any;
+  circleSize?: number;
+  circleJoined?: number;
 }
 
 export interface Interviewer {

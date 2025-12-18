@@ -280,7 +280,7 @@ const PostModal: React.FC<PostModalProps> = ({
       return (
         <div key={c._id} className="flex items-start mb-1">
           <img
-            src={c.user?.image}
+            src={c.user?.image || "/images/default-chat-profile.svg"}
             alt={c.user?.fullName}
             className="w-9 h-9 rounded-full object-cover mr-2 flex-shrink-0 mt-1"
           />
