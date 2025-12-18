@@ -2,23 +2,41 @@ import type { FC } from "react";
 import { useState } from "react";
 import NotificationDrawer from "./NotificationDrawer";
 import LogoutModal from "./LogoutModal";
-
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { persistor } from "../../store";
 import { clearAuthData } from "../../store/Auth";
+import AuthAPI from "../../api/authApi/AuthAPI";
 
 const Navbar: FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogoutConfirm = () => {
-    dispatch(clearAuthData());
-    persistor.purge();
-    setShowLogoutModal(false);
-    navigate("/login");
+  const handleLogoutConfirm = async () => {
+    try {
+      setLoading(true);
+
+      const fcmPushToken = localStorage.getItem("fcmPushToken");
+
+      if (fcmPushToken) {
+        await AuthAPI.Logout({ fcmPushToken });
+      }
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    } finally {
+      dispatch(clearAuthData());
+      await persistor.purge();
+      localStorage.removeItem("fcmPushToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("privateKey");
+      localStorage.removeItem("publicKey");
+      setShowLogoutModal(false);
+      setLoading(false);
+      navigate("/login");
+    }
   };
 
   return (
@@ -39,9 +57,9 @@ const Navbar: FC = () => {
           <img
             src="/icons/notification-icon.svg"
             alt="Bell Icon"
-            className="w-6 h-6 text-xl cursor-pointer"
+            className="w-6 h-6 cursor-pointer"
           />
-          <span className="absolute top-2 right-3 h-3 w-3 bg-[#8869F3] rounded-full border-2 border-white"></span>
+          <span className="absolute top-2 right-3 h-3 w-3 bg-[#8869F3] rounded-full border-2 border-white" />
         </div>
 
         <div
@@ -54,6 +72,7 @@ const Navbar: FC = () => {
 
         <LogoutModal
           open={showLogoutModal}
+          loading={loading}
           onClose={() => setShowLogoutModal(false)}
           onConfirm={handleLogoutConfirm}
         />

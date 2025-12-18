@@ -108,16 +108,16 @@ export const decryptMessages = async (
 // }
 
 interface DecryptParams {
-  password: string;
   wrappedMasterKey: string;
   encryptedPrivateKey: string;
   nonce: string;
   masterKeyNonce: string;
   salt: string;
+  clientSecret: string;
 }
 
 export async function decryptPrivateKeyHybrid({
-  password,
+  clientSecret,
   wrappedMasterKey,
   encryptedPrivateKey,
   nonce,
@@ -143,7 +143,7 @@ export async function decryptPrivateKeyHybrid({
 
   const passwordKey = sodium.crypto_pwhash(
     32,
-    password,
+    clientSecret,
     saltBytes,
     sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
     sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,

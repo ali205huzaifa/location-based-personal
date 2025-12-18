@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
 import AuthAPI from "../../api/authApi/AuthAPI";
 import { decryptPrivateKeyHybrid } from "../../util/Decryption";
+// import { requestFCMToken } from "../common/firebaseConfig";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,23 @@ const LoginPage: React.FC = () => {
   const [_userId, setUserId] = useState("");
   const [_userToken, setUserToken] = useState("");
   const [_form] = Form.useForm();
+  // const [fcmToken, setFcmToken] = useState<string | null>(null);
+
+  // useEffect(() => {
+  //   let isMounted = true;
+
+  //   const setupFCM = async () => {
+  //     const token = await requestFCMToken();
+  //     if (isMounted && token) {
+  //       setFcmToken(token);
+  //     }
+  //   };
+  //   setupFCM();
+
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, []);
 
   const handleFinish = async (values: {
     username: string;
@@ -24,20 +42,25 @@ const LoginPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const fcmPushToken = "123";
-      const platform = "web";
+      // const fcmPushToken = fcmToken as string;
+      // const platform = "web";
 
       const loginRes = await AuthAPI.logIn({
         email: values.username,
         password: values.password,
-        fcmPushToken,
-        platform,
+        // fcmPushToken,
+        // platform,
       });
 
-      const api_token = loginRes.data.data.token;
-      if (!api_token) throw new Error("Token not found");
+      // localStorage.setItem("fcmPushToken", fcmPushToken);
 
-      await handleLoginSuccess(api_token);
+      const { token, clientSecret } = loginRes.data.data;
+
+      if (!token || !clientSecret) {
+        throw new Error("Token or clientSecret missing");
+      }
+
+      await handleLoginSuccess(token, clientSecret);
     } catch (err: any) {
       message.error(
         err?.response?.data?.message ||
@@ -55,7 +78,7 @@ const LoginPage: React.FC = () => {
     }/auth/google/login`;
   };
 
-  const handleLoginSuccess = async (token: string) => {
+  const handleLoginSuccess = async (token: string, clientSecret?: string) => {
     try {
       const verifyRes = await AuthAPI.verifyToken(token);
       const user = verifyRes?.data;
@@ -72,11 +95,10 @@ const LoginPage: React.FC = () => {
           token,
         })
       );
-      const password = _form.getFieldValue("password");
 
-      if (password) {
+      if (clientSecret) {
         const privateKey = await decryptPrivateKeyHybrid({
-          password,
+          clientSecret,
           encryptedPrivateKey: user.encryptedPrivateKey,
           wrappedMasterKey: user.wrappedMasterKey,
           nonce: user.nonce,
@@ -87,6 +109,7 @@ const LoginPage: React.FC = () => {
         localStorage.setItem("privateKey", privateKey);
         localStorage.setItem("publicKey", user.userPublicKey);
       }
+
       localStorage.setItem("token", token);
       message.success("Login successful!");
       navigate("/home");

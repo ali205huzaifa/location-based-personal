@@ -121,7 +121,6 @@ const Signup: React.FC = () => {
       navigate("/verify", {
         state: {
           email: values.email,
-          password: values.password,
         },
       });
     } catch (error: any) {

@@ -1,17 +1,24 @@
-import React from "react";
-import { Drawer, Avatar } from "antd";
-import {
-  MessageOutlined,
-  HeartFilled,
-  ClockCircleOutlined,
-} from "@ant-design/icons";
+import React, { useEffect, useState, useMemo } from "react";
+import { Drawer, Avatar, Spin, Tooltip } from "antd";
+import { CheckOutlined } from "@ant-design/icons";
+import PostAPI from "../../api/postApi/PostAPI";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 
-interface Notification {
-  id: number;
-  type: "reply" | "like";
-  users: { name: string; username: string; avatar: string }[];
+dayjs.extend(relativeTime);
+
+interface ApiNotification {
+  _id: string;
+  type: "like" | "contact" | "reply";
   content: string;
-  time: string;
+  status: "read" | "unread";
+  createdAt: string;
+  senderId: {
+    _id: string;
+    fullName: string;
+    username: string;
+    Image?: string;
+  };
 }
 
 interface NotificationDrawerProps {
@@ -23,46 +30,89 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   visible,
   onClose,
 }) => {
-  const notifications: Notification[] = [
-    {
-      id: 1,
-      type: "reply",
-      users: [
-        {
-          name: "Kathrine Davis",
-          username: "@Kathrine12",
-          avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-        },
-      ],
-      content: "replied to your comment",
-      time: "3m ago",
-    },
-    {
-      id: 2,
-      type: "like",
-      users: [
-        {
-          name: "Kathrine Davis",
-          username: "@Kathrine12",
-          avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-        },
-        {
-          name: "David Holmes",
-          username: "@david69",
-          avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-        },
-      ],
-      content: "liked your post",
-      time: "3m ago",
-    },
-  ];
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      fetchNotifications();
+    }
+  }, [visible]);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const res = await PostAPI.getNotifications();
+      setNotifications(res.data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => n.status === "unread").length,
+    [notifications]
+  );
+
+  const handleMarkRead = async (notif: ApiNotification) => {
+    if (notif.status === "read") return;
+
+    try {
+      await PostAPI.markRead(notif._id);
+
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notif._id ? { ...n, status: "read" } : n))
+      );
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (!unreadCount) return;
+
+    try {
+      setMarkingAll(true);
+      await PostAPI.markAllasRead();
+
+      setNotifications((prev) => prev.map((n) => ({ ...n, status: "read" })));
+    } catch (error) {
+      console.error("Failed to mark all as read", error);
+    } finally {
+      setMarkingAll(false);
+    }
+  };
 
   return (
     <Drawer
-      title={<span className="font-semibold text-gray-800">Notifications</span>}
+      title={
+        <div className="flex items-center justify-between">
+          <span className="text-black text-base font-medium">
+            Notifications
+          </span>
+
+          <Tooltip title="Mark all as read">
+            <button
+              onClick={handleMarkAllAsRead}
+              disabled={!unreadCount || markingAll}
+              className={`p-2 rounded-lg transition ${
+                unreadCount
+                  ? "hover:bg-gray-100 text-gray-700"
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
+            >
+              {markingAll ? <Spin size="small" /> : <CheckOutlined />}
+            </button>
+          </Tooltip>
+        </div>
+      }
       placement="right"
       onClose={onClose}
       open={visible}
+      closable={false}
       width={360}
       styles={{
         body: {
@@ -71,59 +121,52 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
         },
       }}
     >
-      <div className="space-y-4">
-        {notifications.map((notif) => (
-          <div
-            key={notif.id}
-            className="flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 transition cursor-pointer"
-          >
-            <div className="flex -space-x-2">
-              {notif.users.map((user, idx) => (
-                <Avatar
-                  key={idx}
-                  src={user.avatar}
-                  size={38}
-                  className="border-2 border-white"
-                />
-              ))}
-            </div>
+      {loading ? (
+        <div className="flex justify-center mt-10">
+          <Spin />
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {notifications.map((notif) => (
+            <div
+              key={notif._id}
+              onClick={() => handleMarkRead(notif)}
+              className={`flex items-start space-x-3 p-3 rounded-xl transition cursor-pointer
+                hover:bg-gray-50
+                ${notif.status === "unread" ? "bg-gray-50" : ""}`}
+            >
+              <Avatar
+                src={
+                  notif.senderId?.Image || "/images/default-chat-profile.svg"
+                }
+                size={50}
+                className="border-2 border-white"
+              />
 
-            <div className="flex-1">
-              <p className="text-sm text-gray-800 leading-tight">
-                {notif.users.length > 1 ? (
-                  <>
-                    <span className="font-medium text-gray-900">
-                      {notif.users[0].username}
-                    </span>{" "}
-                    and{" "}
-                    <span className="font-medium text-gray-900">
-                      {notif.users[1].username}
-                    </span>{" "}
-                    {notif.content}
-                  </>
-                ) : (
-                  <>
-                    <span className="font-medium text-gray-900">
-                      {notif.users[0].username}
-                    </span>{" "}
-                    {notif.content}
-                  </>
-                )}
-              </p>
+              <div className="flex-1">
+                <p className="text-sm text-gray-800 leading-tight">
+                  <span className="text-black font-medium">
+                    @{notif.senderId?.username}
+                  </span>{" "}
+                  <span className="font-normal">
+                    {notif.content.replace(notif.senderId?.username, "")}
+                  </span>
+                </p>
 
-              <div className="flex items-center space-x-1 text-xs text-gray-400 mt-1">
-                {notif.type === "reply" ? (
-                  <MessageOutlined className="text-purple-500" />
-                ) : (
-                  <HeartFilled className="text-red-500" />
-                )}
-                <ClockCircleOutlined className="ml-2" />
-                <span>{notif.time}</span>
+                <div className="flex items-center text-xs text-gray-400 mt-1">
+                  <span>{dayjs(notif.createdAt).fromNow()}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+
+          {notifications.length === 0 && (
+            <p className="text-center text-gray-400 text-sm">
+              No notifications yet
+            </p>
+          )}
+        </div>
+      )}
     </Drawer>
   );
 };

@@ -68,6 +68,22 @@ class PostAPI {
   static RemoveContact(id: string) {
     return axiosClient.delete(`/contacts/${id}`);
   }
+
+  static getNotifications(params = {}) {
+    return axiosClient.get("/notification", { params });
+  }
+
+  static markRead(id: string, params = {}) {
+    return axiosClient.patch(`/notification/${id}/read`, {
+      params,
+    });
+  }
+
+  static markAllasRead(params = {}) {
+    return axiosClient.patch("notification/mark-all/read", {
+      params,
+    });
+  }
 }
 
 export default PostAPI;

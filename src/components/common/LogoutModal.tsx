@@ -5,12 +5,14 @@ type LogoutModalProps = {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  loading?: boolean;
 };
 
 const LogoutModal: React.FC<LogoutModalProps> = ({
   open,
   onClose,
   onConfirm,
+  loading,
 }) => {
   return (
     <Modal
@@ -30,6 +32,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
           </Button>
           <Button
             onClick={onClose}
+            loading={loading}
             className="!border-[#666666] !text-[#666666]"
           >
             No

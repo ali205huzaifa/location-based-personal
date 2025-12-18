@@ -1,12 +1,7 @@
 import axiosClient from "../axiosClient";
 
 class AuthAPI {
-  static logIn(data: {
-    email: string;
-    password: string;
-    fcmPushToken: string;
-    platform: string;
-  }) {
+  static logIn(data: { email: string; password: string }) {
     return axiosClient.post("/auth/login", data);
   }
 
@@ -49,6 +44,10 @@ class AuthAPI {
     data: { username: string; dob: string; location: string }
   ) {
     return axiosClient.patch(`/auth/complete-google-profile/${id}`, data);
+  }
+
+  static Logout(data: { fcmPushToken: string }) {
+    return axiosClient.post("/auth/logout", data);
   }
 }
 
