@@ -54,7 +54,7 @@ const UserProfile: React.FC = () => {
   const [, setLoading] = useState(false);
   const [, setMap] = useState<google.maps.Map | null>(null);
 
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const limit = 10;
   const [hasMore, setHasMore] = useState(true);
   const rightSidebarRef = useRef<HTMLDivElement>(null);
@@ -117,7 +117,7 @@ const UserProfile: React.FC = () => {
   }, [userId]);
 
   const fetchPosts = useCallback(
-    async (offsetValue = 0) => {
+    async (pageValue = 1) => {
       if (!userId || !profileUser) return;
 
       const hideContent =
@@ -133,21 +133,19 @@ const UserProfile: React.FC = () => {
       try {
         const postsResponse = await PostAPI.getPublicPostsByUser(userId, {
           limit,
-          offset: offsetValue,
+          page: pageValue,
         });
 
-        const newPosts = postsResponse.data?.data?.posts || [];
+        const newPosts = postsResponse.data?.data || [];
 
         setPosts((prev) => {
-          const existingIds = new Set(prev.map((p) => p._id));
-          const filtered = newPosts.filter((p: any) => !existingIds.has(p._id));
+          const ids = new Set(prev.map((p) => p._id));
+          const filtered = newPosts.filter((p: any) => !ids.has(p._id));
           return [...prev, ...filtered];
         });
 
-        setOffset(offsetValue + limit);
-        if (postsResponse.data?.data?.nextPage === null) {
-          setHasMore(false);
-        }
+        setHasMore(postsResponse.data?.hasNext);
+        setPage(pageValue + 1);
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {
@@ -172,7 +170,7 @@ const UserProfile: React.FC = () => {
 
     try {
       const response = await PostAPI.getInteractions(userId);
-      const rawPosts = response.data?.data?.posts || [];
+      const rawPosts = response.data?.data || [];
 
       const normalizedPosts = rawPosts.map((p: any) => ({
         _id: p.postId,
@@ -217,7 +215,7 @@ const UserProfile: React.FC = () => {
   }, [fetchProfile]);
 
   useEffect(() => {
-    if (profileUser) fetchPosts();
+    if (profileUser) fetchPosts(1);
   }, [profileUser, fetchPosts]);
 
   useEffect(() => {
@@ -316,13 +314,13 @@ const UserProfile: React.FC = () => {
 
       if (bottomReached && hasMore && !loadingMore) {
         setLoadingMore(true);
-        fetchPosts(offset);
+        fetchPosts(page);
       }
     };
 
     div.addEventListener("scroll", handleScroll);
     return () => div.removeEventListener("scroll", handleScroll);
-  }, [hasMore, offset, loadingMore]);
+  }, [hasMore, page, loadingMore]);
 
   useEffect(() => {
     if (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Form, Input, Button, Divider, message } from "antd";
+import { Form, Input, Button, message } from "antd";
 import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
 import AuthAPI from "../../api/authApi/AuthAPI";
@@ -234,9 +234,13 @@ const LoginPage: React.FC = () => {
               Login
             </Button>
 
-            <Divider className="!text-stone-500 !text-sm !my-8">
-              or continue with
-            </Divider>
+            <div className="self-stretch inline-flex items-center justify-center gap-2 py-8">
+              <div className="w-32 h-px bg-gradient-to-r from-stone-100 to-[#7C4DFF]" />
+              <div className="text-stone-500 text-xs font-normal">
+                or continue with
+              </div>
+              <div className="w-32 h-px bg-gradient-to-l from-stone-100 to-[#7C4DFF]" />
+            </div>
 
             <div className="flex justify-center gap-8">
               <Button
@@ -247,10 +251,10 @@ const LoginPage: React.FC = () => {
                   <img
                     src="/icons/google-icon.svg"
                     alt="Google"
-                    className="w-6 h-6"
+                    className="w-8 h-8"
                   />
                 }
-                className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF]"
+                className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
               />
 
               <Button
@@ -260,10 +264,10 @@ const LoginPage: React.FC = () => {
                   <img
                     src="/icons/apple-icon.svg"
                     alt="Apple"
-                    className="w-6 h-6"
+                    className="w-8 h-8"
                   />
                 }
-                className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF]"
+                className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
               />
             </div>
             <div className="!mt-12">

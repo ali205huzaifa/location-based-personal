@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Drawer, Avatar, Spin, Tooltip } from "antd";
 import PostAPI from "../../api/postApi/PostAPI";
 import dayjs from "dayjs";
@@ -8,7 +8,7 @@ dayjs.extend(relativeTime);
 
 interface ApiNotification {
   _id: string;
-  type: "like" | "contact" | "reply";
+  type: "like" | "contact" | "reply" | "comment";
   content: string;
   status: "read" | "unread";
   createdAt: string;
@@ -16,7 +16,7 @@ interface ApiNotification {
     _id: string;
     fullName: string;
     username: string;
-    Image?: string;
+    image?: string;
   };
 }
 
@@ -25,29 +25,51 @@ interface NotificationDrawerProps {
   onClose: () => void;
 }
 
+const LIMIT = 10;
+
 const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   visible,
   onClose,
 }) => {
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(true);
 
   useEffect(() => {
     if (visible) {
-      fetchNotifications();
+      setNotifications([]);
+      setPage(1);
+      setHasNext(true);
+      fetchNotifications(1, true);
     }
   }, [visible]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (pageNumber: number, initial = false) => {
     try {
-      setLoading(true);
-      const res = await PostAPI.getNotifications();
-      setNotifications(res.data.data || []);
+      initial ? setLoading(true) : setLoadingMore(true);
+
+      const res = await PostAPI.getNotifications({
+        page: pageNumber,
+        limit: LIMIT,
+      });
+
+      const data = res.data.data;
+
+      setNotifications((prev) =>
+        initial ? data.notifications : [...prev, ...data.notifications]
+      );
+
+      setHasNext(data.hasNext);
+      setPage(data.page);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -61,7 +83,6 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
     try {
       await PostAPI.markRead(notif._id);
-
       setNotifications((prev) =>
         prev.map((n) => (n._id === notif._id ? { ...n, status: "read" } : n))
       );
@@ -76,7 +97,6 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     try {
       setMarkingAll(true);
       await PostAPI.markAllasRead();
-
       setNotifications((prev) => prev.map((n) => ({ ...n, status: "read" })));
     } catch (error) {
       console.error("Failed to mark all as read", error);
@@ -84,6 +104,21 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
       setMarkingAll(false);
     }
   };
+
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget;
+
+      if (
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 80 &&
+        hasNext &&
+        !loadingMore
+      ) {
+        fetchNotifications(page + 1);
+      }
+    },
+    [page, hasNext, loadingMore]
+  );
 
   return (
     <Drawer
@@ -126,58 +161,63 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
       closable={false}
       width={360}
       styles={{
-        body: {
-          padding: "16px",
-          backgroundColor: "#fff",
-        },
+        body: { padding: 0, backgroundColor: "#fff" },
       }}
     >
-      {loading ? (
-        <div className="flex justify-center mt-10">
-          <Spin />
-        </div>
-      ) : (
-        <div className="space-y-1">
-          {notifications.map((notif) => (
-            <div
-              key={notif._id}
-              onClick={() => handleMarkRead(notif)}
-              className={`flex items-start space-x-3 p-3 rounded-xl transition cursor-pointer
-                hover:bg-gray-50
-                ${notif.status === "unread" ? "bg-gray-50" : ""}`}
-            >
-              <Avatar
-                src={
-                  notif.senderId?.Image || "/images/default-chat-profile.svg"
-                }
-                size={50}
-                className="border-2 border-white"
-              />
+      <div className="h-full overflow-y-auto p-4" onScroll={handleScroll}>
+        {loading ? (
+          <div className="flex justify-center mt-10">
+            <Spin />
+          </div>
+        ) : (
+          <>
+            <div className="space-y-1">
+              {notifications.map((notif) => (
+                <div
+                  key={notif._id}
+                  onClick={() => handleMarkRead(notif)}
+                  className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer
+                    hover:bg-gray-50
+                    ${notif.status === "unread" ? "bg-gray-50" : ""}`}
+                >
+                  <Avatar
+                    src={
+                      notif.senderId?.image ||
+                      "/images/default-chat-profile.svg"
+                    }
+                    size={48}
+                  />
 
-              <div className="flex-1">
-                <p className="text-sm text-gray-800 leading-tight">
-                  <span className="text-black font-medium">
-                    @{notif.senderId?.username}
-                  </span>{" "}
-                  <span className="font-normal">
-                    {notif.content.replace(notif.senderId?.username, "")}
-                  </span>
-                </p>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-800">
+                      <span className="font-medium">
+                        @{notif.senderId?.username}
+                      </span>{" "}
+                      {notif.content.replace(notif.senderId?.username, "")}
+                    </p>
 
-                <div className="flex items-center text-xs text-gray-400 mt-1">
-                  <span>{dayjs(notif.createdAt).fromNow()}</span>
+                    <span className="text-xs text-gray-400">
+                      {dayjs(notif.createdAt).fromNow()}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
 
-          {notifications.length === 0 && (
-            <p className="text-center text-gray-400 text-sm">
-              No notifications yet
-            </p>
-          )}
-        </div>
-      )}
+            {loadingMore && (
+              <div className="flex justify-center py-4">
+                <Spin size="small" />
+              </div>
+            )}
+
+            {!notifications.length && (
+              <p className="text-center text-gray-400 text-sm mt-6">
+                No notifications yet
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </Drawer>
   );
 };

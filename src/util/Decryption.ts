@@ -84,7 +84,7 @@ export const decryptMessages = async (
       } catch (err) {
         return {
           _id: msg._id,
-          content: "[Failed to decrypt]",
+          content: "Message UnAvailable",
           senderId: msg.senderId._id,
           createdAt: msg.createdAt,
         };

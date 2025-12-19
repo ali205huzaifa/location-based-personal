@@ -52,11 +52,16 @@ const MyActivity: React.FC = () => {
   const [, setLoading] = useState(false);
   const [, setMap] = useState<google.maps.Map | null>(null);
 
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const limit = 10;
   const [hasMore, setHasMore] = useState(true);
   const rightSidebarRef = useRef<HTMLDivElement>(null);
+  const interactionLoadingRef = useRef(false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const [interactionPage, setInteractionPage] = useState(1);
+  const [interactionHasMore, setInteractionHasMore] = useState(true);
+  const [interactionLoading, setInteractionLoading] = useState(false);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
@@ -87,71 +92,82 @@ const MyActivity: React.FC = () => {
   }, [user?.location]);
 
   const fetchPosts = useCallback(
-    async (offsetValue = 0) => {
+    async (pageValue = 1) => {
       if (!user?._id) return;
-      setLoading(true);
+
       try {
         const response = await PostAPI.getPublicPostsByUser(user._id, {
           limit,
-          offset: offsetValue,
+          page: pageValue,
         });
-        const newPosts = response.data?.data?.posts || [];
+
+        const rawPosts = response.data?.data || [];
 
         setPosts((prev) => {
-          const existingIds = new Set(prev.map((p) => p._id));
-          const filtered = newPosts.filter((p: any) => !existingIds.has(p._id));
+          const ids = new Set(prev.map((p) => p._id));
+          const filtered = rawPosts.filter((p: any) => !ids.has(p._id));
           return [...prev, ...filtered];
         });
 
-        setOffset(offsetValue + limit);
-        if (response.data?.data?.nextPage === null) {
-          setHasMore(false);
-        }
+        setHasMore(response.data?.hasNext);
+        setPage(pageValue + 1);
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {
-        setLoading(false);
+        setLoadingMore(false);
       }
     },
     [user]
   );
 
+  const fetchInteractions = useCallback(async () => {
+    if (!user?._id || interactionLoadingRef.current || !interactionHasMore)
+      return;
+
+    interactionLoadingRef.current = true;
+    setInteractionLoading(true);
+
+    try {
+      const response = await PostAPI.getInteractions(user._id, {
+        page: interactionPage,
+        limit,
+      });
+
+      const raw = response.data?.data || [];
+
+      const normalized = raw.map((p: any) => ({
+        _id: p.postId,
+        user: p.postOwner,
+        content: p.content,
+        media: p.media || [],
+        location: p.location,
+        address: p.address,
+        isLikedByMe: p.isLikedByMe,
+        interaction: {
+          likesCount: p.summary?.likesCount || 0,
+          commentCount: p.summary?.commentCount || 0,
+        },
+      }));
+
+      setInteractions((prev) => [...prev, ...normalized]);
+      setInteractionHasMore(response.data?.hasNext);
+      setInteractionPage((p) => p + 1);
+    } catch (e) {
+      console.error("Interaction fetch error", e);
+    } finally {
+      interactionLoadingRef.current = false;
+      setInteractionLoading(false);
+    }
+  }, [user?._id, interactionPage, interactionHasMore]);
+
   useEffect(() => {
-    const fetchInteractions = async () => {
-      if (activeTab !== "interactions" || !user?._id) return;
-
-      setLoading(true);
-      try {
-        const response = await PostAPI.getInteractions(user._id);
-        const rawPosts = response.data?.data?.posts || [];
-
-        const normalizedPosts = rawPosts.map((p: any) => ({
-          _id: p.postId,
-          user: p.postOwner,
-          content: p.content,
-          media: p.media || [],
-          location: p.location || null,
-          address: p.address || "",
-          isLikedByMe: p.isLikedByMe || false,
-          interaction: {
-            likesCount: p.summary?.likesCount,
-            commentCount: p.summary?.commentCount,
-          },
-        }));
-
-        setInteractions(normalizedPosts);
-      } catch (error) {
-        console.error("Error fetching interactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInteractions();
-  }, [activeTab, user]);
+    if (activeTab === "interactions" && interactions.length === 0) {
+      fetchInteractions();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(1);
   }, [fetchPosts]);
 
   const handlePostClick = (post: any) => {
@@ -166,10 +182,10 @@ const MyActivity: React.FC = () => {
 
   const refreshPosts = async () => {
     setPosts([]);
-    setOffset(0);
+    setPage(1);
     setHasMore(true);
     setLoading(true);
-    await fetchPosts(0);
+    await fetchPosts(1);
   };
 
   const handleLikeUpdate = (
@@ -252,15 +268,25 @@ const MyActivity: React.FC = () => {
       const bottomReached =
         div.scrollTop + div.clientHeight >= div.scrollHeight - 50;
 
-      if (bottomReached && hasMore && !loadingMore) {
-        setLoadingMore(true);
-        fetchPosts(offset);
+      if (bottomReached) {
+        if (activeTab === "posts" && hasMore && !loadingMore) {
+          setLoadingMore(true);
+          fetchPosts(page);
+        }
+
+        if (
+          activeTab === "interactions" &&
+          interactionHasMore &&
+          !interactionLoading
+        ) {
+          fetchInteractions();
+        }
       }
     };
 
     div.addEventListener("scroll", handleScroll);
     return () => div.removeEventListener("scroll", handleScroll);
-  }, [hasMore, offset, loadingMore]);
+  }, [hasMore, page, loadingMore]);
 
   useEffect(() => {
     if (

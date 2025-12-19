@@ -50,7 +50,7 @@ const Home: React.FC = () => {
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const limit = 10;
   const [hasMore, setHasMore] = useState(true);
   const rightSidebarRef = useRef<HTMLDivElement>(null);
@@ -84,24 +84,23 @@ const Home: React.FC = () => {
     geocodeLocation();
   }, [currentUser?.location]);
 
-  const fetchPosts = async (offsetValue = 0) => {
+  const fetchPosts = async (pageValue = 1) => {
     try {
       const res = await PostAPI.getPublicPosts({
+        page: pageValue,
         limit,
-        offset: offsetValue,
       });
 
-      const newPosts = res.data?.posts || [];
+      const newPosts = res.data?.data || [];
+
       setPosts((prev) => {
         const ids = new Set(prev.map((p) => p._id));
         const filtered = newPosts.filter((p: any) => !ids.has(p._id));
         return [...prev, ...filtered];
       });
 
-      setOffset(offsetValue + limit);
-      if (res.data?.nextPage === null) {
-        setHasMore(false);
-      }
+      setHasMore(res.data?.hasNext);
+      setPage(pageValue + 1);
     } catch (err) {
       console.error(err);
     } finally {
@@ -111,7 +110,7 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPosts(0);
+    fetchPosts(1);
   }, []);
 
   const handleLikeUpdate = (
@@ -181,13 +180,13 @@ const Home: React.FC = () => {
 
       if (bottomReached && hasMore && !loadingMore) {
         setLoadingMore(true);
-        fetchPosts(offset);
+        fetchPosts(page);
       }
     };
 
     div.addEventListener("scroll", handleScroll);
     return () => div.removeEventListener("scroll", handleScroll);
-  }, [hasMore, offset, loadingMore]);
+  }, [hasMore, page, loadingMore]);
 
   const MapCard: React.FC<MapCardProps> = ({
     image,
@@ -295,10 +294,10 @@ const Home: React.FC = () => {
 
   const refreshPosts = async () => {
     setPosts([]);
-    setOffset(0);
+    setPage(1);
     setHasMore(true);
     setLoading(true);
-    await fetchPosts(0);
+    await fetchPosts(1);
   };
 
   const onLoad = useCallback((mapInstance: google.maps.Map) => {

@@ -176,7 +176,7 @@ const Signup: React.FC = () => {
             >
               <Input
                 size="large"
-                placeholder="Enter FullName"
+                placeholder="Enter Full Name"
                 className="rounded-xl h-12"
               />
             </Form.Item>

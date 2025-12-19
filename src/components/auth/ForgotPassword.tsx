@@ -58,7 +58,7 @@ const ForgotPassword: React.FC = () => {
               type="primary"
               htmlType="submit"
               disabled={loading}
-              className="w-full bg-[#8869F3] hover:bg-purple-700 text-white text-base font-normal py-2 px-4 rounded-xl transition duration-200 ease-in-out h-10 flex items-center justify-center mt-6"
+              className="w-full !bg-[#8869F3] text-white text-base font-normal py-2 px-4 rounded-xl transition duration-200 ease-in-out h-10 flex items-center justify-center mt-6"
             >
               {loading ? (
                 <Spin size="small" className="text-white" />
@@ -73,7 +73,7 @@ const ForgotPassword: React.FC = () => {
           <span className="text-gray-500">Back to </span>
           <a
             onClick={() => navigate("/")}
-            className="text-purple-600 hover:text-purple-700 cursor-pointer"
+            className="!text-[#8869F3] cursor-pointer"
           >
             Login
           </a>

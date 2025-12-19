@@ -24,6 +24,10 @@ class ChatAPI {
   static getSearchedCotacts(params = {}) {
     return axiosClient.get("/chat/search", { params });
   }
+
+  static leaveGroupChat(chatId: string) {
+    return axiosClient.post(`/chat/group/${chatId}/leave`);
+  }
 }
 
 export default ChatAPI;

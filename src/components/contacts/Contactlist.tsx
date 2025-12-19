@@ -179,7 +179,7 @@ const ContactsList: React.FC<Props> = ({ username }) => {
         <div className="flex flex-col items-center gap-3 py-4">
           <img src="/icons/remove-icon.svg" alt="Icon" className="w-12 h-12" />
           <span className="text-center text-base font-medium px-8">
-            Are you sure you want to delete this contact?
+            Are you sure you want to remove this contact?
           </span>
         </div>
       </Modal>

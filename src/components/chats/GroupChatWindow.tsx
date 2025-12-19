@@ -8,6 +8,7 @@ import type { RootState } from "../../store";
 import { Spin, message } from "antd";
 import { MediaType } from "./chat-enum";
 import AddPostAPI from "../../api/addPostApi/AddPostAPI";
+import GroupInfoDrawer from "./GroupInfoDrawer";
 
 interface ChatMember {
   _id: string;
@@ -43,6 +44,7 @@ interface Message {
   content: string;
   createdAt: string;
   media?: MediaItem[];
+  image?: string;
 }
 
 interface GroupChatWindowProps {
@@ -66,6 +68,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   const socketRef = useRef<Socket | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -158,11 +161,6 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
       return symKey;
     } catch (err) {
-      console.error("GROUP-ERROR: Failed to decrypt group symmetric key", {
-        chatId,
-        keyId,
-        err,
-      });
       return null;
     }
   };
@@ -237,7 +235,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         };
       }
 
-      let content = "[Failed to decrypt]";
+      let content = "Message UnAvailable";
       const isGroup = !!(
         msg.groupCiphertext && Object.keys(msg.groupCiphertext).length
       );
@@ -419,7 +417,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
         const isGroup = msg.chat?.type?.toLowerCase() === "group";
         const isSender = String(msg.sender?._id) === String(myUserId);
-        let content = "[Failed to decrypt]";
+        let content = "Message UnAvailable";
 
         if (isGroup) {
           const keyId =
@@ -595,17 +593,26 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white rounded-xl ml-4 mr-4 mb-4">
-      <div className="flex items-center p-4 border-b">
-        <img
-          src={groupImage}
-          alt="image"
-          className="w-10 h-10 rounded-full mr-3"
-        />
-        <div>
-          <h3 className="text-black text-base font-normal">{groupName}</h3>
-          <p className="text-[#666666] text-sm font-normal">
-            {members.length ? `${members.length} members` : "Group"}
-          </p>
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center">
+          <img
+            src={groupImage}
+            alt="image"
+            className="w-10 h-10 rounded-full mr-3"
+          />
+          <div>
+            <h3 className="text-black text-base font-normal">{groupName}</h3>
+            <p className="text-[#666666] text-sm font-normal">
+              {members.length ? `${members.length} members` : "Group"}
+            </p>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setOpen(true)}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 cursor-pointer border border-gray-200"
+        >
+          <img src="/icons/dots-icon.svg" alt="edit" className="w-5 h-5" />
         </div>
       </div>
 
@@ -621,76 +628,62 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
       >
         {messages && messages.length > 0 ? (
           messages.map((msg) => {
-            const isMine = String(msg.sender) === String(myUserId);
+            const isMine = msg.senderName === user?.fullName;
+            const avatarSrc = isMine ? user?.image : msg.image;
+
             return (
               <div
                 key={msg._id}
-                className={`flex flex-col ${
-                  isMine ? "items-end" : "items-start"
+                className={`flex gap-2 mt-2 ${
+                  isMine ? "justify-end" : "justify-start"
                 }`}
               >
+                {!isMine && (
+                  <img
+                    src={avatarSrc || "/avatar-placeholder.png"}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                )}
+
                 <div
-                  className={`flex p-3 max-w-md mt-2 ${
-                    isMine
-                      ? "bg-[#8869F3] text-white rounded-2xl rounded-br-none"
-                      : "bg-zinc-100 text-black rounded-2xl rounded-bl-none"
+                  className={`flex flex-col ${
+                    isMine ? "items-end" : "items-start"
                   }`}
                 >
-                  <div>
-                    <div className="text-sm font-normal">
-                      {msg.senderName ?? "Unknown"}{" "}
+                  <div
+                    className={`p-3 max-w-md ${
+                      isMine
+                        ? "bg-[#8869F3] text-white rounded-2xl rounded-br-none"
+                        : "bg-zinc-100 text-black rounded-2xl rounded-bl-none"
+                    }`}
+                  >
+                    <div className="text-sm font-normal mb-1">
+                      {isMine ? "You" : msg.senderName ?? "Unknown"}
                     </div>
-                    {msg.content ? (
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
-                    ) : null}
 
-                    {Array.isArray(msg.media) &&
-                      msg.media.length > 0 &&
-                      msg.media.map((m) => {
-                        if (!m?.url) return null;
-                        if ((m.type || "").startsWith("image")) {
-                          return (
-                            <img
-                              key={m._id ?? m.url}
-                              src={m.url}
-                              alt="shared"
-                              className="max-w-sm rounded-md mt-2"
-                            />
-                          );
-                        } else if ((m.type || "").startsWith("video")) {
-                          return (
-                            <video
-                              key={m._id ?? m.url}
-                              controls
-                              src={m.url}
-                              className="max-w-sm rounded-md mt-2"
-                            />
-                          );
-                        } else {
-                          return (
-                            <a
-                              key={m._id ?? m.url}
-                              href={m.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block mt-2 text-xs underline"
-                            >
-                              View file
-                            </a>
-                          );
-                        }
-                      })}
+                    {msg.content && (
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    )}
                   </div>
-                </div>
-                <div className="text-stone-500 text-xs font-light mt-1">
-                  {msg.createdAt
-                    ? new Date(msg.createdAt).toLocaleTimeString([], {
+
+                  <div className="text-stone-500 text-xs font-light mt-1">
+                    {msg.createdAt &&
+                      new Date(msg.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                         hour12: true,
-                      })
-                    : ""}
+                      })}
+                  </div>
                 </div>
+
+                {isMine && (
+                  <img
+                    src={avatarSrc || "/avatar-placeholder.png"}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                )}
               </div>
             );
           })
@@ -739,6 +732,16 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
           </button>
         </div>
       </div>
+
+      {activeChat && (
+        <GroupInfoDrawer
+          open={open}
+          onClose={() => setOpen(false)}
+          chat={activeChat}
+          chatId={chatId}
+          GroupMembers={members}
+        />
+      )}
     </div>
   );
 }

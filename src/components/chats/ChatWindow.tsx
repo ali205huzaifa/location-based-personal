@@ -150,7 +150,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
         const senderPublicKey = actualMsg.sender?.userPublicKey;
 
-        let plaintext = "[Failed to decrypt]";
+        let plaintext = "Message UnAvailable";
         if (ciphertext && nonce && senderPublicKey) {
           plaintext = await decryptMessage(
             ciphertext,
@@ -275,7 +275,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             }
           } catch (err) {
             console.error("Failed decrypt:", msg._id, err);
-            (window as any)._decryptedMessages[msg._id] = "[Failed to decrypt]";
+            (window as any)._decryptedMessages[msg._id] = "Message UnAvailable";
           }
         }
       } catch (error: any) {
@@ -515,7 +515,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               : msg.nonce?.forRecipient;
             const senderPublicKey = msg.senderId?.userPublicKey;
 
-            let plaintext = "[Failed to decrypt]";
+            let plaintext = "Message UnAvailable";
             if (ciphertext && nonce && senderPublicKey) {
               plaintext = await decryptMessage(
                 ciphertext,
