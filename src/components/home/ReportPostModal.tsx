@@ -42,26 +42,26 @@ const ReportPostModal = ({
 
   return (
     <Modal
+      title={<div className="text-black text-lg font-medium">Report Post</div>}
       open={visible}
       onCancel={onClose}
       footer={null}
       centered
-      width={520}
+      width={724}
       className="rounded-3xl overflow-hidden"
       styles={{ body: { padding: "0px 0px 20px 0px" } }}
-      title={
-        <span className="font-semibold text-gray-900 text-lg">
-          Help us understand what’s wrong with the post
-        </span>
-      }
     >
-      <div className="bg-[#FFF7E6] border border-[#FFD591] rounded-lg p-4 mb-5 flex items-start space-x-3">
-        <ExclamationCircleOutlined className="text-[#FAAD14] text-lg mt-0.5" />
+      <div className="text-black text-2xl font-medium mb-4">
+        {" "}
+        Help us understand what’s wrong with the post
+      </div>
+      <div className="bg-[#F59E0B1A] border border-[#F8E7CC] rounded-lg p-4 mb-5 flex items-start space-x-3">
+        <ExclamationCircleOutlined className="text-[#F59E0B] text-lg mt-1" />
         <div>
-          <p className="font-semibold text-[#FAAD14] mb-1">
+          <p className="font-semibold text-xl text-[#F59E0B] mb-1">
             Report Responsibly.
           </p>
-          <p className="text-gray-600 text-sm">
+          <p className="text-[#F59E0B] text-sm font-light">
             False reports may result in action against your account. Only report
             content that violates our community guidelines.
           </p>
@@ -74,7 +74,7 @@ const ReportPostModal = ({
             key={option}
             checked={selectedOptions.includes(option)}
             onChange={() => toggleOption(option)}
-            className="text-gray-800"
+            className="text-black text-sm font-light"
           >
             {option}
           </Checkbox>
@@ -82,7 +82,7 @@ const ReportPostModal = ({
       </div>
 
       <div className="mb-4">
-        <p className="font-medium text-gray-700 mb-1">
+        <p className="text-sm font-light text-black mb-1">
           Additional Information (optional)
         </p>
         <Input.TextArea
@@ -98,7 +98,7 @@ const ReportPostModal = ({
         type="primary"
         block
         size="large"
-        className="rounded-xl !bg-[#8869F3] font-medium"
+        className="rounded-xl !bg-[#8869F3] font-medium h-[52px] mt-2 -mb-4"
         onClick={handleSubmit}
       >
         Submit

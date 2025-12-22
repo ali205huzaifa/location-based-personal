@@ -239,7 +239,7 @@ const Home: React.FC = () => {
                   isLiked ? "/icons/redheart-icon.svg" : "/icons/heart-icon.svg"
                 }
                 alt="Likes"
-                className="w-4 h-4 mr-1"
+                className="w-5 h-5 mr-1"
               />
               {likes}
             </span>
@@ -248,7 +248,7 @@ const Home: React.FC = () => {
               <img
                 src="/icons/comment-icon.svg"
                 alt="Comments"
-                className="w-4 h-4 mr-1"
+                className="w-5 h-5 mr-1"
               />
               {comments || 0}
             </span>
@@ -263,7 +263,7 @@ const Home: React.FC = () => {
               <img
                 src="/icons/share-icon.svg"
                 alt="Share"
-                className="w-4 h-4 mr-1"
+                className="w-5 h-5 mr-1"
               />
               {shares}
             </span>
@@ -339,7 +339,7 @@ const Home: React.FC = () => {
   return (
     <div className="flex gap-4 bg-[#F9FAFB] md:ml-4 xl:ml-0 h-full">
       <div className="flex-1 flex flex-col">
-        <div className="flex justify-center py-4 w-full relative z-10">
+        <div className="flex justify-center pb-4 w-full relative z-10">
           <div className="w-full" ref={searchContainerRef}>
             <Input
               prefix={
@@ -382,7 +382,7 @@ const Home: React.FC = () => {
                 setMainSearchValue(e.target.value);
                 setSearchOpen(true);
               }}
-              className="!h-12 !text-sm !w-full !rounded-xl custom-input focus:border-![#8869F3] hover:!border-[#8869F3]"
+              className="!h-12 !text-sm !w-full !rounded-xl custom-input focus:!border-[#8869F3] hover:!border-[#8869F3]"
             />
 
             {searchOpen && (
@@ -550,7 +550,7 @@ const Home: React.FC = () => {
 
       <div
         ref={rightSidebarRef}
-        className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] p-2 space-y-4 no-scrollbar"
+        className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] px-2 pb-2 space-y-4 no-scrollbar"
       >
         {posts.length === 0 && !loadingMore && (
           <p className="text-center !text-[#8869F3] text-base mt-8">

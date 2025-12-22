@@ -35,7 +35,7 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="relative w-[285px] bg-white rounded-xl pt-2 px-2 flex flex-col items-center space-y-4 h-full">
+    <aside className="relative w-[285px] bg-white rounded-xl pt-2 px-2 flex flex-col items-center space-y-4 h-full border border-[#E8E6E6]">
       <div className="flex flex-col items-center space-y-1">
         <Avatar
           size={80}

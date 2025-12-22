@@ -183,7 +183,7 @@ const ChatList: React.FC<ChatListProps> = ({
           }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666] focus:border-![#8869F3] hover:!border-[#8869F3]"
+          className="rounded-xl w-full !h-12 mb-4 outline-[#8869F3] placeholder:!text-[#666666] focus:!border-[#8869F3] hover:!border-[#8869F3]"
         />
 
         {search && (

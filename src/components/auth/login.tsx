@@ -179,7 +179,7 @@ const LoginPage: React.FC = () => {
               <Input
                 placeholder="Enter your Email"
                 size="large"
-                className="rounded-xl !h-12 border border-gray-300 focus:border-![#7C4DFF] hover:!border-[#7C4DFF]"
+                className="rounded-xl !h-[52px] border border-gray-300 focus:!border-[#7C4DFF] hover:!border-[#7C4DFF]"
               />
             </Form.Item>
 
@@ -212,7 +212,7 @@ const LoginPage: React.FC = () => {
                   )
                 }
                 size="large"
-                className="rounded-xl !h-12 border border-gray-300 focus:border-![#7C4DFF] hover:!border-[#7C4DFF]"
+                className="rounded-xl !h-[52px] border border-gray-300 focus:!border-[#7C4DFF] hover:!border-[#7C4DFF]"
               />
             </Form.Item>
 

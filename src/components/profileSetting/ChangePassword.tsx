@@ -81,7 +81,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-[#FFFFFF] focus:border-![#8869F3] hover:!border-[#8869F3]"
+            className="rounded-xl !h-12 border border-gray-300 placeholder:text-[#C3C3C3] text-black text-base font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3]"
           />
         </Form.Item>
 
@@ -91,7 +91,11 @@ const ChangePassword: React.FC = () => {
           name="newPassword"
           rules={[
             { required: true, message: "Please enter your new password" },
-            { min: 6, message: "Password must be at least 6 characters" },
+            {
+              min: 8,
+              message:
+                "Password must be at least 8 characters including a number and a special character",
+            },
           ]}
         >
           <Input.Password
@@ -114,7 +118,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-[#FFFFFF] focus:border-![#8869F3] hover:!border-[#8869F3]"
+            className="rounded-xl !h-12 border border-gray-300 placeholder:text-[#C3C3C3] text-black text-base font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3]"
           />
         </Form.Item>
 
@@ -155,7 +159,7 @@ const ChangePassword: React.FC = () => {
               )
             }
             size="large"
-            className="rounded-xl !h-12 border border-gray-300 text-[#C3C3C3] text-xs font-normal bg-[#FFFFFF] focus:border-![#8869F3] hover:!border-[#8869F3]"
+            className="rounded-xl !h-12 border border-gray-300 placeholder:text-[#C3C3C3] text-black text-base font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3] "
           />
         </Form.Item>
 

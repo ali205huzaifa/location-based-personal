@@ -243,3 +243,43 @@ select:-webkit-autofill:focus {
   -webkit-text-fill-color: #000 !important;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-password,
+.ant-input-textarea,
+.ant-select-selector,
+.ant-picker {
+  box-shadow: none !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper:active,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused {
+  box-shadow: none !important;
+}
+
+/* .ant-input:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:focus,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused {
+  border-color: #8869f3 !important;
+  box-shadow: 0 0 0 2px rgba(136, 105, 243, 0.2) !important;
+} */
+
+.ant-checkbox-inner {
+  border-color: #8869f3 !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #8869f3 !important;
+  border-color: #8869f3 !important;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner {
+  border-color: #8869f3 !important;
+}

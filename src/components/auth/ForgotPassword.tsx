@@ -24,7 +24,7 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-4 bg-[url('/images/admin.svg')] bg-cover bg-center bg-no-repeat">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-[412px] text-center">
         <h2 className="text-black text-4xl font-medium mb-4">
           Forgot Password?
         </h2>
@@ -49,7 +49,7 @@ const ForgotPassword: React.FC = () => {
             <Input
               placeholder="example123@gmail.com"
               size="large"
-              className="rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              className="h-[52px] rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500"
             />
           </Form.Item>
 
@@ -58,7 +58,7 @@ const ForgotPassword: React.FC = () => {
               type="primary"
               htmlType="submit"
               disabled={loading}
-              className="w-full !bg-[#8869F3] text-white text-base font-normal py-2 px-4 rounded-xl transition duration-200 ease-in-out h-10 flex items-center justify-center mt-6"
+              className="w-full !bg-[#8869F3] text-white text-base font-normal py-2 px-4 rounded-xl transition duration-200 ease-in-out h-[52px] flex items-center justify-center mt-6"
             >
               {loading ? (
                 <Spin size="small" className="text-white" />

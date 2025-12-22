@@ -8,16 +8,20 @@ dayjs.extend(relativeTime);
 
 interface ApiNotification {
   _id: string;
-  type: "like" | "contact" | "reply" | "comment";
-  content: string;
-  status: "read" | "unread";
-  createdAt: string;
+  userId: string;
   senderId: {
     _id: string;
     fullName: string;
     username: string;
     image?: string;
   };
+  type: "like" | "contact" | "reply" | "comment";
+  entityId: string;
+  entityType: "Post" | string;
+  content: string;
+  status: "read" | "unread";
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface NotificationDrawerProps {
@@ -57,14 +61,14 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
         limit: LIMIT,
       });
 
-      const data = res.data.data;
+      const resData = res.data;
 
       setNotifications((prev) =>
-        initial ? data.notifications : [...prev, ...data.notifications]
+        initial ? resData.data : [...prev, ...resData.data]
       );
 
-      setHasNext(data.hasNext);
-      setPage(data.page);
+      setHasNext(resData.hasNext);
+      setPage(resData.page);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     } finally {
@@ -191,9 +195,9 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                   <div className="flex-1">
                     <p className="text-sm text-gray-800">
                       <span className="font-medium">
-                        @{notif.senderId?.username}
+                        @{notif.senderId.username}
                       </span>{" "}
-                      {notif.content.replace(notif.senderId?.username, "")}
+                      {notif.content.replace(`${notif.senderId.username} `, "")}
                     </p>
 
                     <span className="text-xs text-gray-400">

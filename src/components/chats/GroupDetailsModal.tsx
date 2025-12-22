@@ -151,7 +151,7 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
           placeholder="Enter group name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full h-12 border rounded-xl px-3 py-2 text-black text-xs font-normal outline-[#8869F3]"
+          className="w-full h-[52px] border rounded-xl px-3 py-2 text-black text-xs font-normal outline-[#8869F3]"
         />
       </div>
 
@@ -171,7 +171,7 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
       <button
         onClick={handleCreate}
         disabled={!name || uploading || creating}
-        className="mt-2 w-full !bg-[#8869F3] text-white py-2 rounded-xl disabled:opacity-50"
+        className="h-[52px] mt-2 w-full !bg-[#8869F3] text-white py-2 rounded-xl disabled:opacity-50"
       >
         {creating ? "Creating Group..." : "Create Group Chat"}
       </button>

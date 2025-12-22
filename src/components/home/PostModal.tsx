@@ -584,7 +584,7 @@ const PostModal: React.FC<PostModalProps> = ({
                           : "/icons/heart-icon.svg"
                       }
                       alt="Likes"
-                      className="w-5 h-5 mr-1 cursor-pointer"
+                      className="w-6 h-6 mr-1 cursor-pointer"
                     />
                     {likeCount}
                   </span>
@@ -593,7 +593,7 @@ const PostModal: React.FC<PostModalProps> = ({
                     <img
                       src="/icons/comment-icon.svg"
                       alt="Comments"
-                      className="w-5 h-5 mr-1"
+                      className="w-6 h-6 mr-1"
                     />
                     {comments}
                   </span>
@@ -605,7 +605,7 @@ const PostModal: React.FC<PostModalProps> = ({
                     <img
                       src="/icons/share-icon.svg"
                       alt="Share"
-                      className="w-5 h-5 mr-1"
+                      className="w-6 h-6 mr-1"
                     />
                     {post.shares || 0}
                   </span>
@@ -618,7 +618,7 @@ const PostModal: React.FC<PostModalProps> = ({
                   <img
                     src="/icons/report-icon.svg"
                     alt="Report"
-                    className="w-5 h-5 mr-1"
+                    className="w-6 h-6 mr-1"
                   />
                 </span>
               </div>

@@ -85,7 +85,7 @@ const ContactsList: React.FC<Props> = ({ username }) => {
   };
 
   return (
-    <div className="p-3 h-full overflow-y-auto space-y-2 custom-scrollbar mr-8">
+    <div className="px-3 h-full overflow-y-auto space-y-2 custom-scrollbar mr-8">
       <Input
         prefix={
           <img src="/icons/search-icon.svg" alt="Icon" className="mr-2" />

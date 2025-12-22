@@ -356,7 +356,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                 <Button
                   block
                   onClick={onClose}
-                  className="h-12 rounded-xl text-gray-500"
+                  className="h-12 rounded-xl !text-[#666666] !border-[#666666]"
                 >
                   Close
                 </Button>

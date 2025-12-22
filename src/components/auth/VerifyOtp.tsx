@@ -120,16 +120,26 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      setOtp(Array(otp.length).fill(""));
+      setTimeout(() => {
+        document.getElementById("otp-0")?.focus();
+      }, 0);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
       {!otpVerified ? (
-        <div className="bg-white rounded-2xl p-8 w-[90%] sm:w-[400px] text-center border border-gray-300">
-          <h2 className="text-black text-4xl font-medium mb-2">Verify OTP</h2>
-          <p className="text-stone-500 text-base font-normal mb-6">
+        <div className="bg-white rounded-2xl p-6 w-[90%] sm:w-[412px] text-center border border-gray-300">
+          <h2 className="text-black text-4xl font-medium">Verify OTP</h2>
+          <p className="text-stone-500 text-lg font-light py-4">
             Enter the code sent to your email.
           </p>
 
-          <div className="flex justify-center gap-3 mb-6">
+          <div className="flex justify-center gap-3 mb-6 mt-4">
             {otp.map((digit, i) => (
               <input
                 key={i}
@@ -138,7 +148,8 @@ const VerifyOtp: React.FC = () => {
                 value={digit}
                 maxLength={1}
                 onChange={(e) => handleOtpChange(e.target.value, i)}
-                className="w-12 h-12 text-center border border-gray-300 rounded-lg text-lg outline-none"
+                onKeyDown={(e) => handleKeyDown(e)}
+                className="w-14 h-12 text-center border border-gray-300 rounded-lg text-lg outline-none"
               />
             ))}
           </div>
@@ -147,16 +158,16 @@ const VerifyOtp: React.FC = () => {
             type="primary"
             block
             onClick={() => handleVerifyOTP(otp.join(""))}
-            className="!bg-[#8869F3] text-white text-base font-normal py-2 px-4 h-10 rounded-lg"
+            className="!bg-[#8869F3] text-white text-base font-normal py-2 px-4 h-[52px] rounded-xl mt-4"
           >
             {loading ? <ClipLoader size={20} color="#fff" /> : "Verify OTP"}
           </Button>
 
-          <div className="text-gray-500 text-sm mt-4 flex justify-center items-center gap-1">
+          <div className="text-gray-500 text-sm mt-6 flex justify-center items-center gap-1">
             {timer > 0 ? (
               <>
                 00:{timer < 10 ? `0${timer}` : timer}
-                <span className="text-[#8869F3] ml-1">Resend code</span>
+                <span className="!text-[#8869F3] ml-1">Resend code</span>
               </>
             ) : (
               <Button
@@ -171,11 +182,11 @@ const VerifyOtp: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl p-6 w-[90%] sm:w-[420px] text-center border border-gray-300">
+        <div className="bg-white rounded-2xl p-6 w-[90%] sm:w-[412px] text-center border border-gray-300">
           <h2 className="self-stretch text-black text-4xl font-medium text-center mb-4 whitespace-nowrap">
             Set a New Password
           </h2>
-          <p className="self-stretch text-stone-500 text-base font-normal mb-6">
+          <p className="self-stretch text-stone-500 text-base font-light mb-6">
             Choose a strong password to secure your account.{" "}
           </p>
 
@@ -208,7 +219,7 @@ const VerifyOtp: React.FC = () => {
                     />
                   )
                 }
-                className="h-10 rounded-lg"
+                className="h-[52px] rounded-xl"
                 visibilityToggle={{
                   visible: showNewPassword,
                   onVisibleChange: setShowNewPassword,
@@ -238,7 +249,7 @@ const VerifyOtp: React.FC = () => {
                     />
                   )
                 }
-                className="h-10 rounded-lg"
+                className="h-[52px] rounded-xl"
                 visibilityToggle={{
                   visible: showConfirmPassword,
                   onVisibleChange: setShowConfirmPassword,
@@ -251,7 +262,7 @@ const VerifyOtp: React.FC = () => {
               htmlType="submit"
               block
               disabled={loading}
-              className="bg-[#8869F3] hover:!bg-purple-600 h-12 rounded-xl !mt-12 text-white text-lg font-medium"
+              className="bg-[#8869F3] hover:!bg-purple-600 h-[52px] rounded-xl !mt-12 text-white text-lg font-normal"
             >
               {loading ? (
                 <ClipLoader size={20} color="#fff" />

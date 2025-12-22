@@ -522,7 +522,7 @@ const UserProfile: React.FC = () => {
               <Button
                 type="primary"
                 className="w-80 rounded-lg py-2 !h-10 flex items-center justify-center gap-2
-  !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3]"
+  !bg-[#F9FAFB] !text-[#8869F3] !border-[#8869F3]"
                 onClick={
                   contactStatus === "none" ? handleAddToContact : undefined
                 }
