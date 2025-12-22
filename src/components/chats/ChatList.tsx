@@ -55,7 +55,7 @@ const ChatList: React.FC<ChatListProps> = ({
     const fetchChats = async () => {
       try {
         const chatRes = await ChatAPI.getMyChats();
-        if (chatRes?.data) setChats(chatRes.data);
+        if (chatRes?.data) setChats(chatRes.data.data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -77,8 +77,8 @@ const ChatList: React.FC<ChatListProps> = ({
 
       try {
         const res = await ChatAPI.getSearchedCotacts({ q: search });
-        if (Array.isArray(res?.data)) {
-          setContacts(res.data);
+        if (Array.isArray(res?.data?.data)) {
+          setContacts(res.data.data);
         } else {
           setContacts([]);
         }

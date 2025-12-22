@@ -1,6 +1,6 @@
-import axios from 'axios';
-import { store } from '../store';
-import { clearAuthData } from '../store/Auth';
+import axios from "axios";
+import { store } from "../store";
+import { clearAuthData } from "../store/Auth";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,30 +9,36 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use(
-  function (config) {
+  (config) => {
     const token = store.getState().auth.token;
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      config.headers['ngrok-skip-browser-warning'] = true;
     }
+
+    config.headers["ngrok-skip-browser-warning"] = true;
     return config;
   },
-  function (error) {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 axiosClient.interceptors.response.use(
-  function (res) {
-    return res;
-  },
-  function (error) {
+  (response) => response,
+  (error) => {
     const status = error.response?.status;
-    const url = error.config?.url || '';
+    const url = error.config?.url || "";
+    const message = error.response?.data?.message;
 
-    if (status === 401 && !url.includes('update-password')) {
+    const isChangePassword =
+      url.includes("change-password") || url.includes("update-password");
+
+    if (
+      status === 401 &&
+      !isChangePassword &&
+      message !== "Current password is incorrect"
+    ) {
       store.dispatch(clearAuthData());
-      localStorage.removeItem('persist:root');
+      localStorage.removeItem("persist:root");
     }
 
     return Promise.reject(error);

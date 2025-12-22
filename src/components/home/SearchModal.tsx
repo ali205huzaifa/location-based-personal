@@ -34,7 +34,7 @@ const SearchModal = ({
 
     setLoadingUsers(true);
     try {
-      const res = await PostAPI.searchUsers({ q: value });
+      const res = await PostAPI.searchUsers({ query: value });
       setUsers(res.data.data || []);
     } catch (err) {
       console.error(err);

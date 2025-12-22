@@ -52,6 +52,20 @@ const LoginPage: React.FC = () => {
         // platform,
       });
 
+      const { data } = loginRes.data;
+
+      if (data.verified === false) {
+        try {
+          await AuthAPI.VerifyUserEmailOTP({ email: values.username });
+          message.success("Verification code sent to your email.");
+        } catch (err) {
+          message.error("Failed to send OTP. Please try again.");
+        }
+
+        navigate("/verify", { state: { email: values.username } });
+        return;
+      }
+
       // localStorage.setItem("fcmPushToken", fcmPushToken);
 
       const { token, clientSecret } = loginRes.data.data;

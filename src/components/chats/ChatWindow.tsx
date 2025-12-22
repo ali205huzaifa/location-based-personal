@@ -56,8 +56,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const socketRef = useRef<Socket | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [offset, setOffset] = useState(0);
-  const limit = 10;
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(true);
+  const limit = 15;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isFetchingMoreRef = useRef(false);
@@ -193,19 +194,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       try {
         let chatIdToFetch = selectedChatId;
-        let chatDataResponse: any = null;
 
         if (!isExistingChat) {
           const res = await ChatAPI.OnetoOneChat({
             participantId: selectedChatId,
           });
+          const chatDataResponse = res?.data;
 
-          chatDataResponse = res?.data;
-
-          if (typeof chatDataResponse === "string") {
-            chatIdToFetch = chatDataResponse;
-          } else {
-            chatIdToFetch = chatDataResponse?._id || chatIdToFetch;
+          if (chatDataResponse?.data) {
+            chatIdToFetch = chatDataResponse.data;
           }
 
           if (socketRef.current && chatIdToFetch) {
@@ -214,10 +211,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         }
 
         const res2 = await ChatAPI.getMessagesbyChatId(chatIdToFetch, {
+          page: 1,
           limit,
-          offset: 0,
         });
-        setOffset(limit);
+
+        setPage(2);
+        setHasNext(res2.data?.hasNext ?? false);
 
         const messages = Array.isArray(res2.data?.data) ? res2.data.data : [];
 
@@ -463,28 +462,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const loadMoreMessages = async () => {
-    if (!chatData?._id || isFetchingMoreRef.current) return;
+    if (!chatData?._id || isFetchingMoreRef.current || !hasNext) return;
 
     isFetchingMoreRef.current = true;
 
     try {
       const res = await ChatAPI.getMessagesbyChatId(chatData._id, {
+        page,
         limit,
-        offset,
       });
 
-      const newMessages = Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data)
-        ? res.data
-        : [];
+      const newMessages = Array.isArray(res.data?.data) ? res.data.data : [];
+
+      setHasNext(res.data?.hasNext ?? false);
 
       if (!newMessages.length) {
-        isFetchingMoreRef.current = false;
         return;
       }
-
-      setOffset((p) => p + limit);
 
       const container = containerRef.current;
       const oldScrollHeight = container?.scrollHeight ?? 0;
@@ -495,27 +489,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           : prev
       );
 
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (container) {
           const newScrollHeight = container.scrollHeight;
           container.scrollTop = newScrollHeight - oldScrollHeight;
         }
-      }, 0);
+      });
+      setPage((p) => p + 1);
 
       const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
       if (myPrivateKeyBase64) {
         for (const msg of newMessages) {
           try {
             const isSender = msg.senderId?._id === user!._id;
+
             const ciphertext = isSender
               ? msg.ciphertext?.forSender
               : msg.ciphertext?.forRecipient;
+
             const nonce = isSender
               ? msg.nonce?.forSender
               : msg.nonce?.forRecipient;
+
             const senderPublicKey = msg.senderId?.userPublicKey;
 
             let plaintext = "Message UnAvailable";
+
             if (ciphertext && nonce && senderPublicKey) {
               plaintext = await decryptMessage(
                 ciphertext,

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Checkbox, Button, Spin, message } from "antd";
-import { LinkOutlined, SearchOutlined } from "@ant-design/icons";
+import ChatAPI from "../../api/chatApi/ChatAPI";
 import PostAPI from "../../api/postApi/PostAPI";
+import { Pagination } from "antd";
 
 interface User {
   id: number;
@@ -24,37 +25,64 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
+
   useEffect(() => {
     if (visible) fetchContacts();
   }, [visible]);
 
-  const fetchContacts = async () => {
+  const normalizeMutualContacts = (list: any[]): User[] => {
+    return list.map((item) => ({
+      id: item.user?._id,
+      name: item.user?.fullName || "Unknown",
+      username: item.user?.username || "",
+      avatar: item.user?.image || "",
+      isMutual: true,
+    }));
+  };
+
+  const normalizeSearchContacts = (list: any[]): User[] => {
+    return list.map((item) => ({
+      id: item._id,
+      name: item.fullName || "Unknown",
+      username: item.username || "",
+      avatar: item.image || "",
+      isMutual: item.isMutual,
+    }));
+  };
+
+  const fetchContacts = async (pageNumber = 1, keyword = "") => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        message.warning("You must be logged in to fetch contacts.");
-        setLoading(false);
-        return;
+      let res;
+      let usersData: User[] = [];
+
+      if (keyword.trim()) {
+        res = await PostAPI.searchShareContacts({
+          search: keyword,
+          page: pageNumber,
+          limit,
+        });
+
+        usersData = normalizeSearchContacts(res.data?.data || []);
+        setTotal(res.data?.total || usersData.length);
+      } else {
+        res = await ChatAPI.getMyContacts({
+          page: pageNumber,
+          limit,
+        });
+
+        usersData = normalizeMutualContacts(res.data?.data || []);
+        setTotal(res.data.total);
       }
 
-      const res = await PostAPI.getMyContacts();
-
-      const contactList = Array.isArray(res.data?.contacts)
-        ? res.data.contacts
-        : res.data;
-
-      const formattedUsers: User[] = contactList.map((contact: any) => ({
-        id: contact.grantedTo?._id || contact._id,
-        name: contact.grantedTo?.fullName || "Unknown",
-        username: contact.grantedTo?.username || "",
-        avatar: contact.grantedTo?.image || "",
-      }));
-
-      setUsers(formattedUsers);
+      setUsers(usersData);
+      setPage(pageNumber);
     } catch (error) {
-      console.error("Error fetching contacts:", error);
-      message.error("Failed to load contacts.");
+      console.error(error);
+      message.error("Failed to load contacts");
     } finally {
       setLoading(false);
     }
@@ -87,6 +115,27 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
     onClose();
   };
 
+  useEffect(() => {
+    if (visible) {
+      setPage(1);
+      fetchContacts(1, "");
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchContacts(1, search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const handlePageChange = (pageNumber: number) => {
+    setPage(pageNumber);
+    fetchContacts(pageNumber, search);
+  };
+
   return (
     <Modal
       open={visible}
@@ -99,10 +148,12 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
       title={<span className="font-semibold text-gray-800">Share Post</span>}
     >
       <Input
-        prefix={<SearchOutlined />}
-        placeholder="Search contacts"
+        prefix={
+          <img src="/icons/search-icon.svg" alt="Icon" className="mr-2" />
+        }
+        placeholder="Search"
         allowClear
-        className="rounded-xl mb-3 w-full h-10"
+        className="rounded-xl mb-3 w-full h-11 placeholder:!text-[#666666]"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -146,12 +197,29 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
         </div>
       )}
 
+      {total > limit && (
+        <div className="flex justify-center mt-4">
+          <Pagination
+            current={page}
+            pageSize={limit}
+            total={total}
+            onChange={handlePageChange}
+            showSizeChanger={false}
+            size="small"
+          />
+        </div>
+      )}
+
       <div
         onClick={handleCopyLink}
-        className="flex items-center text-sm text-[#8869F3] cursor-pointer mt-4"
+        className="flex items-center cursor-pointer mt-4"
       >
-        <LinkOutlined className="mr-2" />
-        Copy Link to Clipboard
+        <div className="w-9 h-9 bg-white rounded-full border border-Stroke-1">
+          <img src="/icons/sharelink-icon.svg" alt="Icon" className="p-2" />
+        </div>
+        <p className="ml-2 text-[#8869F3] text-base font-normla">
+          Copy Link to Clipboard
+        </p>
       </div>
 
       <Button

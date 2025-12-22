@@ -142,7 +142,7 @@ const UserVerification: React.FC = () => {
   const handleResendOTP = async () => {
     try {
       setResendLoading(true);
-      await AuthAPI.SendOTP({ email });
+      await AuthAPI.VerifyUserEmailOTP({ email });
 
       notification.success({
         message: "OTP Resent",

@@ -172,6 +172,7 @@ const Signup: React.FC = () => {
               className="text-xs font-normal text-[#000000]"
               rules={[
                 { required: true, message: "Please enter your full name" },
+                { max: 30, message: "Full Name cannot exceed 30 characters" },
               ]}
             >
               <Input
@@ -188,6 +189,7 @@ const Signup: React.FC = () => {
                 className="flex-1 text-xs font-normal text-[#000000]"
                 rules={[
                   { required: true, message: "Please create a username" },
+                  { max: 30, message: "Username cannot exceed 30 characters" },
                 ]}
               >
                 <Input
@@ -204,6 +206,7 @@ const Signup: React.FC = () => {
                 rules={[
                   { required: true, message: "Please enter your email" },
                   { type: "email", message: "Enter a valid email address" },
+                  { max: 30, message: "Email cannot exceed 30 characters" },
                 ]}
               >
                 <Input

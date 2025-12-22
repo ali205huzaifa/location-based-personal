@@ -27,6 +27,10 @@ class AuthAPI {
     return axiosClient.post("/auth/forget-password", data);
   }
 
+  static VerifyUserEmailOTP(data: { email: string }) {
+    return axiosClient.post("/auth/resend-email-otp", data);
+  }
+
   static VerifyOTP(data: { email: string; otp: number }) {
     return axiosClient.post("/auth/verify-password-otp", data);
   }

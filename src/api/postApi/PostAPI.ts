@@ -21,8 +21,12 @@ class PostAPI {
     return axiosClient.get("/contacts/granted");
   }
 
-  static searchUsers(params = {}) {
+  static searchShareContacts(params = {}) {
     return axiosClient.get("/contacts/search", { params });
+  }
+
+  static searchUsers(params = {}) {
+    return axiosClient.get("/search/users", { params });
   }
 
   static getCommentforPost(id: string) {

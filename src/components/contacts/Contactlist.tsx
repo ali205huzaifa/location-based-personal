@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatAPI from "../../api/chatApi/ChatAPI";
-import { Modal, Button, message, Input, Spin } from "antd";
+import { Modal, Button, message, Input, Spin, Pagination } from "antd";
 import PostAPI from "../../api/postApi/PostAPI";
 
 interface User {
@@ -20,59 +20,96 @@ interface Props {
   username?: string;
 }
 
-const ContactsList: React.FC<Props> = ({ username }) => {
+const ContactsList: React.FC<Props> = ({}) => {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
+  const limit = 10;
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
-  const fetchContacts = async (username?: string) => {
+  const normalizeMutualContacts = (list: any[]): Contact[] =>
+    list.map((item) => ({
+      grantedTo: item.grantedTo,
+      user: {
+        _id: item.user?._id,
+        fullName: item.user?.fullName,
+        username: item.user?.username,
+        image: item.user?.image,
+      },
+    }));
+
+  const normalizeSearchContacts = (list: any[]): Contact[] =>
+    list.map((item) => ({
+      grantedTo: item._id,
+      user: {
+        _id: item._id,
+        fullName: item.fullName,
+        username: item.username,
+        image: item.image,
+      },
+    }));
+
+  const fetchContacts = async (pageNumber = 1, keyword = "") => {
     setLoading(true);
     try {
-      const response = await ChatAPI.getMyContacts(username);
-      if (response && Array.isArray(response.data?.data)) {
-        setContacts(response.data.data);
-        setFilteredContacts(response.data.data);
+      let data: Contact[] = [];
+      let totalItems = 0;
+
+      if (keyword.trim()) {
+        const res = await PostAPI.searchShareContacts({
+          q: keyword,
+          page: pageNumber,
+          limit,
+        });
+        data = normalizeSearchContacts(res.data?.data || []);
+        totalItems = res.data?.total || data.length;
+      } else {
+        const res = await ChatAPI.getMyContacts({
+          page: pageNumber,
+          limit,
+        });
+        data = normalizeMutualContacts(res.data?.data || []);
+        totalItems = res.data?.total || data.length;
       }
+
+      setContacts(data);
+      setTotal(totalItems);
+      setPage(pageNumber);
     } catch (error) {
       console.error("Error fetching contacts:", error);
+      message.error("Failed to fetch contacts");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
-
-    const filtered = contacts.filter(
-      ({ user }) =>
-        user.fullName.toLowerCase().includes(value.toLowerCase()) ||
-        user.username.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredContacts(filtered);
-  };
-
   useEffect(() => {
-    fetchContacts(username);
-  }, [username]);
+    const timer = setTimeout(() => {
+      fetchContacts(1, search);
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  };
 
   const handleDelete = async () => {
     if (!userToDelete) return;
 
     setLoadingDelete(true);
-
     try {
       await PostAPI.RemoveContact(userToDelete._id);
       message.success("Contact Removed");
       setDeleteModalVisible(false);
-
-      fetchContacts(username);
+      fetchContacts(page, search);
     } catch (error) {
       message.error("Failed to delete contact");
     } finally {
@@ -82,6 +119,10 @@ const ContactsList: React.FC<Props> = ({ username }) => {
 
   const handleProfileClick = (user: User) => {
     navigate(`/othersProfile/${user._id}`);
+  };
+
+  const handlePageChange = (pageNumber: number) => {
+    fetchContacts(pageNumber, search);
   };
 
   return (
@@ -100,54 +141,72 @@ const ContactsList: React.FC<Props> = ({ username }) => {
         <div className="flex justify-center items-center py-10">
           <Spin size="large" />
         </div>
-      ) : filteredContacts.length === 0 ? (
-        <p className="text-center text-gray-400 text-sm mt-3">
+      ) : contacts.length === 0 ? (
+        <p className="text-center text-[#8869F3] text-base pt-8">
           No contacts found
         </p>
       ) : (
-        <div className="space-y-2 mt-2">
-          {filteredContacts.map(({ user }) => {
-            if (!user) return null;
-            const avatar = user.image || "/images/default-chat-profile.svg";
+        <>
+          <div className="space-y-2 mt-2">
+            {contacts.map(({ user }) => {
+              if (!user) return null;
+              const avatar = user.image || "/images/default-chat-profile.svg";
 
-            return (
-              <div
-                key={user._id}
-                onClick={() => handleProfileClick(user)}
-                className="flex items-center justify-between py-3 rounded-lg cursor-pointer"
-              >
-                <div className="flex items-center space-x-3 pointer-events-auto">
-                  <img
-                    src={avatar}
-                    alt={user.fullName}
-                    className="w-11 h-11 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="text-black text-base font-normal">
-                      {user.fullName}
-                    </p>
-                    <p className="text-stone-500 text-sm font-normal">
-                      @{user.username}
-                    </p>
+              return (
+                <div
+                  key={user._id}
+                  onClick={() => handleProfileClick(user)}
+                  className="flex items-center justify-between py-3 rounded-lg cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3 pointer-events-auto">
+                    <img
+                      src={avatar}
+                      alt={user.fullName}
+                      className="w-11 h-11 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="text-black text-base font-normal">
+                        {user.fullName}
+                      </p>
+                      <p className="text-stone-500 text-sm font-normal">
+                        @{user.username}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="!text-[#FF5D5D] !text-base !font-normal cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setUserToDelete(user);
+                      setDeleteModalVisible(true);
+                    }}
+                  >
+                    Remove
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div
-                  className="!text-[#FF5D5D] !text-base !font-normal cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setUserToDelete(user);
-                    setDeleteModalVisible(true);
-                  }}
-                >
-                  Remove
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          {/* AntD Pagination */}
+          {total > limit && (
+            <div className="flex justify-center mt-4">
+              <Pagination
+                current={page}
+                pageSize={limit}
+                total={total}
+                onChange={handlePageChange}
+                size="small"
+                showSizeChanger={false}
+                disabled={loading}
+              />
+            </div>
+          )}
+        </>
       )}
 
+      {/* Delete Modal */}
       <Modal
         centered
         open={deleteModalVisible}
