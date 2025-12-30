@@ -130,13 +130,16 @@ const AddPostModal: React.FC<PostModalProps> = ({
       } else {
         message.error("Upload failed!");
       }
-    } catch (error) {
-      console.error(error);
-      message.error("Failed to upload file!");
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to upload file!";
+
+      message.error(backendMessage);
     } finally {
       setLoading(false);
     }
-
     return false;
   };
 
@@ -222,7 +225,6 @@ const AddPostModal: React.FC<PostModalProps> = ({
         return;
       }
     } catch (err) {
-      console.error("Submit error:", err);
       message.error("Failed to submit.");
       setLoading(false);
       return;
@@ -363,7 +365,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                 <Button
                   type="primary"
                   block
-                  className="!bg-[#8869F3] h-12 rounded-xl"
+                  className="!bg-[#8869F3] !border-[#8869F3] h-12 rounded-xl shadow-none"
                   onClick={handleNext}
                 >
                   Next
@@ -422,7 +424,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                 <Button
                   type="primary"
                   block
-                  className="!bg-[#8869F3] h-12 rounded-xl"
+                  className="!bg-[#8869F3] !border-[#8869F3] h-12 rounded-xl shadow-none"
                   onClick={handlePost}
                 >
                   {isEditMode ? "Update Post" : "Post"}

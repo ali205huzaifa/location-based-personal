@@ -192,7 +192,7 @@ const UserVerification: React.FC = () => {
           block
           disabled={loading}
           onClick={handleVerifyOTP}
-          className="!bg-[#8869F3] h-10 rounded-lg"
+          className="!bg-[#8869F3] h-10 rounded-lg shadow-none"
         >
           {loading ? <ClipLoader size={20} color="#fff" /> : "Verify OTP"}
         </Button>

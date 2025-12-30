@@ -465,7 +465,7 @@ const MyActivity: React.FC = () => {
 
             <Button
               type="primary"
-              className="xl:!w-80 rounded-lg py-2 !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3] !h-10"
+              className="xl:!w-80 rounded-lg py-2 !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3] !h-10 shadow-none"
               onClick={() => navigate("/settings")}
             >
               Edit Profile

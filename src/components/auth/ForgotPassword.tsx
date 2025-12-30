@@ -58,7 +58,7 @@ const ForgotPassword: React.FC = () => {
               type="primary"
               htmlType="submit"
               disabled={loading}
-              className="w-full !bg-[#8869F3] text-white text-base font-normal py-2 px-4 rounded-xl transition duration-200 ease-in-out h-[52px] flex items-center justify-center mt-6"
+              className="w-full !bg-[#8869F3] text-white text-base font-normal py-2 px-4 rounded-xl transition duration-200 ease-in-out h-[52px] flex items-center justify-center mt-6 shadow-none"
             >
               {loading ? (
                 <Spin size="small" className="text-white" />

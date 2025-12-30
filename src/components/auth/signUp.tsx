@@ -178,7 +178,7 @@ const Signup: React.FC = () => {
               <Input
                 size="large"
                 placeholder="Enter Full Name"
-                className="rounded-xl h-12"
+                className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
               />
             </Form.Item>
 
@@ -186,7 +186,7 @@ const Signup: React.FC = () => {
               <Form.Item
                 name="username"
                 label="Username"
-                className="flex-1 text-xs font-normal text-[#000000]"
+                className="flex-1 text-xs font-normal text-[#000000] "
                 rules={[
                   { required: true, message: "Please create a username" },
                   { max: 30, message: "Username cannot exceed 30 characters" },
@@ -195,7 +195,7 @@ const Signup: React.FC = () => {
                 <Input
                   size="large"
                   placeholder="Create username"
-                  className="rounded-xl h-12"
+                  className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
                 />
               </Form.Item>
 
@@ -212,7 +212,7 @@ const Signup: React.FC = () => {
                 <Input
                   size="large"
                   placeholder="Enter your email"
-                  className="rounded-xl h-12"
+                  className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
                 />
               </Form.Item>
             </div>
@@ -229,7 +229,7 @@ const Signup: React.FC = () => {
                 <Input.Password
                   size="large"
                   placeholder="Enter your password"
-                  className="rounded-xl h-12"
+                  className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
                   iconRender={(visible) =>
                     visible ? (
                       <img
@@ -270,7 +270,7 @@ const Signup: React.FC = () => {
                 <Input.Password
                   size="large"
                   placeholder="Re-enter your password"
-                  className="rounded-xl h-12"
+                  className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
                   iconRender={(visible) =>
                     visible ? (
                       <img
@@ -308,7 +308,7 @@ const Signup: React.FC = () => {
                   />
                 }
                 format="YYYY/MM/DD"
-                className="w-full rounded-xl h-12"
+                className="w-full rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
                 placeholder="YYYY/MM/DD"
               />
             </Form.Item>
@@ -316,7 +316,7 @@ const Signup: React.FC = () => {
             <Button
               htmlType="submit"
               loading={loading}
-              className="w-full !h-12 !bg-[#8869F3] border-none !text-white text-lg rounded-xl shadow-md !mt-6"
+              className="w-full !h-12 !bg-[#8869F3] border-none !text-white text-lg rounded-xl shadow-none !mt-6"
             >
               Signup
             </Button>
@@ -336,7 +336,7 @@ const Signup: React.FC = () => {
                     className="w-6 h-6"
                   />
                 }
-                className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF] hover:text-[#7C4DFF]"
+                className="!w-12 !h-12 border border-gray-300 hover:border-[#8869F3] hover:text-[#8869F3]"
               />
 
               <Button
@@ -349,7 +349,7 @@ const Signup: React.FC = () => {
                     className="w-6 h-6"
                   />
                 }
-                className="!w-12 !h-12 border border-gray-300 hover:border-[#7C4DFF] hover:text-[#7C4DFF]"
+                className="!w-12 !h-12 border border-gray-300 hover:border-[#8869F3] hover:text-[#8869F3]"
               />
             </div>
 

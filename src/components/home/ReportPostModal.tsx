@@ -88,7 +88,7 @@ const ReportPostModal = ({
         <Input.TextArea
           placeholder="Provide any additional context that might help our review team..."
           rows={3}
-          className="rounded-xl text-sm"
+          className="rounded-xl text-sm focus:!border-[#8869F3] hover:!border-[#8869F3]"
           value={additionalInfo}
           onChange={(e) => setAdditionalInfo(e.target.value)}
         />
@@ -98,7 +98,7 @@ const ReportPostModal = ({
         type="primary"
         block
         size="large"
-        className="rounded-xl !bg-[#8869F3] font-medium h-[52px] mt-2 -mb-4"
+        className="rounded-xl !bg-[#8869F3] font-medium h-[52px] mt-2 -mb-4 shadow-none"
         onClick={handleSubmit}
       >
         Submit

@@ -153,7 +153,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
         }
         placeholder="Search"
         allowClear
-        className="rounded-xl mb-3 w-full h-11 placeholder:!text-[#666666]"
+        className="rounded-xl mb-3 w-full h-11 placeholder:!text-[#666666] focus:!border-[#8869F3] hover:!border-[#8869F3]"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -226,7 +226,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
         type="primary"
         block
         size="large"
-        className="mt-4 rounded-xl !bg-[#8869F3]"
+        className="mt-4 rounded-xl !bg-[#8869F3] shadow-none"
         onClick={handleShare}
         disabled={loading}
       >

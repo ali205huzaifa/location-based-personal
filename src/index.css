@@ -304,3 +304,7 @@ select:-webkit-autofill:focus {
   border-color: #8869f3;
   color: #fff !important;
 }
+
+.ant-spin-dot-item {
+  background-color: #8869f3 !important;
+}

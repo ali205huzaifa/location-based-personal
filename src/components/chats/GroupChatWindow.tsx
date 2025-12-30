@@ -17,12 +17,20 @@ interface ChatMember {
   userPublicKey: string;
 }
 
+interface GroupKey {
+  _id: string;
+  keyId: string;
+  active: boolean;
+  createdAt: string;
+  createdBy: string;
+}
+
 interface Chat {
   _id: string;
   type: string;
   members: ChatMember[];
   messages?: Message[];
-  keyId?: { keyId: string }[];
+  keyId?: GroupKey[];
   name?: string;
   description?: string;
   GroupName?: string;
@@ -235,16 +243,25 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         };
       }
 
-      let content = "Message UnAvailable";
-      const isGroup = !!(
-        msg.groupCiphertext && Object.keys(msg.groupCiphertext).length
-      );
-      if (isGroup) {
-        const keyId =
-          msg.groupCiphertext?.keyId || chatData?.chat?.keyVersions?.[0]?.keyId;
+      let content = "Message Unavailable";
+
+      const isGroupMessage =
+        !!msg.groupCiphertext &&
+        !!msg.groupCiphertext.keyId &&
+        !!msg.groupCiphertext.ciphertexts;
+
+      if (isGroupMessage) {
+        const keyId = msg.groupCiphertext.keyId;
+
+        if (!keyId) {
+          console.warn("[GROUP] Missing keyId on message:", msg._id);
+          return null;
+        }
+
         content = await decryptGroupMessage(msg, chatData?.chat?._id, keyId);
       } else {
         const isSender = String(sender._id) === String(user?._id);
+
         content = await decryptMessage(
           isSender ? msg.ciphertext?.forSender : msg.ciphertext?.forRecipient,
           isSender ? msg.nonce?.forSender : msg.nonce?.forRecipient,
@@ -262,8 +279,8 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         content,
         createdAt: msg.createdAt,
       };
-    } catch (mapErr) {
-      console.error("[GROUP][MAP-ERROR]", mapErr);
+    } catch (err) {
+      console.error("[GROUP][MAP-ERROR]", err);
       return null;
     }
   };
@@ -296,11 +313,14 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
     try {
       if (isGroupChat) {
-        const keyId = activeChat.keyId?.[0]?.keyId;
-        if (!keyId) {
-          alert("Group key not available");
+        const activeGroupKey = activeChat.keyId?.find((k) => k.active === true);
+
+        if (!activeGroupKey) {
+          alert("No active group key found");
           return;
         }
+
+        const keyId = activeGroupKey.keyId;
 
         const groupSymKey = await getMyGroupSymKey(activeChat._id, keyId);
         if (!groupSymKey) {
@@ -316,25 +336,25 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         const allMembers = [user, ...receivers];
 
         for (const member of allMembers) {
-          if (!member._id) {
-            console.error("Member missing _id:", member);
-            continue;
-          }
+          if (!member._id) continue;
 
           const nonce = sodium.randombytes_buf(
             sodium.crypto_secretbox_NONCEBYTES
           );
+
           const ct = sodium.crypto_secretbox_easy(msgBytes, nonce, groupSymKey);
 
           ciphertexts[member._id] = sodium.to_base64(
             ct,
             sodium.base64_variants.ORIGINAL
           );
+
           nonces[member._id] = sodium.to_base64(
             nonce,
             sodium.base64_variants.ORIGINAL
           );
         }
+
         socketRef.current?.emit("sendMessage", {
           chatId: activeChat._id,
           senderId: user._id,
@@ -378,28 +398,80 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
     if (!socketRef.current) return;
     const s = socketRef.current;
 
-    const handleNewMessage = async (msg: any) => {
-      if (!msg) return;
+    const pendingMessagesRef = { current: [] as any[] };
 
-      const chatId = msg.chat?._id;
-
-      if (!activeChat || String(chatId) !== String(activeChat._id)) return;
+    const getMyGroupSymKey = async (
+      chatId: string,
+      keyId: string
+    ): Promise<Uint8Array | null> => {
+      const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
+      if (!myPrivateKeyBase64) return null;
 
       try {
-        if (Array.isArray(msg.media) && msg.media.length > 0) {
+        const res = await fetch(
+          `${API_BASE}/chat/group/${chatId}/myGroupKey?keyId=${keyId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) throw new Error(`myGroupKey fetch failed: ${res.status}`);
+
+        const data = await res.json();
+        const keyData = data?.data;
+        if (!keyData) throw new Error("myGroupKey response empty");
+
+        const ephemeralPub = sodium.from_base64(
+          keyData.ephemeralPub,
+          sodium.base64_variants.ORIGINAL
+        );
+        const ciphertext = sodium.from_base64(
+          keyData.ciphertext,
+          sodium.base64_variants.ORIGINAL
+        );
+        const nonce = sodium.from_base64(
+          keyData.nonce,
+          sodium.base64_variants.ORIGINAL
+        );
+        const myPrivKey = sodium.from_base64(
+          myPrivateKeyBase64,
+          sodium.base64_variants.ORIGINAL
+        );
+
+        const sharedKey = sodium.crypto_box_beforenm(ephemeralPub, myPrivKey);
+        const symKey = sodium.crypto_box_open_easy_afternm(
+          ciphertext,
+          nonce,
+          sharedKey
+        );
+
+        return symKey;
+      } catch (err) {
+        console.error("getMyGroupSymKey error", err);
+        return null;
+      }
+    };
+
+    const decryptAndAddMessage = async (messageData: any) => {
+      const chatId = messageData.chatId;
+      let content = "Message UnAvailable";
+      const isGroup = messageData.chat?.type?.toLowerCase() === "group";
+      const uid = String(myUserId);
+
+      try {
+        if (Array.isArray(messageData.media) && messageData.media.length > 0) {
           const newMsg: Message = {
-            _id: msg._id,
-            sender: msg.sender?._id,
-            senderName: msg.sender?.fullName,
-            senderUsername: msg.sender?.username,
+            _id: messageData._id,
+            sender: messageData.senderId,
+            senderName: messageData.sender?.fullName,
+            senderUsername: messageData.sender?.username,
             content: "",
-            media: msg.media.map((m: any) => ({
+            media: messageData.media.map((m: any) => ({
               url: m.url,
               type: m.type,
               _id: m._id,
               publicId: m.publicId,
             })),
-            createdAt: msg.createdAt,
+            createdAt: messageData.createdAt,
           };
 
           setMessages((prev) => [...prev, newMsg]);
@@ -409,32 +481,36 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
               : prev
           );
 
-          if (containerRef.current) {
-            containerRef.current.scrollTop = containerRef.current.scrollHeight;
-          }
+          containerRef.current?.scrollTo({
+            top: containerRef.current.scrollHeight,
+          });
           return;
         }
 
-        const isGroup = msg.chat?.type?.toLowerCase() === "group";
-        const isSender = String(msg.sender?._id) === String(myUserId);
-        let content = "Message UnAvailable";
-
         if (isGroup) {
-          const keyId =
-            msg.groupCiphertext?.keyId || msg.chat?.keyVersions?.[0]?.keyId;
-
+          const keyId = messageData.groupCiphertext?.keyId;
           if (!keyId) return;
 
-          const groupSymKey = await getMyGroupSymKey(chatId, keyId);
-          if (!groupSymKey) return;
+          let retries = 3;
+          let groupSymKey: Uint8Array | null = null;
 
-          const uid = String(myUserId);
-          const cipherBase64 = msg.groupCiphertext?.ciphertexts?.[uid];
-          const nonceBase64 = msg.groupNonce?.nonces?.[uid];
+          while (retries > 0) {
+            groupSymKey = await getMyGroupSymKey(chatId, keyId);
+            if (groupSymKey) break;
+            await new Promise((r) => setTimeout(r, 500));
+            retries--;
+          }
 
-          if (!cipherBase64 || !nonceBase64) {
-            content = "[Decrypt failed]";
-          } else {
+          if (!groupSymKey) {
+            pendingMessagesRef.current.push(messageData);
+            return;
+          }
+
+          const cipherBase64 = messageData.groupCiphertext?.ciphertexts?.[uid];
+          const nonceBase64 = messageData.groupNonce?.nonces?.[uid];
+
+          if (!cipherBase64 || !nonceBase64) content = "[Decrypt failed]";
+          else {
             try {
               const cipher = sodium.from_base64(
                 cipherBase64,
@@ -458,20 +534,25 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
           if (sodium.memzero) sodium.memzero(groupSymKey);
         } else {
           content = await decryptMessage(
-            isSender ? msg.ciphertext?.forSender : msg.ciphertext?.forRecipient,
-            isSender ? msg.nonce?.forSender : msg.nonce?.forRecipient,
-            msg.sender?.userPublicKey,
+            uid
+              ? messageData.ciphertext?.forSender
+              : messageData.ciphertext?.forRecipient,
+            uid
+              ? messageData.nonce?.forSender
+              : messageData.nonce?.forRecipient,
+            messageData.sender?.userPublicKey,
             myPrivateKeyBase64 ?? "",
-            msg._id
+            messageData._id
           );
         }
+
         const newMsg: Message = {
-          _id: msg._id,
-          sender: msg.sender?._id,
-          senderName: msg.sender?.fullName,
-          senderUsername: msg.sender?.username,
+          _id: messageData._id,
+          sender: messageData.senderId,
+          senderName: messageData.sender?.fullName,
+          senderUsername: messageData.sender?.username,
           content,
-          createdAt: msg.createdAt,
+          createdAt: messageData.createdAt,
         };
 
         setMessages((prev) => [...prev, newMsg]);
@@ -480,15 +561,39 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
             ? { ...prev, messages: [...(prev.messages || []), newMsg] }
             : prev
         );
+
+        containerRef.current?.scrollTo({
+          top: containerRef.current.scrollHeight,
+        });
       } catch (err) {
-        console.error("handleNewMessage error", err);
+        console.error("decryptAndAddMessage error", err);
       }
+    };
+
+    const handleNewMessage = async (msg: any) => {
+      if (!msg) return;
+
+      const messageData = msg.data;
+      if (!activeChat || String(messageData.chatId) !== String(activeChat._id))
+        return;
+
+      await decryptAndAddMessage(messageData);
     };
 
     s.on("newMessage", handleNewMessage);
 
+    const interval = setInterval(async () => {
+      if (pendingMessagesRef.current.length === 0) return;
+      const pending = [...pendingMessagesRef.current];
+      pendingMessagesRef.current = [];
+      for (const msg of pending) {
+        await decryptAndAddMessage(msg);
+      }
+    }, 2000);
+
     return () => {
       s.off("newMessage", handleNewMessage);
+      clearInterval(interval);
     };
   }, [myUserId, myPrivateKeyBase64, members, activeChat]);
 

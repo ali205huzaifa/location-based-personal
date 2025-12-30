@@ -219,7 +219,7 @@ const VerifyOtp: React.FC = () => {
                     />
                   )
                 }
-                className="h-[52px] rounded-xl"
+                className="h-[52px] rounded-xl focus:!border-[#8869F3] hover:!border-[#8869F3]"
                 visibilityToggle={{
                   visible: showNewPassword,
                   onVisibleChange: setShowNewPassword,
@@ -249,7 +249,7 @@ const VerifyOtp: React.FC = () => {
                     />
                   )
                 }
-                className="h-[52px] rounded-xl"
+                className="h-[52px] rounded-xl focus:!border-[#8869F3] hover:!border-[#8869F3]"
                 visibilityToggle={{
                   visible: showConfirmPassword,
                   onVisibleChange: setShowConfirmPassword,
@@ -262,7 +262,7 @@ const VerifyOtp: React.FC = () => {
               htmlType="submit"
               block
               disabled={loading}
-              className="bg-[#8869F3] hover:!bg-purple-600 h-[52px] rounded-xl !mt-12 text-white text-lg font-normal"
+              className="!bg-[#8869F3] hover:!bg-purple-600 h-[52px] rounded-xl !mt-12 text-white text-lg font-normal shadow-none"
             >
               {loading ? (
                 <ClipLoader size={20} color="#fff" />
