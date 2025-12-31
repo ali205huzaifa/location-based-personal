@@ -70,13 +70,15 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   const [members, setMembers] = useState<any[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [, setOffset] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
+  const previousScrollHeightRef = useRef(0);
 
   useEffect(() => {
     if (!token) return;
@@ -102,14 +104,17 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
     setLoading(true);
     setMessages([]);
-    setOffset(0);
+    setCurrentPage(1);
     setHasMore(true);
 
     const fetchAll = async () => {
       try {
-        const res = await fetch(`${API_BASE}/chat/${chatId}/messages`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${API_BASE}/chat/${chatId}/messages?page=1&limit=10`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data: any = await res.json();
 
         setActiveChat(data.chat ?? null);
@@ -121,8 +126,8 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
         const cleaned = decrypted.filter(Boolean) as Message[];
         setMessages(cleaned);
-        setOffset((data.offset ?? 0) + (data.limit ?? cleaned.length));
-        setHasMore(Boolean(data.nextPage));
+        setCurrentPage(data.page ?? 1);
+        setHasMore(Boolean(data.hasNext));
       } catch (err) {
         console.error("GROUP-ERROR fetch messages", err);
       } finally {
@@ -231,6 +236,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
           sender: sender._id,
           senderName: sender.fullName,
           senderUsername: sender.username,
+          image: sender.image,
           content: "",
           media: msg.media.map((m: any) => ({
             url: m.url,
@@ -286,21 +292,43 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   };
 
   const loadMoreMessages = async (chatId: string) => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
     try {
-      const res = await fetch(`${API_BASE}/chat/${chatId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const nextPage = currentPage + 1;
+      const res = await fetch(
+        `${API_BASE}/chat/${chatId}/messages?page=${nextPage}&limit=10`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const data = await res.json();
       const decrypted = await Promise.all(
         (data.data ?? []).map((m: any) => processMessage(m, data))
       );
       const cleaned = decrypted.filter(Boolean) as Message[];
-      setMessages((prev) => [...cleaned, ...prev]);
 
-      setOffset((data.offset ?? 0) + (data.limit ?? cleaned.length));
-      setHasMore(Boolean(data.nextPage));
+      if (containerRef.current) {
+        previousScrollHeightRef.current = containerRef.current.scrollHeight;
+      }
+
+      setMessages((prev) => [...cleaned, ...prev]);
+      setCurrentPage(data.page ?? nextPage);
+      setHasMore(Boolean(data.hasNext));
+
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          const newScrollHeight = containerRef.current.scrollHeight;
+          const heightDifference =
+            newScrollHeight - previousScrollHeightRef.current;
+          containerRef.current.scrollTop += heightDifference;
+        }
+      });
     } catch (err) {
       console.error("GROUP-ERROR loadMoreMessages", err);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -490,6 +518,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
             sender: messageData.senderId,
             senderName: messageData.sender?.fullName,
             senderUsername: messageData.sender?.username,
+            image: messageData.sender?.image,
             content: "",
             media: messageData.media.map((m: any) => ({
               url: m.url,
@@ -753,6 +782,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
           messages.map((msg) => {
             const isMine = msg.senderName === user?.fullName;
             const avatarSrc = isMine ? user?.image : msg.image;
+            console.log(msg);
 
             return (
               <div
@@ -763,7 +793,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
               >
                 {!isMine && (
                   <img
-                    src={avatarSrc || "/avatar-placeholder.png"}
+                    src={avatarSrc}
                     alt="avatar"
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -833,7 +863,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
                 {isMine && (
                   <img
-                    src={avatarSrc || "/avatar-placeholder.png"}
+                    src={avatarSrc || "/images/default-chat-profile.svg"}
                     alt="avatar"
                     className="w-8 h-8 rounded-full object-cover"
                   />
