@@ -34,7 +34,9 @@ const NewGroupModal: React.FC<NewGroupModalProps> = ({
   const fetchContacts = async (username?: string) => {
     setLoading(true);
     try {
-      const response = await ChatAPI.getMyContacts(username);
+      const response = await ChatAPI.getMyContacts(
+        username ? { username } : {}
+      );
       if (response && Array.isArray(response.data?.data)) {
         setContacts(response.data.data);
       }

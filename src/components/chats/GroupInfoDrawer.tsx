@@ -1,9 +1,9 @@
 import { Button, Modal, Drawer, Avatar, Input, Dropdown, message } from "antd";
-import { UserAddOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import ChatAPI from "../../api/chatApi/ChatAPI";
+import AddGroupMembersModal from "./AddGroupMembersModal";
 
 interface GroupMember {
   _id: string;
@@ -12,6 +12,8 @@ interface GroupMember {
   image?: string;
   role: "admin" | "member";
 }
+
+type ConfirmAction = "leave" | "delete" | "remove" | "make" | null;
 
 interface GroupInfoDrawerProps {
   open: boolean;
@@ -35,8 +37,12 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
 }) => {
   if (!chat) return null;
   const user = useSelector((state: RootState) => state.auth.currentUser);
-  const [leaveModalVisible, setLeaveModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(
+    null
+  );
+  const [addMembersOpen, setAddMembersOpen] = useState(false);
 
   const members = Array.isArray(GroupMembers) ? GroupMembers : [];
 
@@ -44,22 +50,53 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
     (m) => m.username === user?.username && m.role === "admin"
   );
 
-  const handleRemove = async () => {
+  const confirmTextMap: Record<Exclude<ConfirmAction, null>, string> = {
+    leave: "Are you sure you want to leave this Group Chat?",
+    delete: "Are you sure you want to delete this Group Chat?",
+    remove: "Are you sure you want to remove this member?",
+    make: "Are you sure you want to make this member Admin?",
+  };
+
+  const confirmButtonTextMap: Record<Exclude<ConfirmAction, null>, string> = {
+    leave: "Yes, Leave",
+    delete: "Yes, Delete",
+    remove: "Yes, Remove",
+    make: "Yes, Make Admin",
+  };
+
+  const handleConfirm = async () => {
     if (!chat?._id) return;
 
     try {
       setLoading(true);
 
-      await ChatAPI.leaveGroupChat(chat._id);
+      if (confirmAction === "leave") {
+        await ChatAPI.leaveGroupChat(chat._id);
+        message.success("You left the group");
+        onClose();
+      }
 
-      message.success("You have left the group");
+      if (confirmAction === "delete") {
+        await ChatAPI.deleteGroupChat(chat._id);
+        message.success("Group deleted");
+        window.location.reload();
+      }
 
-      setLeaveModalVisible(false);
-      onClose();
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Failed to leave group");
+      if (confirmAction === "remove" && selectedMember) {
+        await ChatAPI.removeGroupMember(chat._id, selectedMember._id);
+        message.success("Member removed");
+      }
+
+      if (confirmAction === "make" && selectedMember) {
+        await ChatAPI.makeGroupAdmin(chat._id, selectedMember._id);
+        message.success(`${selectedMember.fullName} is now an Admin`);
+      }
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Action failed");
     } finally {
       setLoading(false);
+      setConfirmAction(null);
+      setSelectedMember(null);
     }
   };
 
@@ -78,8 +115,8 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
         height: "100%",
       }}
     >
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-5 pt-5">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-5 pt-5 shrink-0">
           <div className="flex items-left gap-4">
             <Avatar
               size={72}
@@ -102,13 +139,20 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
           </div>
         </div>
 
-        <div className="px-4 mt-6">
+        <div className="px-4 mt-6 flex flex-col flex-1 min-h-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-black text-base font-medium">
               {members.length} Members
             </h3>
             {isCurrentUserAdmin && (
-              <UserAddOutlined className="w-6 h-6 text-lg text-[#8869F3] cursor-pointer" />
+              <div className="flex justify-center p-1 w-16 hover:bg-[#EFEFEF] hover:rounded-xl cursor-pointer">
+                <img
+                  src="/icons/userAdd-icon.svg"
+                  alt="Icon"
+                  className="w-6 h-6 cursor-pointer"
+                  onClick={() => setAddMembersOpen(true)}
+                />
+              </div>
             )}
           </div>
 
@@ -124,7 +168,7 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
             className="h-12 rounded-xl mb-4 placeholder:text-neutral-400 text-sm font-light"
           />
 
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto space-y-4 pb-4 px-2 custom-scrollbar">
             {members.map((member) => (
               <div
                 key={member._id}
@@ -162,15 +206,47 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
                       trigger={["click"]}
                       menu={{
                         items: [
-                          { key: "remove", label: "Remove from group" },
-                          { key: "make-admin", label: "Make admin" },
+                          {
+                            key: "make-admin",
+                            label: (
+                              <div className="flex items-center gap-2 py-1">
+                                <img
+                                  src="/icons/admin-icon.svg"
+                                  className="w-4 h-4 mr-2"
+                                  alt="admin"
+                                />
+                                Make Admin
+                              </div>
+                            ),
+                            onClick: () => {
+                              setSelectedMember(member);
+                              setConfirmAction("make");
+                            },
+                          },
+                          {
+                            key: "remove",
+                            label: (
+                              <div className="flex items-center gap-2 py-1">
+                                <img
+                                  src="/icons/remove-icon.svg"
+                                  className="w-4 h-4 mr-2"
+                                  alt="remove"
+                                />
+                                Remove Member
+                              </div>
+                            ),
+                            onClick: () => {
+                              setSelectedMember(member);
+                              setConfirmAction("remove");
+                            },
+                          },
                         ],
                       }}
                     >
                       <img
                         src="/icons/dots-icon.svg"
-                        alt="edit"
                         className="w-5 h-5 cursor-pointer"
+                        alt="menu"
                       />
                     </Dropdown>
                   )
@@ -180,46 +256,48 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
           </div>
         </div>
       </div>
-      <div className="px-4 py-5 mt-6">
+      <div className="px-4 py-5">
         <button
-          className="flex items-center p-4 gap-4 cursor-pointer"
-          onClick={() => setLeaveModalVisible(true)}
+          className="flex items-center p-4 gap-4 hover:bg-[#EFEFEF] w-full hover:rounded-xl"
+          onClick={() => setConfirmAction("leave")}
         >
-          <img src="/icons/logout-icon.svg" alt="edit" className="w-5 h-6" />
-          <p className="!text-[#FF5D5D] text-base font-normal">Leave Group</p>
+          <img src="/icons/logout-icon.svg" className="w-5 h-6" />
+          <p className="text-[#FF5D5D]">Leave Group</p>
         </button>
 
         {isCurrentUserAdmin && (
-          <button className="flex items-center p-4 gap-4 cursor-pointer">
-            <img src="/icons/delete-icon.svg" alt="edit" className="w-5 h-6" />
-            <p className="!text-[#FF5D5D] text-base font-normal">
-              Delete Group
-            </p>
+          <button
+            className="flex items-center p-4 gap-4 hover:bg-[#EFEFEF] w-full hover:rounded-xl"
+            onClick={() => setConfirmAction("delete")}
+          >
+            <img src="/icons/delete-icon.svg" className="w-5 h-6" />
+            <p className="text-[#FF5D5D]">Delete Group</p>
           </button>
         )}
       </div>
+
       <Modal
         centered
-        open={leaveModalVisible}
-        onCancel={() => setLeaveModalVisible(false)}
+        open={!!confirmAction}
         closable={false}
+        onCancel={() => setConfirmAction(null)}
         width={392}
         footer={
           <div className="flex gap-3">
             <Button
-              key="delete"
               type="primary"
-              danger
               loading={loading}
-              onClick={handleRemove}
-              className="flex-1 !h-10 !bg-[#FF5D5D] rounded-xl"
+              onClick={handleConfirm}
+              className={`flex-1 !h-[42px] rounded-xl ${
+                confirmAction === "make" ? "!bg-[#166C3B]" : "!bg-[#FF5D5D]"
+              }`}
             >
-              Yes, Leave
+              {confirmAction && confirmButtonTextMap[confirmAction]}
             </Button>
+
             <Button
-              key="close"
-              onClick={() => setLeaveModalVisible(false)}
-              className="flex-1 !h-10 rounded-xl !text-[#666666] !border !border-[#E8E6E6]"
+              onClick={() => setConfirmAction(null)}
+              className="flex-1 !h-[42px] rounded-xl !text-[#666666] !border-[#666666]"
             >
               Cancel
             </Button>
@@ -227,12 +305,17 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
         }
       >
         <div className="flex flex-col items-center gap-3 py-4">
-          <img src="/icons/delete-icon.svg" alt="Icon" className="w-12 h-12" />
           <span className="text-center text-base font-medium px-8">
-            Are you sure you want to leave this Group Chat?
+            {confirmAction && confirmTextMap[confirmAction]}
           </span>
         </div>
       </Modal>
+
+      <AddGroupMembersModal
+        visible={addMembersOpen}
+        onClose={() => setAddMembersOpen(false)}
+        chatId={chat?._id}
+      />
     </Drawer>
   );
 };

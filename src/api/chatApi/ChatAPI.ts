@@ -28,6 +28,28 @@ class ChatAPI {
   static leaveGroupChat(chatId: string) {
     return axiosClient.post(`/chat/group/${chatId}/leave`);
   }
+
+  static deleteGroupChat(chatId: string) {
+    return axiosClient.delete(`/chat/group/${chatId}`);
+  }
+
+  static removeGroupMember(chatId: string, memberId: string) {
+    return axiosClient.post(`/chat/${chatId}/remove-member`, {
+      memberId,
+    });
+  }
+
+  static makeGroupAdmin(chatId: string, memberId: string) {
+    return axiosClient.post(`/chat/group/${chatId}/make-admin`, {
+      memberId,
+    });
+  }
+
+  static AddGroupMembers(chatId: string, memberIds: string[]) {
+    return axiosClient.post(`/chat/group/${chatId}/add-member`, {
+      memberIds,
+    });
+  }
 }
 
 export default ChatAPI;

@@ -148,157 +148,187 @@ const LoginPage: React.FC = () => {
   }, [location.search]);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="md:w-1/2 w-full flex flex-col justify-center items-center bg-violet-500/10 px-8">
-        <div className="max-w-xl mx-auto">
-          <div className="flex items-center py-8">
+    <>
+      <div className="md:hidden flex items-center justify-center min-h-screen text-center px-6 bg-white">
+        <div>
+          <h2 className="text-2xl font-semibold !text-[#8869f3]">
+            We’re available on mobile!
+          </h2>
+          <p className="text-gray-500 mt-3">
+            Please download our app from Playstore & AppStore to continue.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3">
+            <a
+              href="#"
+              className="bg-[#8869f3] text-white px-4 py-2 rounded-lg"
+            >
+              Google Play Store
+            </a>
+            <a
+              href="#"
+              className="bg-[#8869f3] text-white px-4 py-2 rounded-lg"
+            >
+              Apple App Store
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden md:flex min-h-screen flex-col md:flex-row">
+        <div className="md:w-1/2 w-full flex flex-col justify-center items-center bg-violet-500/10 px-8">
+          <div className="max-w-xl mx-auto">
+            <div className="flex items-center py-8">
+              <img
+                src="/icons/logo.svg"
+                alt="Logo"
+                className="h-24 w-auto object-contain cursor-pointer"
+              />
+            </div>
+            <h1 className="text-4xl font-semibold text-black">Welcome Back!</h1>
+            <p className=" max-w-[442px] py-4 !text-[#666666] lg:text-2xl md:text-lg !font-light">
+              Login to continue exploring what's happening around you.
+            </p>
             <img
-              src="/icons/logo.svg"
-              alt="Logo"
-              className="h-24 w-auto object-contain cursor-pointer"
+              src="/images/login.svg"
+              alt="Login"
+              className="xl:max-w-[596px] lg:max-w-[466px] md:max-w-[350px] mx-auto"
             />
           </div>
-          <h1 className="text-4xl font-semibold text-black">Welcome Back!</h1>
-          <p className=" max-w-[442px] py-4 !text-[#666666] lg:text-2xl md:text-lg !font-light">
-            Login to continue exploring what's happening around you.
-          </p>
-          <img
-            src="/images/login.svg"
-            alt="Login"
-            className="xl:max-w-[596px] lg:max-w-[466px] md:max-w-[350px] mx-auto"
-          />
         </div>
-      </div>
 
-      <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 bg-white">
-        <div className="w-full max-w-sm">
-          <h2 className="text-black text-4xl font-medium mb-8">Login</h2>
+        <div className="md:w-1/2 w-full flex items-center justify-center px-6 sm:px-10 bg-white">
+          <div className="w-full max-w-sm">
+            <h2 className="text-black text-4xl font-medium mb-8">Login</h2>
 
-          <Form
-            form={_form}
-            layout="vertical"
-            onFinish={handleFinish}
-            className="space-y-4"
-          >
-            <Form.Item
-              name="username"
-              label={
-                <span className="text-xs font-normal text-black">Email</span>
-              }
-              rules={[
-                { required: true, message: "Please enter your email" },
-                { type: "email", message: "Enter a valid email address" },
-              ]}
+            <Form
+              form={_form}
+              layout="vertical"
+              onFinish={handleFinish}
+              className="space-y-4"
             >
-              <Input
-                placeholder="Enter your Email"
-                size="large"
-                className="rounded-xl !h-[52px] border border-gray-300 focus:!border-[#8869F3] hover:!border-[#8869F3]"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              label={
-                <span className="text-xs font-normal text-black">Password</span>
-              }
-              rules={[
-                { required: true, message: "Please enter your password" },
-              ]}
-            >
-              <Input.Password
-                placeholder="Enter your password"
-                iconRender={(visible) =>
-                  visible ? (
-                    <img
-                      src="/icons/eyeOpen-icon.svg"
-                      alt="Show"
-                      width={20}
-                      height={20}
-                    />
-                  ) : (
-                    <img
-                      src="/icons/eyeClose-icon.svg"
-                      alt="Hide"
-                      width={20}
-                      height={20}
-                    />
-                  )
+              <Form.Item
+                name="username"
+                label={
+                  <span className="text-xs font-normal text-black">Email</span>
                 }
-                size="large"
-                className="rounded-xl !h-[52px] border border-gray-300 focus:!border-[#8869F3] hover:!border-[#8869F3]"
-              />
-            </Form.Item>
-
-            <div className="flex justify-end mb-6">
-              <button
-                type="button"
-                className="text-sm text-[#8869F3] hover:underline"
-                onClick={() => navigate("/forgot-password")}
+                rules={[
+                  { required: true, message: "Please enter your email" },
+                  { type: "email", message: "Enter a valid email address" },
+                ]}
               >
-                Forgot Password?
-              </button>
-            </div>
+                <Input
+                  placeholder="Enter your Email"
+                  size="large"
+                  className="rounded-xl !h-[52px] border border-gray-300 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                />
+              </Form.Item>
 
-            <Button
-              htmlType="submit"
-              loading={loading}
-              className="w-full !h-12 !bg-[#8869F3] border-none !text-white text-lg rounded-xl shadow-none !mt-12"
-            >
-              Login
-            </Button>
-
-            <div className="self-stretch inline-flex items-center justify-center gap-2 py-8">
-              <div className="w-32 h-px bg-gradient-to-r from-stone-100 to-[#7C4DFF]" />
-              <div className="text-stone-500 text-xs font-normal">
-                or continue with
-              </div>
-              <div className="w-32 h-px bg-gradient-to-l from-stone-100 to-[#7C4DFF]" />
-            </div>
-
-            <div className="flex justify-center gap-8">
-              <Button
-                shape="circle"
-                size="large"
-                onClick={handleGoogleLogin}
-                icon={
-                  <img
-                    src="/icons/google-icon.svg"
-                    alt="Google"
-                    className="w-8 h-8"
-                  />
+              <Form.Item
+                name="password"
+                label={
+                  <span className="text-xs font-normal text-black">
+                    Password
+                  </span>
                 }
-                className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
-              />
+                rules={[
+                  { required: true, message: "Please enter your password" },
+                ]}
+              >
+                <Input.Password
+                  placeholder="Enter your password"
+                  iconRender={(visible) =>
+                    visible ? (
+                      <img
+                        src="/icons/eyeOpen-icon.svg"
+                        alt="Show"
+                        width={20}
+                        height={20}
+                      />
+                    ) : (
+                      <img
+                        src="/icons/eyeClose-icon.svg"
+                        alt="Hide"
+                        width={20}
+                        height={20}
+                      />
+                    )
+                  }
+                  size="large"
+                  className="rounded-xl !h-[52px] border border-gray-300 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                />
+              </Form.Item>
 
-              <Button
-                shape="circle"
-                size="large"
-                icon={
-                  <img
-                    src="/icons/apple-icon.svg"
-                    alt="Apple"
-                    className="w-8 h-8"
-                  />
-                }
-                className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
-              />
-            </div>
-            <div className="!mt-12">
-              <p className="text-center text-gray-600 text-sm">
-                Don’t have an account?{" "}
-                <span
-                  onClick={() => navigate("/signup")}
-                  className="text-[#8869F3] cursor-pointer hover:underline"
+              <div className="flex justify-end mb-6">
+                <button
+                  type="button"
+                  className="text-sm text-[#8869F3] hover:underline"
+                  onClick={() => navigate("/forgot-password")}
                 >
-                  Sign up
-                </span>
-              </p>
-            </div>
-          </Form>
+                  Forgot Password?
+                </button>
+              </div>
+
+              <Button
+                htmlType="submit"
+                loading={loading}
+                className="w-full !h-12 !bg-[#8869F3] border-none !text-white text-lg rounded-xl shadow-none !mt-12"
+              >
+                Login
+              </Button>
+
+              <div className="self-stretch inline-flex items-center justify-center gap-2 py-8">
+                <div className="w-32 h-px bg-gradient-to-r from-stone-100 to-[#7C4DFF]" />
+                <div className="text-stone-500 text-xs font-normal">
+                  or continue with
+                </div>
+                <div className="w-32 h-px bg-gradient-to-l from-stone-100 to-[#7C4DFF]" />
+              </div>
+
+              <div className="flex justify-center gap-8">
+                <Button
+                  shape="circle"
+                  size="large"
+                  onClick={handleGoogleLogin}
+                  icon={
+                    <img
+                      src="/icons/google-icon.svg"
+                      alt="Google"
+                      className="w-8 h-8"
+                    />
+                  }
+                  className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
+                />
+
+                <Button
+                  shape="circle"
+                  size="large"
+                  icon={
+                    <img
+                      src="/icons/apple-icon.svg"
+                      alt="Apple"
+                      className="w-8 h-8"
+                    />
+                  }
+                  className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
+                />
+              </div>
+              <div className="!mt-12">
+                <p className="text-center text-gray-600 text-sm">
+                  Don’t have an account?{" "}
+                  <span
+                    onClick={() => navigate("/signup")}
+                    className="text-[#8869F3] cursor-pointer hover:underline"
+                  >
+                    Sign up
+                  </span>
+                </p>
+              </div>
+            </Form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

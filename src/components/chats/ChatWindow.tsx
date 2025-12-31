@@ -18,6 +18,7 @@ interface MessageFromAPI {
   nonce?: any;
   createdAt?: string;
   media?: any[];
+  postLink?: string;
 }
 
 interface Member {
@@ -458,7 +459,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     }
 
-    return "[Encrypted message]";
+    return "Message UnAvailable";
   };
 
   const loadMoreMessages = async () => {
@@ -589,9 +590,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             let mediaUrl: string | null = msg.media?.[0]?.url ?? null;
             let mediaType: MediaType | null = msg.media?.[0]?.type ?? null;
 
-            const decrypted = msg.ciphertext
-              ? getDecrypted(msg._id, msg.ciphertext)
-              : null;
+            const hasPostLink = Boolean(msg.postLink);
+
+            const decrypted =
+              !hasPostLink && msg.ciphertext
+                ? getDecrypted(msg._id, msg.ciphertext)
+                : null;
 
             if (
               !mediaUrl &&
@@ -623,7 +627,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "bg-zinc-100 text-black rounded-2xl rounded-bl-none"
                   }`}
                 >
-                  {mediaUrl ? (
+                  {msg.postLink ? (
+                    <a
+                      href={msg.postLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm underline break-all ${
+                        isMine ? "text-white" : "text-blue-600"
+                      }`}
+                    >
+                      {msg.postLink}
+                    </a>
+                  ) : mediaUrl ? (
                     isImage ? (
                       <img
                         src={mediaUrl}
@@ -638,7 +653,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       />
                     ) : null
                   ) : (
-                    <span>{textMessage ?? "[Encrypted message]"}</span>
+                    <span>{textMessage ?? "Message UnAvailable"}</span>
                   )}
                 </div>
 
