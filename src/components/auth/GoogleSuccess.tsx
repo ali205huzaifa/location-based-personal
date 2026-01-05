@@ -4,6 +4,7 @@ import { message } from "antd";
 import { useDispatch } from "react-redux";
 import AuthAPI from "../../api/authApi/AuthAPI";
 import { setAuthData } from "../../store/Auth";
+import { decryptPrivateKeyHybrid } from "../../util/Decryption";
 
 const GoogleSuccess: React.FC = () => {
   const navigate = useNavigate();
@@ -31,6 +32,27 @@ const GoogleSuccess: React.FC = () => {
 
         dispatch(setAuthData({ currentUser: user, token }));
         localStorage.setItem("token", token);
+
+        if (
+          user?.clientSecret &&
+          user?.encryptedPrivateKey &&
+          user?.wrappedMasterKey &&
+          user?.nonce &&
+          user?.masterKeyNonce &&
+          user?.salt
+        ) {
+          const privateKey = await decryptPrivateKeyHybrid({
+            clientSecret: user.clientSecret,
+            encryptedPrivateKey: user.encryptedPrivateKey,
+            wrappedMasterKey: user.wrappedMasterKey,
+            nonce: user.nonce,
+            masterKeyNonce: user.masterKeyNonce,
+            salt: user.salt,
+          });
+
+          localStorage.setItem("privateKey", privateKey);
+          localStorage.setItem("publicKey", user.userPublicKey);
+        }
 
         message.success("Login successful!");
         navigate("/home", { replace: true });

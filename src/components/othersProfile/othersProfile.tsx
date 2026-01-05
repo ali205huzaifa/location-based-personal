@@ -469,7 +469,7 @@ const UserProfile: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="text-gray-500 text-sm mt-4">
+                <p className="text-gray-500 text-sm mt-4 max-w-md">
                   {profileUser?.bio
                     ? profileUser.bio.slice(0, 81) +
                       (profileUser.bio.length > 81 ? "..." : "")
@@ -511,45 +511,45 @@ const UserProfile: React.FC = () => {
             </Button> */}
           </div>
 
-          {!shouldHideContent && (
-            <div className="w-full flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 rounded-lg">
-              {/* <Input
+          <div className="w-full flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 rounded-lg">
+            {/* <Input
                 prefix={<SearchOutlined />}
                 placeholder="Search"
                 allowClear
                 className="!h-11 !text-sm w-full xl:!w-80 outline-[#8869F3]"
               /> */}
-              <Button
-                type="primary"
-                className="w-80 rounded-lg py-2 !h-10 flex items-center justify-center gap-2
+            <Button
+              type="primary"
+              className="w-80 rounded-lg py-2 !h-10 flex items-center justify-center gap-2
   !bg-[#F9FAFB] !text-[#8869F3] !border-[#8869F3]"
-                onClick={
-                  contactStatus === "none" ? handleAddToContact : undefined
+              onClick={
+                contactStatus === "none" ? handleAddToContact : undefined
+              }
+              disabled={contactStatus !== "none"}
+            >
+              <img
+                src={
+                  contactStatus === "none"
+                    ? "/icons/AddUser-icon.svg"
+                    : "/icons/contactAdded-icon.svg"
                 }
-                disabled={contactStatus !== "none"}
-              >
-                <img
-                  src={
-                    contactStatus === "none"
-                      ? "/icons/AddUser-icon.svg"
-                      : "/icons/contactAdded-icon.svg"
-                  }
-                  alt={
-                    contactStatus === "none"
-                      ? "Add to contact"
-                      : contactStatus === "added"
-                      ? "Request sent"
-                      : "Friends"
-                  }
-                  className="w-5 h-5"
-                />
+                alt={
+                  contactStatus === "none"
+                    ? "Add to contact"
+                    : contactStatus === "added"
+                    ? "Request sent"
+                    : "Friends"
+                }
+                className="w-5 h-5"
+              />
 
-                {contactStatus === "none"
-                  ? "Add to Contact"
-                  : contactStatus === "added"
-                  ? "Request Sent"
-                  : "Friends"}
-              </Button>
+              {contactStatus === "none"
+                ? "Add to Contact"
+                : contactStatus === "added"
+                ? "Request Sent"
+                : "Friends"}
+            </Button>
+            {!shouldHideContent && (
               <Segmented
                 value={activeTab}
                 onChange={(val) =>
@@ -562,8 +562,8 @@ const UserProfile: React.FC = () => {
                 className="custom-segmented bg-white rounded-xl w-full xl:!w-80 h-12 flex items-center"
                 block
               />
-            </div>
-          )}
+            )}
+          </div>
 
           {shouldHideContent ? (
             <div className="flex flex-col justify-center items-center w-[250px] h-[221px] xl:ml-48 lg:ml-36 md:ml-36 space-y-2">

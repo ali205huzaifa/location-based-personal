@@ -9,7 +9,7 @@ import {
   Spin,
   Radio,
 } from "antd";
-import { CloseCircleOutlined, SearchOutlined } from "@ant-design/icons";
+import { CloseCircleOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import type { RcFile } from "antd/es/upload";
 import {
@@ -388,9 +388,15 @@ const AddPostModal: React.FC<PostModalProps> = ({
                     <Input
                       placeholder="Search for a place"
                       value={location}
-                      prefix={<SearchOutlined />}
+                      prefix={
+                        <img
+                          src="/icons/search-icon.svg"
+                          alt="Icon"
+                          className="w-6 h-6"
+                        />
+                      }
                       onChange={(e) => setLocation(e.target.value)}
-                      className="rounded-lg mb-2 h-12"
+                      className="rounded-xl mb-2 h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
                     />
                   </Autocomplete>
 

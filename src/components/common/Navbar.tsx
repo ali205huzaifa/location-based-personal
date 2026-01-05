@@ -59,7 +59,7 @@ const Navbar: FC = () => {
             alt="Bell Icon"
             className="w-6 h-6 cursor-pointer"
           />
-          <span className="absolute top-2 right-3 h-3 w-3 bg-[#8869F3] rounded-full border-2 border-white" />
+          <span className="absolute top-2 right-3 h-3 w-3 rounded-full" />
         </div>
 
         <div

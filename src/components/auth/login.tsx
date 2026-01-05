@@ -297,7 +297,7 @@ const LoginPage: React.FC = () => {
                       className="w-8 h-8"
                     />
                   }
-                  className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
+                  className="!w-14 !h-14 border border-gray-300 hover:border-[#8869F3]"
                 />
 
                 <Button
@@ -310,7 +310,7 @@ const LoginPage: React.FC = () => {
                       className="w-8 h-8"
                     />
                   }
-                  className="!w-14 !h-14 border border-gray-300 hover:border-[#7C4DFF]"
+                  className="!w-14 !h-14 border border-gray-300 hover:border-[#8869F3]"
                 />
               </div>
               <div className="!mt-12">

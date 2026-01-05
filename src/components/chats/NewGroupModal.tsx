@@ -102,7 +102,7 @@ const NewGroupModal: React.FC<NewGroupModalProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           allowClear
-          className="w-full h-10 rounded-xl mb-6 text-[#666666] text-sm font-normal outline-[#8869F3]"
+          className="w-full h-10 rounded-xl mb-6 text-[#666666] text-sm font-normal focus:!border-[#8869F3] hover:!border-[#8869F3]"
         />
 
         {loading ? (

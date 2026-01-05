@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import AuthAPI from "../../api/authApi/AuthAPI";
 import { useDispatch } from "react-redux";
 import { setAuthData } from "../../store/Auth";
+import { decryptPrivateKeyHybrid } from "../../util/Decryption";
 
 const CompleteGoogleProfile: React.FC = () => {
   const location = useLocation();
@@ -132,6 +133,7 @@ const CompleteGoogleProfile: React.FC = () => {
         message.error("Location is required. Please allow location access.");
         return;
       }
+
       setLoading(true);
 
       const formattedDob = dayjs(values.dob).toISOString();
@@ -143,12 +145,36 @@ const CompleteGoogleProfile: React.FC = () => {
       });
 
       const newToken = res?.data?.data?.token || token;
-      if (!newToken) throw new Error("Token missing after profile completion");
+      const clientSecret = res?.data?.data?.clientSecret;
+
+      if (!newToken) {
+        throw new Error("Token missing after profile completion");
+      }
 
       const verifyRes = await AuthAPI.verifyToken(newToken);
       const user = verifyRes?.data;
 
-      dispatch(setAuthData({ currentUser: user, token: newToken }));
+      dispatch(
+        setAuthData({
+          currentUser: user,
+          token: newToken,
+        })
+      );
+
+      if (clientSecret) {
+        const privateKey = await decryptPrivateKeyHybrid({
+          clientSecret,
+          encryptedPrivateKey: user.encryptedPrivateKey,
+          wrappedMasterKey: user.wrappedMasterKey,
+          nonce: user.nonce,
+          masterKeyNonce: user.masterKeyNonce,
+          salt: user.salt,
+        });
+
+        localStorage.setItem("privateKey", privateKey);
+        localStorage.setItem("publicKey", user.userPublicKey);
+      }
+
       localStorage.setItem("token", newToken);
 
       message.success("Profile completed and logged in successfully!");

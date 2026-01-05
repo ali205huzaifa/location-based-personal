@@ -225,6 +225,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
   ): Promise<Message | null> => {
     try {
       const sender = msg.senderId || msg.sender;
+
       if (!sender?._id) {
         console.warn("[GROUP] Missing sender:", msg);
         return null;
@@ -307,6 +308,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
       const decrypted = await Promise.all(
         (data.data ?? []).map((m: any) => processMessage(m, data))
       );
+
       const cleaned = decrypted.filter(Boolean) as Message[];
 
       if (containerRef.current) {
@@ -481,7 +483,6 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
 
     const commitMessage = (newMsg: Message) => {
       processedMessageIdsRef.current.add(newMsg._id);
-
       setMessages((prev) => {
         if (prev.some((m) => m._id === newMsg._id)) return prev;
         return [...prev, newMsg];
@@ -508,17 +509,17 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
     const decryptAndAddMessage = async (messageData: any) => {
       const chatId = messageData.chatId;
       let content = "Message UnAvailable";
-      const isGroup = messageData.chat?.type?.toLowerCase() === "group";
+      const isGroup = messageData.chatId?.type?.toLowerCase() === "group";
       const uid = String(user?._id);
 
       try {
         if (Array.isArray(messageData.media) && messageData.media.length > 0) {
           const newMsg: Message = {
             _id: messageData._id,
-            sender: messageData.senderId,
-            senderName: messageData.sender?.fullName,
-            senderUsername: messageData.sender?.username,
-            image: messageData.sender?.image,
+            sender: messageData.senderId._id,
+            senderName: messageData.senderId?.fullName,
+            senderUsername: messageData.senderId?.username,
+            image: messageData.senderId?.image,
             content: "",
             media: messageData.media.map((m: any) => ({
               url: m.url,
@@ -528,7 +529,6 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
             })),
             createdAt: messageData.createdAt,
           };
-
           commitMessage(newMsg);
           return;
         }
@@ -541,7 +541,7 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
           let groupSymKey: Uint8Array | null = null;
 
           while (retries > 0) {
-            groupSymKey = await getMyGroupSymKey(chatId, keyId);
+            groupSymKey = await getMyGroupSymKey(chatId._id, keyId);
             if (groupSymKey) break;
             await new Promise((r) => setTimeout(r, 500));
             retries--;
@@ -595,13 +595,12 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
         const newMsg: Message = {
           _id: messageData._id,
           sender: messageData.senderId,
-          senderName: messageData.sender?.fullName,
-          senderUsername: messageData.sender?.username,
-          image: messageData.sender?.image,
+          senderName: messageData.senderId?.fullName,
+          senderUsername: messageData.senderId?.username,
+          image: messageData.senderId?.image,
           content,
           createdAt: messageData.createdAt,
         };
-
         commitMessage(newMsg);
       } catch (err) {
         console.error("decryptAndAddMessage error", err);
@@ -609,19 +608,23 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
     };
 
     const handleNewMessage = async (msg: any) => {
-      if (!msg) return;
+      if (!msg?.messageWithMeta?.data) return;
 
-      const messageData = msg.data;
-      if (!activeChat || String(messageData.chatId) !== String(activeChat._id))
+      const messageData = msg.messageWithMeta.data;
+
+      if (
+        !activeChat ||
+        String(messageData.chatId._id) !== String(activeChat._id)
+      ) {
         return;
+      }
 
-      // Skip media messages sent by the current user - they're already added via sendMediaMessage
-      const isFromCurrentUser =
-        messageData.senderId === user?._id ||
-        messageData.sender?._id === user?._id;
+      const isFromCurrentUser = messageData.senderId?._id === user?._id;
+
       const isMediaMessage =
         Array.isArray(messageData.media) && messageData.media.length > 0;
 
+      // prevent duplicate own media messages
       if (isFromCurrentUser && isMediaMessage) return;
 
       await decryptAndAddMessage(messageData);
@@ -780,9 +783,10 @@ export default function GroupChatWindow({ chatId }: GroupChatWindowProps) {
       >
         {messages && messages.length > 0 ? (
           messages.map((msg) => {
+            // console.log("msg", msg);
             const isMine = msg.senderName === user?.fullName;
+
             const avatarSrc = isMine ? user?.image : msg.image;
-            console.log(msg);
 
             return (
               <div

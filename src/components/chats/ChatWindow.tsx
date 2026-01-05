@@ -132,15 +132,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // });
 
     const handleNewMessage = async (msg: any) => {
-      msg = typeof msg?.data === "string" ? JSON.parse(msg.data) : msg;
-      const actualMsg = msg.data ?? msg;
-      if (actualMsg.sender?._id === user._id) return;
-      if (!chatData?._id || actualMsg.chatId !== chatData._id) return;
+      const actualMsg = msg?.messageWithMeta?.data;
+      if (!actualMsg) return;
+
+      if (actualMsg.chatId?._id !== chatData?._id) return;
+
+      const senderId = actualMsg.senderId?._id;
+      if (senderId === user._id) return;
+
       const myPrivateKeyBase64 = localStorage.getItem("privateKey")?.trim();
       if (!myPrivateKeyBase64) return;
 
       try {
-        const isSender = actualMsg.sender?._id === user._id;
+        const isSender = senderId === user._id;
 
         const ciphertext = isSender
           ? actualMsg.ciphertext?.forSender
@@ -150,9 +154,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           ? actualMsg.nonce?.forSender
           : actualMsg.nonce?.forRecipient;
 
-        const senderPublicKey = actualMsg.sender?.userPublicKey;
+        const senderPublicKey = actualMsg.senderId?.userPublicKey;
 
-        let plaintext = "Message UnAvailable";
+        let plaintext = "Message Unavailable";
+
         if (ciphertext && nonce && senderPublicKey) {
           plaintext = await decryptMessage(
             ciphertext,
@@ -169,8 +174,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             : prev
         );
 
-        (window as any)._decryptedMessages =
-          (window as any)._decryptedMessages || {};
+        (window as any)._decryptedMessages ??= {};
         (window as any)._decryptedMessages[actualMsg._id] = plaintext;
       } catch (err) {
         console.error("Realtime decrypt failed", err);
