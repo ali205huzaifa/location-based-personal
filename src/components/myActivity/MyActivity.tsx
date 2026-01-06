@@ -537,7 +537,7 @@ const MyActivity: React.FC = () => {
                                   <div className="h-full w-full rounded-full border-4 border-[#8869F3] overflow-hidden">
                                     <img
                                       src={
-                                        post.media?.[0]?.url ||
+                                        post.user.image ||
                                         "/images/default-chat-profile.svg"
                                       }
                                       alt="pin"
