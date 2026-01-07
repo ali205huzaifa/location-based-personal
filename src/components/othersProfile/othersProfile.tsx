@@ -69,7 +69,9 @@ const UserProfile: React.FC = () => {
   const shouldHideContent =
     profileUser?.privacy === "PRIVATE" &&
     !isOwnProfile &&
+    !profileUser.hasAccess &&
     contactStatus !== "friends";
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
     libraries,
