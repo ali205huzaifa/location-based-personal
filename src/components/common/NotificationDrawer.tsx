@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Drawer, Avatar, Spin, Tooltip } from "antd";
+import { Drawer, Avatar, Spin, Tooltip, Button, message } from "antd";
 import PostAPI from "../../api/postApi/PostAPI";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -39,6 +39,7 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
+  const [processingIds, setProcessingIds] = useState<string[]>([]);
 
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(true);
@@ -106,6 +107,34 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
       console.error("Failed to mark all as read", error);
     } finally {
       setMarkingAll(false);
+    }
+  };
+
+  const handleAccept = async (notif: ApiNotification) => {
+    try {
+      setProcessingIds((prev) => [...prev, notif._id]);
+      await PostAPI.addToContact({ grantedTo: notif.senderId._id });
+      message.success(`Added ${notif.senderId.username} to contacts`);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notif._id ? { ...n, status: "read" } : n))
+      );
+    } catch (error) {
+      message.error("Failed to add contact");
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== notif._id));
+    }
+  };
+
+  const handleDecline = async (notif: ApiNotification) => {
+    try {
+      setProcessingIds((prev) => [...prev, notif._id]);
+      await PostAPI.RemoveContact(notif.senderId._id);
+      message.success(`Declined contact from ${notif.senderId.username}`);
+      setNotifications((prev) => prev.filter((n) => n._id !== notif._id));
+    } catch (error) {
+      message.error("Failed to decline contact");
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== notif._id));
     }
   };
 
@@ -203,6 +232,29 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                     <span className="text-xs text-gray-400">
                       {dayjs(notif.createdAt).fromNow()}
                     </span>
+
+                    {notif.type === "contact" && notif.status === "unread" && (
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          type="primary"
+                          size="large"
+                          className="!bg-[#8869F3] w-28"
+                          loading={processingIds.includes(notif._id)}
+                          onClick={() => handleAccept(notif)}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          danger
+                          size="large"
+                          className="w-28"
+                          loading={processingIds.includes(notif._id)}
+                          onClick={() => handleDecline(notif)}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

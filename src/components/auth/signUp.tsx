@@ -205,7 +205,7 @@ const Signup: React.FC = () => {
                 <Input
                   size="large"
                   placeholder="Enter Full Name"
-                  className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                  className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-visible:!border-[#8869F3]"
                 />
               </Form.Item>
 
@@ -225,7 +225,7 @@ const Signup: React.FC = () => {
                   <Input
                     size="large"
                     placeholder="Create username"
-                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-visible:!border-[#8869F3]"
                   />
                 </Form.Item>
 
@@ -242,7 +242,7 @@ const Signup: React.FC = () => {
                   <Input
                     size="large"
                     placeholder="Enter your email"
-                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-visible:!border-[#8869F3]"
                   />
                 </Form.Item>
               </div>
@@ -259,7 +259,7 @@ const Signup: React.FC = () => {
                   <Input.Password
                     size="large"
                     placeholder="Enter your password"
-                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                     iconRender={(visible) =>
                       visible ? (
                         <img
@@ -300,7 +300,7 @@ const Signup: React.FC = () => {
                   <Input.Password
                     size="large"
                     placeholder="Re-enter your password"
-                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                    className="rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                     iconRender={(visible) =>
                       visible ? (
                         <img
@@ -341,7 +341,7 @@ const Signup: React.FC = () => {
                     />
                   }
                   format="YYYY/MM/DD"
-                  className="w-full rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                  className="w-full rounded-xl h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                   placeholder="YYYY/MM/DD"
                 />
               </Form.Item>

@@ -49,7 +49,7 @@ const ForgotPassword: React.FC = () => {
             <Input
               placeholder="example123@gmail.com"
               size="large"
-              className="h-[52px] rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              className="h-[52px] rounded-xl border-gray-300 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-visible:!border-[#8869F3]"
             />
           </Form.Item>
 

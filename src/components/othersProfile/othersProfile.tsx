@@ -477,51 +477,15 @@ const UserProfile: React.FC = () => {
                 </p>
               </div>
             </div>
-
-            {/* <Button
-              type="primary"
-              className="w-full rounded-lg py-2 !h-10 flex items-center justify-center gap-2
-  !bg-[#F9FAFB] !text-[#8869F3] border-[#8869F3]"
-              onClick={
-                contactStatus === "none" ? handleAddToContact : undefined
-              }
-              disabled={contactStatus !== "none"}
-            >
-              <img
-                src={
-                  contactStatus === "none"
-                    ? "/icons/AddUser-icon.svg"
-                    : "/icons/contactAdded-icon.svg"
-                }
-                alt={
-                  contactStatus === "none"
-                    ? "Add to contact"
-                    : contactStatus === "added"
-                    ? "Request sent"
-                    : "Friends"
-                }
-                className="w-5 h-5"
-              />
-
-              {contactStatus === "none"
-                ? "Add to Contact"
-                : contactStatus === "added"
-                ? "Request Sent"
-                : "Friends"}
-            </Button> */}
           </div>
 
           <div className="w-full flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-3 rounded-lg">
-            {/* <Input
-                prefix={<SearchOutlined />}
-                placeholder="Search"
-                allowClear
-                className="!h-11 !text-sm w-full xl:!w-80 outline-[#8869F3]"
-              /> */}
             <Button
               type="primary"
-              className="w-80 rounded-lg py-2 !h-10 flex items-center justify-center gap-2
-  !bg-[#F9FAFB] !text-[#8869F3] !border-[#8869F3]"
+              className={`rounded-xl py-2 !h-10 flex items-center justify-center gap-2
+  !bg-[#F9FAFB] !text-[#8869F3] !border-[#8869F3] shadow-none ${
+    shouldHideContent ? "w-[478px] xl:ml-24 lg:ml-4 md:ml-4" : "w-80"
+  } `}
               onClick={
                 contactStatus === "none" ? handleAddToContact : undefined
               }

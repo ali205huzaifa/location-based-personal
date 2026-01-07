@@ -382,7 +382,7 @@ const Home: React.FC = () => {
                 setMainSearchValue(e.target.value);
                 setSearchOpen(true);
               }}
-              className="!h-12 !text-sm !w-full !rounded-xl custom-input focus:!border-[#8869F3] hover:!border-[#8869F3]"
+              className="!h-12 !text-sm !w-full !rounded-xl custom-input focus:!border-[#8869F3] hover:!border-[#8869F3] focus-visible:!border-[#8869F3]"
             />
 
             {searchOpen && (

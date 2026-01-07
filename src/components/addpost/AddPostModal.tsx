@@ -241,6 +241,47 @@ const AddPostModal: React.FC<PostModalProps> = ({
     setLoading(false);
   };
 
+  const detectLocationFromText = async (text: string) => {
+    if (!window.google || !text) return;
+
+    const service = new google.maps.places.PlacesService(
+      document.createElement("div")
+    );
+
+    const request: google.maps.places.FindPlaceFromQueryRequest = {
+      query: text,
+      fields: ["name", "geometry", "formatted_address"],
+    };
+
+    return new Promise<void>((resolve) => {
+      service.findPlaceFromQuery(request, (results, status) => {
+        if (
+          status !== google.maps.places.PlacesServiceStatus.OK ||
+          !results ||
+          !results[0]
+        ) {
+          resolve();
+          return;
+        }
+
+        const place = results[0];
+
+        if (!place.geometry || !place.geometry.location) {
+          resolve();
+          return;
+        }
+
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+
+        setCoords({ lat, lng });
+        setLocation(place.formatted_address || place.name || "");
+
+        resolve();
+      });
+    });
+  };
+
   return (
     <>
       <Modal
@@ -280,7 +321,11 @@ const AddPostModal: React.FC<PostModalProps> = ({
 
               <Input.TextArea
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={async (e) => {
+                  const val = e.target.value;
+                  setText(val);
+                  await detectLocationFromText(val);
+                }}
                 placeholder="What's on your mind?"
                 autoSize={{ minRows: 3, maxRows: 5 }}
                 className="border-none text-base mb-4"
@@ -396,7 +441,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                         />
                       }
                       onChange={(e) => setLocation(e.target.value)}
-                      className="rounded-xl mb-2 h-12 focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                      className="rounded-xl mb-2 h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                     />
                   </Autocomplete>
 
@@ -423,7 +468,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                 <Button
                   block
                   onClick={() => setStep(1)}
-                  className="h-12 rounded-xl"
+                  className="h-12 rounded-xl !text-[#666666] !border-[#666666]"
                 >
                   Back
                 </Button>

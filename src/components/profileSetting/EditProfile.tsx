@@ -1,16 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../store";
-import { setAuthData } from "../../store/Auth";
+import { setAuthData, clearAuthData } from "../../store/Auth";
 import { Form, Input, Button, Avatar, message } from "antd";
 import ProfileAPI from "../../api/profileApi/ProfileAPI";
 import AddPostAPI from "../../api/addPostApi/AddPostAPI";
+import { Modal } from "antd";
+import { useNavigate } from "react-router-dom";
+import AuthAPI from "../../api/authApi/AuthAPI";
 
 const { TextArea } = Input;
 
 const EditProfile: React.FC = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [image, setImage] = useState<string>(
     "/images/default-chat-profile.svg"
@@ -108,14 +114,52 @@ const EditProfile: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!token) {
+      message.error("User not authenticated!");
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      await AuthAPI.deleteAccount();
+
+      message.success("Account deleted successfully");
+      dispatch(clearAuthData());
+
+      navigate("/");
+    } catch (error: any) {
+      console.error("Delete account error:", error);
+      message.error(
+        error?.response?.data?.message || "Failed to delete account"
+      );
+    } finally {
+      setDeleteLoading(false);
+      setDeleteModalOpen(false);
+    }
+  };
+
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-black text-2xl font-medium mb-2">Edit Profile</h2>
-        <p className="text-[#666666] text-sm font-normal">
-          Update your name, bio, and profile photo to keep your account fresh
-          and personal.
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="text-black text-2xl font-medium mb-2">Edit Profile</h2>
+          <p className="text-[#666666] text-sm font-normal">
+            Update your name, bio, and profile photo to keep your account fresh
+            and personal.
+          </p>
+        </div>
+
+        <div
+          className="cursor-pointer mr-8"
+          onClick={() => setDeleteModalOpen(true)}
+        >
+          <img
+            src="/icons/delete-icon.svg"
+            alt="Icon"
+            className="xl:w-8 xl:h-8 lg:w-16 lg:h-16 md:w-12 md:h-12"
+          />
+        </div>
       </div>
 
       <Form
@@ -227,6 +271,39 @@ const EditProfile: React.FC = () => {
           </Button>
         </div>
       </Form>
+
+      <Modal
+        title="Delete Account"
+        centered
+        open={deleteModalOpen}
+        footer={null}
+        onCancel={() => setDeleteModalOpen(false)}
+      >
+        <div className="text-center py-4">
+          <p className="text-lg font-medium mb-6">
+            Are you sure you want to delete your account permanently?
+          </p>
+
+          <div className="flex justify-center gap-4">
+            <Button
+              type="primary"
+              danger
+              loading={deleteLoading}
+              onClick={handleDeleteAccount}
+              className="!bg-[#FF5D5D]"
+            >
+              Yes, Delete
+            </Button>
+
+            <Button
+              onClick={() => setDeleteModalOpen(false)}
+              className="!border-[#666666] !text-[#666666]"
+            >
+              No
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

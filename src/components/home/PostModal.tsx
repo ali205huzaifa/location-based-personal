@@ -316,7 +316,7 @@ const PostModal: React.FC<PostModalProps> = ({
                   placeholder={`Reply to @${c.user.username}`}
                   suffix={
                     <span
-                      className="text-[#8869F3] cursor-pointer"
+                      className="text-[#8869F3] cursor-pointer focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                       onClick={() => {
                         handleSubmitReply(c._id);
                         setActiveReplyId(null);
@@ -634,7 +634,7 @@ const PostModal: React.FC<PostModalProps> = ({
                 suffix={
                   !post.isCommentDisabled && (
                     <span
-                      className="text-[#8869F3] font-medium cursor-pointer focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                      className="text-[#8869F3] font-medium cursor-pointer focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                       onClick={handleSubmitComment}
                     >
                       Submit

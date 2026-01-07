@@ -50,6 +50,10 @@ class ChatAPI {
       memberIds,
     });
   }
+
+  static editGroupChatInfo(chatId: string, payload: any) {
+    return axiosClient.patch(`/chat/group/${chatId}`, payload);
+  }
 }
 
 export default ChatAPI;

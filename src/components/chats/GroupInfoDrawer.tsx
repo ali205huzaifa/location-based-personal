@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import ChatAPI from "../../api/chatApi/ChatAPI";
 import AddGroupMembersModal from "./AddGroupMembersModal";
+import GroupDetailsModal from "./GroupDetailsModal";
 
 interface GroupMember {
   _id: string;
@@ -38,6 +39,7 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
   if (!chat) return null;
   const user = useSelector((state: RootState) => state.auth.currentUser);
   const [loading, setLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [selectedMember, setSelectedMember] = useState<GroupMember | null>(
     null
@@ -117,20 +119,31 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
     >
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="px-5 pt-5 shrink-0">
-          <div className="flex items-left gap-4">
-            <Avatar
-              size={72}
-              src={chat.image || "/images/default-chat-profile.svg"}
-            />
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar
+                size={72}
+                src={chat.image || "/images/default-chat-profile.svg"}
+              />
 
-            <div className="text-left">
-              <h2 className="text-black text-base font-medium">
-                {chat.GroupName || chat.name || "Group"}
-              </h2>
-              <p className="text-[#666666] text-sm font-normal">
-                Members ({members.length})
-              </p>
+              <div className="text-left">
+                <h2 className="text-black text-base font-medium">
+                  {chat.GroupName || chat.name || "Group"}
+                </h2>
+                <p className="text-[#666666] text-sm font-normal">
+                  Members ({members.length})
+                </p>
+              </div>
             </div>
+
+            {isCurrentUserAdmin && (
+              <img
+                src="/icons/edit-icon.svg"
+                alt="edit"
+                className="w-5 h-5 cursor-pointer mt-2 mr-2"
+                onClick={() => setEditOpen(true)}
+              />
+            )}
           </div>
 
           <div className="mt-4 rounded-xl border border-[#E8E6E6] p-3 text-sm text-gray-700">
@@ -315,6 +328,18 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
         visible={addMembersOpen}
         onClose={() => setAddMembersOpen(false)}
         chatId={chat?._id}
+      />
+
+      <GroupDetailsModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        mode="edit"
+        chatId={chat._id}
+        initialData={{
+          name: chat.GroupName || chat.name,
+          description: chat.description,
+          image: chat.image,
+        }}
       />
     </Drawer>
   );

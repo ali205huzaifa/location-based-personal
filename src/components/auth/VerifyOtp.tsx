@@ -219,7 +219,7 @@ const VerifyOtp: React.FC = () => {
                     />
                   )
                 }
-                className="h-[52px] rounded-xl focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                className="h-[52px] rounded-xl focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                 visibilityToggle={{
                   visible: showNewPassword,
                   onVisibleChange: setShowNewPassword,
@@ -249,7 +249,7 @@ const VerifyOtp: React.FC = () => {
                     />
                   )
                 }
-                className="h-[52px] rounded-xl focus:!border-[#8869F3] hover:!border-[#8869F3]"
+                className="h-[52px] rounded-xl focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                 visibilityToggle={{
                   visible: showConfirmPassword,
                   onVisibleChange: setShowConfirmPassword,

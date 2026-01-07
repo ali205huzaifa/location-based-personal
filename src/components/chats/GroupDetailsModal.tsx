@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Modal, Avatar, Input, message } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import ChatAPI from "../../api/chatApi/ChatAPI";
@@ -9,8 +9,17 @@ const { TextArea } = Input;
 interface GroupDetailsModalProps {
   open: boolean;
   onClose: () => void;
-  members: string[];
-  onGroupCreated: () => void;
+
+  members?: string[];
+  onGroupCreated?: () => void;
+
+  mode?: "create" | "edit";
+  chatId?: string;
+  initialData?: {
+    name?: string;
+    description?: string;
+    image?: string;
+  };
 }
 
 const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
@@ -18,13 +27,26 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
   onClose,
   members,
   onGroupCreated,
+  mode,
+  chatId,
+  initialData,
 }) => {
-  const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
-  const [image, setImage] = useState<string>();
+  const isEdit = mode === "edit";
+
+  const [name, setName] = useState(initialData?.name || "");
+  const [desc, setDesc] = useState(initialData?.description || "");
+  const [image, setImage] = useState<string | undefined>(initialData?.image);
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && isEdit && initialData) {
+      setName(initialData.name || "");
+      setDesc(initialData.description || "");
+      setImage(initialData.image);
+    }
+  }, [open, isEdit, initialData]);
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -56,28 +78,41 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
     }
   };
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     if (!name.trim()) return message.warning("Please enter a group name");
-    if (members.length === 0) return message.warning("Please select members");
 
     try {
       setCreating(true);
-      const payload = {
+
+      if (isEdit && chatId) {
+        await ChatAPI.editGroupChatInfo(chatId, {
+          name,
+          description: desc,
+          image,
+        });
+
+        message.success("Group updated");
+        window.location.reload();
+        onClose();
+        return;
+      }
+
+      if (!members?.length) {
+        return message.warning("Please select members");
+      }
+
+      await ChatAPI.createGroup({
         members,
         name,
         description: desc,
         image,
-      };
+      });
 
-      const res = await ChatAPI.createGroup(payload);
-      if (res?.data) {
-        message.success("Group created");
-        handleClose();
-        onGroupCreated();
-      }
-    } catch (error) {
-      console.error("Group creation failed:", error);
-      message.error("Failed to create group");
+      message.success("Group created");
+      onClose();
+      onGroupCreated?.();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Action failed");
     } finally {
       setCreating(false);
     }
@@ -101,7 +136,7 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
       centered
       title={
         <span className="text-black text-base font-medium">
-          Add Group Details
+          {isEdit ? "Edit Group Info" : "Add Group Details"}
         </span>
       }
       width={530}
@@ -169,11 +204,17 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
       </div>
 
       <button
-        onClick={handleCreate}
+        onClick={handleSubmit}
         disabled={!name || uploading || creating}
-        className="h-[52px] mt-2 w-full !bg-[#8869F3] text-white py-2 rounded-xl disabled:opacity-50"
+        className="h-[52px] mt-2 w-full !bg-[#8869F3] text-white rounded-xl"
       >
-        {creating ? "Creating Group..." : "Create Group Chat"}
+        {creating
+          ? isEdit
+            ? "Saving..."
+            : "Creating Group..."
+          : isEdit
+          ? "Save Changes"
+          : "Create Group Chat"}
       </button>
     </Modal>
   );

@@ -53,6 +53,10 @@ class AuthAPI {
   static Logout(data: { fcmPushToken: string }) {
     return axiosClient.post("/auth/logout", data);
   }
+
+  static deleteAccount() {
+    return axiosClient.delete("/user/me/delete");
+  }
 }
 
 export default AuthAPI;
