@@ -157,7 +157,7 @@ const EditProfile: React.FC = () => {
           <img
             src="/icons/delete-icon.svg"
             alt="Icon"
-            className="xl:w-8 xl:h-8 lg:w-16 lg:h-16 md:w-12 md:h-12"
+            className="w-[23px] h-[24px]"
           />
         </div>
       </div>

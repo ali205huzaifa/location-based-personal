@@ -73,25 +73,30 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
       setLoading(true);
 
       if (confirmAction === "leave") {
-        await ChatAPI.leaveGroupChat(chat._id);
-        message.success("You left the group");
+        const res = await ChatAPI.leaveGroupChat(chat._id);
+        message.success(res?.data?.message || "Task successful");
         onClose();
       }
 
       if (confirmAction === "delete") {
-        await ChatAPI.deleteGroupChat(chat._id);
-        message.success("Group deleted");
+        const res = await ChatAPI.deleteGroupChat(chat._id);
+        message.success(res?.data?.message || "Task successful");
         window.location.reload();
       }
 
       if (confirmAction === "remove" && selectedMember) {
-        await ChatAPI.removeGroupMember(chat._id, selectedMember._id);
-        message.success("Member removed");
+        const res = await ChatAPI.removeGroupMember(
+          chat._id,
+          selectedMember._id
+        );
+        message.success(res?.data?.message || "Task successful");
       }
 
       if (confirmAction === "make" && selectedMember) {
-        await ChatAPI.makeGroupAdmin(chat._id, selectedMember._id);
-        message.success(`${selectedMember.fullName} is now an Admin`);
+        const res = await ChatAPI.makeGroupAdmin(chat._id, selectedMember._id);
+        message.success(
+          res?.data?.message || `${selectedMember.fullName} is now an Admin`
+        );
       }
     } catch (err: any) {
       message.error(err?.response?.data?.message || "Action failed");
@@ -140,7 +145,7 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
               <img
                 src="/icons/edit-icon.svg"
                 alt="edit"
-                className="w-5 h-5 cursor-pointer mt-2 mr-2"
+                className="w-4 h-4 cursor-pointer mt-6 mr-2"
                 onClick={() => setEditOpen(true)}
               />
             )}

@@ -154,7 +154,7 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
             />
             <div
               onClick={handleImageClick}
-              className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full shadow-lg cursor-pointer hover:bg-purple-700 transition"
+              className="absolute bottom-0 right-0 !bg-[#8869F3] text-white p-1 rounded-full shadow-lg cursor-pointer transition"
             >
               {uploading ? (
                 <LoadingOutlined className="text-sm p-1" />

@@ -131,14 +131,12 @@ const AddGroupMembersModal: React.FC<SharePostModalProps> = ({
 
     setLoading(true);
     try {
-      await ChatAPI.AddGroupMembers(chatId, selectedUsers);
-
-      message.success("Members Added!");
+      const res = await ChatAPI.AddGroupMembers(chatId, selectedUsers);
+      message.success(res?.data?.message || "Task successful");
       setSelectedUsers([]);
       onClose();
-    } catch (error) {
-      console.error(error);
-      message.error("Failed to add members");
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || "Failed to add members");
     } finally {
       setLoading(false);
     }
