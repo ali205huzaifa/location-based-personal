@@ -634,14 +634,14 @@ const PostModal: React.FC<PostModalProps> = ({
                 suffix={
                   !post.isCommentDisabled && (
                     <span
-                      className="text-[#8869F3] font-medium cursor-pointer focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
+                      className="!text-[#8869F3] font-medium cursor-pointer"
                       onClick={handleSubmitComment}
                     >
                       Submit
                     </span>
                   )
                 }
-                className="rounded-xl py-1 px-3 h-12"
+                className="rounded-xl py-1 px-3 h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
                 disabled={post.isCommentDisabled}
               />
             </div>
