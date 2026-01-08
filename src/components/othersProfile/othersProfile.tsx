@@ -348,8 +348,8 @@ const UserProfile: React.FC = () => {
     const hasImage = Boolean(image);
 
     const trimmedCaption =
-      caption && caption.length > 80
-        ? caption.substring(0, 80) + "..."
+      caption && caption.length > 105
+        ? caption.substring(0, 105) + "..."
         : caption;
 
     return (

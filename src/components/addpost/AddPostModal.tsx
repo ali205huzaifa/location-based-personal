@@ -310,7 +310,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                   </h3>
                   <Button
                     size="small"
-                    className="rounded text-xs !bg-[#8869F326] text-[#8869F3]"
+                    className="rounded text-xs !bg-[#8869F326] text-[#8869F3] border-none"
                     onClick={() => setPrivacyModalVisible(true)}
                   >
                     {visibility === "public" ? "Public" : "Contacts Only"}
@@ -495,7 +495,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
             <Button
               type="primary"
               block
-              className="!bg-[#8869F3] h-12 rounded-xl text-sm font-light"
+              className="!bg-[#8869F3] h-12 rounded-xl text-sm font-light shadow-none"
               onClick={() => setPrivacyModalVisible(false)}
             >
               Done

@@ -163,6 +163,26 @@ const UserVerification: React.FC = () => {
     }
   };
 
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (e.key === "Backspace") {
+      e.preventDefault();
+
+      const newOtp = [...otp];
+
+      if (newOtp[index]) {
+        newOtp[index] = "";
+        setOtp(newOtp);
+      } else if (index > 0) {
+        newOtp[index - 1] = "";
+        setOtp(newOtp);
+        document.getElementById(`otp-${index - 1}`)?.focus();
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
       <div className="bg-white rounded-2xl p-8 w-[90%] sm:w-[400px] text-center border border-gray-300">
@@ -182,7 +202,14 @@ const UserVerification: React.FC = () => {
               maxLength={1}
               value={digit}
               onChange={(e) => handleOtpChange(e.target.value, i)}
-              className="w-12 h-12 text-center border border-gray-300 rounded-xl text-lg outline-none"
+              onKeyDown={(e) => handleKeyDown(e, i)}
+              className="
+  w-14 h-12 text-center text-lg
+  border border-gray-300 rounded-xl
+  hover:!border-[#8869F3]
+  focus:!border-[#8869F3]
+  focus:!outline-none focus:!ring-0
+"
             />
           ))}
         </div>

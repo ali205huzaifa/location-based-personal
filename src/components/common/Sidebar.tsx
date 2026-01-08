@@ -72,12 +72,12 @@ const Sidebar: React.FC = () => {
               <img
                 src={item.icon}
                 alt={item.label}
-                width={20}
-                height={20}
+                width={24}
+                height={24}
                 className={`transition-all duration-200 ${
                   isActive
                     ? "[filter:brightness(0)_saturate(100%)_invert(57%)_sepia(69%)_saturate(4787%)_hue-rotate(236deg)_brightness(92%)_contrast(92%)]"
-                    : "opacity-70"
+                    : "opacity-90"
                 }`}
               />
               <span>{item.label}</span>

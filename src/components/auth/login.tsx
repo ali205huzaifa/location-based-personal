@@ -206,6 +206,7 @@ const LoginPage: React.FC = () => {
               layout="vertical"
               onFinish={handleFinish}
               className="space-y-4"
+              requiredMark={false}
             >
               <Form.Item
                 name="username"
@@ -297,7 +298,16 @@ const LoginPage: React.FC = () => {
                       className="w-8 h-8"
                     />
                   }
-                  className="!w-14 !h-14 border border-gray-300 hover:border-[#8869F3]"
+                  className="
+    !w-14 !h-14 
+    border border-gray-300
+    focus:!border-[#8869F3]
+    hover:!border-[#8869F3]
+    active:!border-[#8869F3]
+    focus:!shadow-none
+    active:!shadow-none
+    focus:!outline-none
+  "
                 />
 
                 <Button
@@ -310,7 +320,16 @@ const LoginPage: React.FC = () => {
                       className="w-8 h-8"
                     />
                   }
-                  className="!w-14 !h-14 border border-gray-300 hover:border-[#8869F3]"
+                  className="
+    !w-14 !h-14 
+    border border-gray-300
+    focus:!border-[#8869F3]
+    hover:!border-[#8869F3]
+    active:!border-[#8869F3]
+    focus:!shadow-none
+    active:!shadow-none
+    focus:!outline-none
+  "
                 />
               </div>
               <div className="!mt-12">

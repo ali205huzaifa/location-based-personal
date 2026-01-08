@@ -63,6 +63,8 @@ const MyActivity: React.FC = () => {
   const [interactionHasMore, setInteractionHasMore] = useState(true);
   const [interactionLoading, setInteractionLoading] = useState(false);
 
+  const [profileUser, setProfileUser] = useState<any>(null);
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
     libraries,
@@ -90,6 +92,24 @@ const MyActivity: React.FC = () => {
 
     geocodeLocation();
   }, [user?.location]);
+
+  const fetchProfile = useCallback(async () => {
+    if (!user?._id) return;
+    try {
+      const profileResponse = await PostAPI.getPublicPrivateProfile(user._id);
+      const profileData = profileResponse.data;
+
+      if (profileData) {
+        setProfileUser(profileData);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  }, [user?._id]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const fetchPosts = useCallback(
     async (pageValue = 1) => {
@@ -312,8 +332,8 @@ const MyActivity: React.FC = () => {
     const hasImage = Boolean(image);
 
     const trimmedCaption =
-      caption && caption.length > 80
-        ? caption.substring(0, 80) + "..."
+      caption && caption.length > 105
+        ? caption.substring(0, 105) + "..."
         : caption;
 
     return (
@@ -419,7 +439,7 @@ const MyActivity: React.FC = () => {
                 <div className="flex justify-between mt-4 text-left w-64 text-gray-600 text-sm">
                   <div className="flex flex-col">
                     <strong className="text-black text-base font-medium">
-                      {user?.circleJoined}
+                      {profileUser?.circleJoined ?? 0}
                     </strong>
                     <span className="text-[#666666] text-xs font-medium">
                       Circles Joined
@@ -427,7 +447,7 @@ const MyActivity: React.FC = () => {
                   </div>
                   <div className="flex flex-col">
                     <strong className="text-black text-base font-medium">
-                      {user?.circleSize}
+                      {profileUser?.circleSize ?? 0}
                     </strong>
                     <span className="text-[#666666] text-xs font-medium">
                       Circle Size

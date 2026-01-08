@@ -9,7 +9,7 @@ const ReportPostModal = ({
 }: {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (reason: string, description: string) => void;
+  onSubmit: (reasons: string[], description: string) => void;
 }) => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [additionalInfo, setAdditionalInfo] = useState("");
@@ -33,11 +33,7 @@ const ReportPostModal = ({
 
   const handleSubmit = () => {
     if (selectedOptions.length === 0) return;
-
-    const reason = selectedOptions[0];
-    const description = additionalInfo;
-
-    onSubmit(reason, description);
+    onSubmit(selectedOptions, additionalInfo);
   };
 
   return (

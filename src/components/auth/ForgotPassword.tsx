@@ -36,6 +36,7 @@ const ForgotPassword: React.FC = () => {
           name="forgotPasswordForm"
           onFinish={handleSendOTP}
           layout="vertical"
+          requiredMark={false}
         >
           <Form.Item
             name="email"

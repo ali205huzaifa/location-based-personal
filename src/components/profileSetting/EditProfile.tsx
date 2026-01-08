@@ -165,6 +165,7 @@ const EditProfile: React.FC = () => {
       <Form
         form={form}
         layout="vertical"
+        requiredMark={false}
         className="space-y-6 w-full pr-8"
         initialValues={{
           fullName: "",
@@ -251,9 +252,17 @@ const EditProfile: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item name="bio" label="Bio">
+        <Form.Item
+          name="bio"
+          label="Bio"
+          rules={[{ max: 100, message: "Bio cannot exceed 100 characters" }]}
+        >
           <TextArea
-            className="h-16 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3]"
+            rows={2}
+            maxLength={100}
+            showCount
+            autoSize={false}
+            className="rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3] resize-none"
             placeholder="Tell us about yourself..."
           />
         </Form.Item>

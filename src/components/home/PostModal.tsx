@@ -490,7 +490,16 @@ const PostModal: React.FC<PostModalProps> = ({
                             className="w-5 h-5"
                           />
                         }
-                        className="mr-2"
+                        className="
+    mr-2
+    !border-gray-300
+    hover:!border-[#8869F3]
+    focus:!border-[#8869F3]
+    active:!border-[#8869F3]
+    !shadow-none
+    focus:!shadow-none
+    active:!shadow-none
+  "
                       />{" "}
                     </Popover>
                   ) : (
@@ -671,7 +680,7 @@ const PostModal: React.FC<PostModalProps> = ({
             <Button
               key="close"
               onClick={onClose}
-              className="flex-1 !h-10 rounded-xl text-[#666666]"
+              className="flex-1 !h-10 rounded-xl !text-[#666666] !border-[#666666]"
             >
               Cancel
             </Button>

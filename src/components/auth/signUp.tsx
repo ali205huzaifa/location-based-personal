@@ -134,6 +134,12 @@ const Signup: React.FC = () => {
     }
   };
 
+  // const handleGoogleLogin = () => {
+  //   window.location.href = `${
+  //     import.meta.env.VITE_API_BASE_URL
+  //   }/auth/google/login`;
+  // };
+
   return (
     <>
       <div className="md:hidden flex items-center justify-center min-h-screen text-center px-6 bg-white">
@@ -192,7 +198,11 @@ const Signup: React.FC = () => {
           <div className="w-full max-w-md">
             <h2 className="text-black text-4xl font-medium mb-8">Signup</h2>
 
-            <Form layout="vertical" onFinish={handleSignup}>
+            <Form
+              layout="vertical"
+              onFinish={handleSignup}
+              requiredMark={false}
+            >
               <Form.Item
                 name="fullName"
                 label="Full Name"
@@ -362,14 +372,24 @@ const Signup: React.FC = () => {
                 <Button
                   shape="circle"
                   size="large"
+                  // onClick={handleGoogleLogin}
                   icon={
                     <img
                       src="/icons/google-icon.svg"
                       alt="Google"
-                      className="w-6 h-6"
+                      className="w-8 h-8"
                     />
                   }
-                  className="!w-12 !h-12 border border-gray-300 hover:border-[#8869F3] hover:text-[#8869F3]"
+                  className="
+    !w-14 !h-14 
+    border border-gray-300
+    focus:!border-[#8869F3]
+    hover:!border-[#8869F3]
+    active:!border-[#8869F3]
+    focus:!shadow-none
+    active:!shadow-none
+    focus:!outline-none
+  "
                 />
 
                 <Button
@@ -379,10 +399,19 @@ const Signup: React.FC = () => {
                     <img
                       src="/icons/apple-icon.svg"
                       alt="Apple"
-                      className="w-6 h-6"
+                      className="w-8 h-8"
                     />
                   }
-                  className="!w-12 !h-12 border border-gray-300 hover:border-[#8869F3] hover:text-[#8869F3]"
+                  className="
+    !w-14 !h-14 
+    border border-gray-300
+    focus:!border-[#8869F3]
+    hover:!border-[#8869F3]
+    active:!border-[#8869F3]
+    focus:!shadow-none
+    active:!shadow-none
+    focus:!outline-none
+  "
                 />
               </div>
 

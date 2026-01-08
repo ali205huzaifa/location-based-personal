@@ -52,6 +52,7 @@ const ChangePassword: React.FC = () => {
         layout="vertical"
         onFinish={handleSubmit}
         className="space-y-6 w-full pr-8"
+        requiredMark={false}
       >
         <Form.Item
           label="Current Password"
@@ -169,7 +170,7 @@ const ChangePassword: React.FC = () => {
             htmlType="submit"
             size="large"
             loading={loading}
-            className="!h-12 sm:w-auto px-8 !bg-[#8869F3] border-none rounded-xl !text-white text-sm font-normal"
+            className="!h-12 sm:w-auto px-8 !bg-[#8869F3] border-none rounded-xl !text-white text-sm font-normal shadow-none"
           >
             Save Changes
           </Button>
