@@ -553,11 +553,11 @@ const UserProfile: React.FC = () => {
                   <GoogleMap
                     mapContainerStyle={mapContainerStyle}
                     center={mapCenter}
-                    zoom={12}
+                    zoom={14}
                     onLoad={onLoad}
                     onUnmount={onUnmount}
                     options={{
-                      minZoom: 14,
+                      minZoom: 6,
                       maxZoom: 18,
                       zoomControl: false,
                       mapTypeControl: false,

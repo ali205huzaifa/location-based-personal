@@ -197,11 +197,11 @@ const PostModal: React.FC<PostModalProps> = ({
     }
   };
 
-  const handleReportPost = async (reason: string, description: string) => {
+  const handleReportPost = async (reasons: string[], description: string) => {
     const payload = {
       entityType: "Post",
       entityId: post._id,
-      reason,
+      reason: reasons,
       description,
     };
 
