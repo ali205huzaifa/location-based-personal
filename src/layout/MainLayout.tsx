@@ -39,7 +39,7 @@ const MainLayout: React.FC = () => {
                 <CloseOutlined className="text-lg text-gray-600" />
               </button>
             </div>
-            <Sidebar />
+            <Sidebar onNavigate={() => setIsSidebarOpen(false)} />
           </div>
 
           {isSidebarOpen && (

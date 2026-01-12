@@ -190,7 +190,7 @@ const VerifyOtp: React.FC = () => {
                 type="link"
                 onClick={handleResendOTP}
                 disabled={resendLoading}
-                className="text-purple-500 p-0"
+                className="!text-[#8869F3] p-0"
               >
                 {resendLoading ? "Resending..." : "Resend code"}
               </Button>

@@ -262,7 +262,7 @@ const EditProfile: React.FC = () => {
             maxLength={100}
             showCount
             autoSize={false}
-            className="rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3] resize-none"
+            className="rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3] resize-none"
             placeholder="Tell us about yourself..."
           />
         </Form.Item>

@@ -40,7 +40,7 @@ const Navbar: FC = () => {
   };
 
   return (
-    <header className="flex items-center justify-between px-14 py-3 shadow-sm bg-white">
+    <header className="flex items-center justify-between xl:px-14 lg:px-6 md:px-8 md:pl-20 py-3 shadow-sm bg-white">
       <div className="flex items-center">
         <img
           src="/icons/logo.svg"

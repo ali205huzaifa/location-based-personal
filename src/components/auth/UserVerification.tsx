@@ -237,7 +237,7 @@ const UserVerification: React.FC = () => {
               type="link"
               onClick={handleResendOTP}
               disabled={resendLoading}
-              className="text-purple-500 p-0 font-semibold"
+              className="!text-[#8869F3] p-0 font-semibold"
             >
               {resendLoading ? "Resending..." : "Resend code"}
             </Button>

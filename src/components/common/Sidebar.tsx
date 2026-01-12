@@ -13,7 +13,11 @@ import ContactIcon from "/icons/sidecontact-icon.svg";
 
 import AddPostModal from "../addpost/AddPostModal";
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,6 +60,7 @@ const Sidebar: React.FC = () => {
               item.action();
             } else {
               navigate(item.path!);
+              onNavigate?.();
             }
           };
 
@@ -63,23 +68,13 @@ const Sidebar: React.FC = () => {
             <div
               key={item.label}
               onClick={handleClick}
-              className={`flex items-center gap-4 px-4 py-3 rounded-xl text-base font-normal transition mt-0 ${
+              className={`flex items-center gap-4 px-4 py-3 rounded-xl text-base font-normal transition ${
                 isActive
                   ? "text-[#8869F3] bg-purple-50"
                   : "text-[#000000] hover:bg-[#EFEFEF]"
               }`}
             >
-              <img
-                src={item.icon}
-                alt={item.label}
-                width={24}
-                height={24}
-                className={`transition-all duration-200 ${
-                  isActive
-                    ? "[filter:brightness(0)_saturate(100%)_invert(57%)_sepia(69%)_saturate(4787%)_hue-rotate(236deg)_brightness(92%)_contrast(92%)]"
-                    : "opacity-90"
-                }`}
-              />
+              <img src={item.icon} alt={item.label} width={24} height={24} />
               <span>{item.label}</span>
             </div>
           );

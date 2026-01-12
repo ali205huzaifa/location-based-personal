@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Form, Input, Button, Divider, DatePicker, message } from "antd";
+import { Form, Input, Button, DatePicker, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthAPI from "../../api/authApi/AuthAPI";
 
@@ -364,9 +364,13 @@ const Signup: React.FC = () => {
                 Signup
               </Button>
 
-              <Divider className="!text-stone-500 !text-sm !font-normal !my-8">
-                or continue with
-              </Divider>
+              <div className="self-stretch inline-flex items-center justify-center gap-2 py-8">
+                <div className="w-32 h-px bg-gradient-to-r from-stone-100 to-[#C3C3C3]" />
+                <div className="text-stone-500 text-xs font-normal">
+                  or continue with
+                </div>
+                <div className="w-32 h-px bg-gradient-to-l from-stone-100 to-[#C3C3C3]" />
+              </div>
 
               <div className="flex justify-center gap-8">
                 <Button

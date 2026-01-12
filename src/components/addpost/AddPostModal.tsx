@@ -310,7 +310,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                   </h3>
                   <Button
                     size="small"
-                    className="rounded text-xs !bg-[#8869F326] text-[#8869F3] border-none"
+                    className="rounded text-xs !bg-[#8869F326] !text-[#8869F3] border-none"
                     onClick={() => setPrivacyModalVisible(true)}
                   >
                     {visibility === "public" ? "Public" : "Contacts Only"}
@@ -528,7 +528,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
                   className="w-5 h-5"
                 />
               </div>
-              <span className="ftext-black text-sm font-medium">Public</span>
+              <span className="text-black text-sm font-medium">Public</span>
             </div>
             <Radio value="public" className="custom-purple-radio" />
           </div>
