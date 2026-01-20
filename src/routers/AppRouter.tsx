@@ -16,6 +16,7 @@ import ChatLayout from "../components/chats/ChatLayout";
 import GoogleSuccess from "../components/auth/GoogleSuccess";
 import UserProfile from "../components/othersProfile/othersProfile";
 import ContactsList from "../components/contacts/Contactlist";
+import SinglePostView from "../components/home/SinglePostView";
 
 const AppRouter: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const AppRouter: React.FC = () => {
           path="/auth/google/complete-profile"
           element={<CompleteGoogleProfile />}
         />
+        <Route path="/post/:postId" element={<SinglePostView />} />
 
         <Route
           path="/"

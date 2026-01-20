@@ -5,6 +5,10 @@ class PostAPI {
     return axiosClient.get("/post", { params });
   }
 
+  static getPostsByMapArea(params = {}) {
+    return axiosClient.get("/post/map-area", { params });
+  }
+
   static getPublicPostsByUser(id: string, params = {}) {
     return axiosClient.get(`/post/user/${id}`, { params });
   }

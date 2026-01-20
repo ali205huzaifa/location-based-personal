@@ -715,6 +715,7 @@ const MyActivity: React.FC = () => {
       <SharePostModal
         visible={isShareOpen}
         onClose={() => setIsShareOpen(false)}
+        post={selectedPost}
       />
     </div>
   );

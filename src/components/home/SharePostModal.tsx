@@ -14,11 +14,13 @@ interface User {
 interface SharePostModalProps {
   visible: boolean;
   onClose: () => void;
+  post: any | null;
 }
 
 const SharePostModal: React.FC<SharePostModalProps> = ({
   visible,
   onClose,
+  post,
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
@@ -28,10 +30,6 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    if (visible) fetchContacts();
-  }, [visible]);
 
   const normalizeMutualContacts = (list: any[]): User[] => {
     return list.map((item) => ({
@@ -100,36 +98,73 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
     );
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    message.success("Link copied to clipboard!");
+  const POST_BASE_URL = "https://www.hurcle.com";
+
+  const getPostLink = () => {
+    if (!post?._id) return "";
+    return `${POST_BASE_URL}/post/${post._id}`;
   };
 
-  const handleShare = () => {
+  const handleCopyLink = () => {
+    const postLink = getPostLink();
+
+    if (!postLink) {
+      message.error("Invalid post link");
+      return;
+    }
+
+    navigator.clipboard.writeText(postLink);
+    message.success("Post link copied to clipboard!");
+  };
+
+  const handleShare = async () => {
     if (selectedUsers.length === 0) {
       message.warning("Please select at least one contact to share with.");
       return;
     }
 
-    message.success("Post shared successfully!");
-    onClose();
+    const postLink = getPostLink();
+
+    if (!postLink) {
+      message.error("Invalid post link");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await ChatAPI.sharePostWithUser({
+        participants: selectedUsers,
+        postLink,
+      });
+
+      message.success("Post shared successfully!");
+      setSelectedUsers([]);
+      onClose();
+    } catch (error) {
+      console.error(error);
+      message.error("Failed to share post");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (visible) {
       setPage(1);
-      fetchContacts(1, "");
+      fetchContacts(1, search);
     }
   }, [visible]);
 
   useEffect(() => {
+    if (!visible) return;
     const timer = setTimeout(() => {
       setPage(1);
       fetchContacts(1, search);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, visible]);
 
   const handlePageChange = (pageNumber: number) => {
     setPage(pageNumber);

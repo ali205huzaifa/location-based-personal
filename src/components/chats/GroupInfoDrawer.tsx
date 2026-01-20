@@ -42,14 +42,14 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
   const [editOpen, setEditOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [selectedMember, setSelectedMember] = useState<GroupMember | null>(
-    null
+    null,
   );
   const [addMembersOpen, setAddMembersOpen] = useState(false);
 
   const members = Array.isArray(GroupMembers) ? GroupMembers : [];
 
   const isCurrentUserAdmin = members.some(
-    (m) => m.username === user?.username && m.role === "admin"
+    (m) => m.username === user?.username && m.role === "admin",
   );
 
   const confirmTextMap: Record<Exclude<ConfirmAction, null>, string> = {
@@ -87,7 +87,7 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
       if (confirmAction === "remove" && selectedMember) {
         const res = await ChatAPI.removeGroupMember(
           chat._id,
-          selectedMember._id
+          selectedMember._id,
         );
         message.success(res?.data?.message || "Task successful");
       }
@@ -95,7 +95,7 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
       if (confirmAction === "make" && selectedMember) {
         const res = await ChatAPI.makeGroupAdmin(chat._id, selectedMember._id);
         message.success(
-          res?.data?.message || `${selectedMember.fullName} is now an Admin`
+          res?.data?.message || `${selectedMember.fullName} is now an Admin`,
         );
       }
     } catch (err: any) {
@@ -306,7 +306,7 @@ const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
               type="primary"
               loading={loading}
               onClick={handleConfirm}
-              className={`flex-1 !h-[42px] rounded-xl ${
+              className={`flex-1 !h-[42px] rounded-xl shadow-none ${
                 confirmAction === "make" ? "!bg-[#166C3B]" : "!bg-[#FF5D5D]"
               }`}
             >

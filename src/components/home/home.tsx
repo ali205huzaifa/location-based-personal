@@ -27,6 +27,7 @@ interface MapCardProps {
   username: string;
   isLiked: boolean;
   onLike: () => void;
+  onShare: () => void;
 }
 
 const mapContainerStyle = {
@@ -44,17 +45,15 @@ const Home: React.FC = () => {
   const [popupPostId, setPopupPostId] = useState<string | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mainSearchValue, setMainSearchValue] = useState("");
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const [page, setPage] = useState(1);
-  const limit = 10;
-  const [hasMore, setHasMore] = useState(true);
   const rightSidebarRef = useRef<HTMLDivElement>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const lastFetchKeyRef = useRef<string | null>(null);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
@@ -84,34 +83,81 @@ const Home: React.FC = () => {
     geocodeLocation();
   }, [currentUser?.location]);
 
-  const fetchPosts = async (pageValue = 1) => {
-    try {
-      const res = await PostAPI.getPublicPosts({
-        page: pageValue,
-        limit,
-      });
+  const getBoundsKey = (params: any) => {
+    return `${params.zoom}-${params.north.toFixed(4)}-${params.south.toFixed(
+      4
+    )}-${params.east.toFixed(4)}-${params.west.toFixed(4)}`;
+  };
 
-      const newPosts = res.data?.data || [];
+  const getMapBoundsParams = () => {
+    if (!map) return null;
 
-      setPosts((prev) => {
-        const ids = new Set(prev.map((p) => p._id));
-        const filtered = newPosts.filter((p: any) => !ids.has(p._id));
-        return [...prev, ...filtered];
-      });
+    const bounds = map.getBounds();
+    if (!bounds) return null;
 
-      setHasMore(res.data?.hasNext);
-      setPage(pageValue + 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+
+    const north = Number(ne.lat());
+    const south = Number(sw.lat());
+    const east = Number(ne.lng());
+    const west = Number(sw.lng());
+
+    if (
+      [north, south, east, west].some(
+        (v) => typeof v !== "number" || Number.isNaN(v)
+      )
+    ) {
+      return null;
     }
+
+    return {
+      zoom: Number(map.getZoom()),
+      north,
+      south,
+      east,
+      west,
+      postLimit: 50,
+    };
+  };
+
+  const fetchPostsByBounds = () => {
+    if (!map) return;
+
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+
+    idleTimeoutRef.current = setTimeout(async () => {
+      const params = getMapBoundsParams();
+      if (!params) return;
+
+      const fetchKey = getBoundsKey(params);
+      if (lastFetchKeyRef.current === fetchKey) {
+        return;
+      }
+
+      lastFetchKeyRef.current = fetchKey;
+
+      try {
+        setLoading(true);
+
+        const res = await PostAPI.getPostsByMapArea(params);
+        const newPosts = res.data?.data?.posts || [];
+
+        setPosts(newPosts);
+      } catch (err) {
+        console.error("Map fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }, 400);
   };
 
   useEffect(() => {
-    fetchPosts(1);
-  }, []);
+    if (!map) return;
+    fetchPostsByBounds();
+  }, [map]);
 
   const handleLikeUpdate = (
     postId: string,
@@ -170,24 +216,6 @@ const Home: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const div = rightSidebarRef.current;
-    if (!div) return;
-
-    const handleScroll = () => {
-      const bottomReached =
-        div.scrollTop + div.clientHeight >= div.scrollHeight - 50;
-
-      if (bottomReached && hasMore && !loadingMore) {
-        setLoadingMore(true);
-        fetchPosts(page);
-      }
-    };
-
-    div.addEventListener("scroll", handleScroll);
-    return () => div.removeEventListener("scroll", handleScroll);
-  }, [hasMore, page, loadingMore]);
-
   const MapCard: React.FC<MapCardProps> = ({
     image,
     caption,
@@ -198,6 +226,7 @@ const Home: React.FC = () => {
     onClick,
     isLiked,
     onLike,
+    onShare,
   }) => {
     const hasImage = Boolean(image);
     const trimmedCaption =
@@ -257,7 +286,7 @@ const Home: React.FC = () => {
               className="flex items-center"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsShareOpen(true);
+                onShare();
               }}
             >
               <img
@@ -293,45 +322,34 @@ const Home: React.FC = () => {
   };
 
   const refreshPosts = async () => {
+    lastFetchKeyRef.current = null;
     setPosts([]);
-    setPage(1);
-    setHasMore(true);
-    setLoading(true);
-    await fetchPosts(1);
+    fetchPostsByBounds();
   };
-
-  const onLoad = useCallback((mapInstance: google.maps.Map) => {
-    setMap(mapInstance);
-  }, []);
 
   const onUnmount = useCallback(() => setMap(null), []);
 
   const handleSearchClose = () => {
     setSearchOpen(false);
-    // setMainSearchValue("");
   };
 
   const handleLocationSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry?.location && map) {
       map.panTo(place.geometry.location);
       map.setZoom(14);
+
+      setPosts([]);
+      setTimeout(fetchPostsByBounds, 400);
     }
+
     setSearchOpen(false);
     setMainSearchValue(place.name || place.formatted_address || "");
   };
 
-  if (!isLoaded || loading) {
+  if (!isLoaded) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          flexDirection: "column",
-        }}
-      >
-        <Spin size="large" tip="Loading map and posts..." />
+      <div className="h-screen flex items-center justify-center">
+        <Spin size="large" tip="Loading map..." />
       </div>
     );
   }
@@ -408,7 +426,11 @@ const Home: React.FC = () => {
             mapContainerStyle={mapContainerStyle}
             center={mapCenter}
             zoom={14}
-            onLoad={onLoad}
+            onLoad={(mapInstance) => {
+              setMap(mapInstance);
+              setTimeout(fetchPostsByBounds, 600);
+            }}
+            onIdle={fetchPostsByBounds}
             onUnmount={onUnmount}
             options={{
               minZoom: 6,
@@ -552,7 +574,7 @@ const Home: React.FC = () => {
         ref={rightSidebarRef}
         className="xl:w-80 w-72 h-full xl:mr-8 md:mr-0 overflow-y-auto bg-[#F9FAFB] px-2 pb-2 space-y-4 no-scrollbar"
       >
-        {posts.length === 0 && !loadingMore && (
+        {posts.length === 0 && (
           <p className="text-center !text-[#8869F3] text-base mt-8">
             No posts yet — check back soon!
           </p>
@@ -571,16 +593,14 @@ const Home: React.FC = () => {
             username={post.user?.username}
             onClick={() => handlePostClick(post)}
             onLike={() => handleLike(post)}
+            onShare={() => {
+              setSelectedPost(post);
+              setIsShareOpen(true);
+            }}
           />
         ))}
 
-        {loadingMore && (
-          <div className="w-full flex justify-center py-4 text-gray-500">
-            <Spin size="small" />
-          </div>
-        )}
-
-        {!hasMore && posts.length >= 10 && (
+        {posts.length >= 10 && (
           <p className="text-center text-xs text-gray-400 py-4">
             No more posts to load.
           </p>
@@ -598,6 +618,7 @@ const Home: React.FC = () => {
       <SharePostModal
         visible={isShareOpen}
         onClose={() => setIsShareOpen(false)}
+        post={selectedPost}
       />
     </div>
   );

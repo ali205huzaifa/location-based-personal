@@ -83,7 +83,6 @@ const AddGroupMembersModal: React.FC<SharePostModalProps> = ({
       setUsers(usersData);
       setPage(pageNumber);
     } catch (error) {
-      console.error(error);
       message.error("Failed to load contacts");
     } finally {
       setLoading(false);

@@ -13,6 +13,7 @@ import { message } from "antd";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import AddPostModal from "../addpost/AddPostModal";
+import { useAuthActionGuard } from "../../hooks/useAuthActionGuard";
 
 interface PostModalProps {
   visible: boolean;
@@ -20,6 +21,7 @@ interface PostModalProps {
   post: any | null;
   onPostDeleted: any;
   onLikeUpdate: (postId: string, liked: boolean, likeCount: number) => void;
+  isPublicView?: boolean;
 }
 
 const MediaRenderer: React.FC<any> = ({ mediaItem }) => {
@@ -60,6 +62,7 @@ const PostModal: React.FC<PostModalProps> = ({
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { requireAuth } = useAuthActionGuard();
 
   // const [successModalVisible, setSuccessModalVisible] = useState(false);
   // const [successMessage, setSuccessMessage] = useState("");
@@ -71,13 +74,6 @@ const PostModal: React.FC<PostModalProps> = ({
   >("none");
 
   useEffect(() => {
-    if (visible && post?._id) {
-      fetchComments(post._id);
-      fetchPostInteraction(post._id);
-    }
-  }, [visible]);
-
-  useEffect(() => {
     if (visible && post) {
       setLikeCount(post?.interaction?.likesCount ?? 0);
       setIsLiked(post?.interaction?.liked ?? false);
@@ -85,12 +81,21 @@ const PostModal: React.FC<PostModalProps> = ({
   }, [visible]);
 
   useEffect(() => {
-    if (visible && post?.user?._id) {
-      PostAPI.checkRelation(post.user._id)
-        .then((res) => setContactStatus(res.data.status))
-        .catch((err) => console.error("Error checking relation:", err));
-    }
-  }, [visible]);
+    if (!visible || !post?._id) return;
+    if (!currentUser) return;
+
+    fetchComments(post._id);
+    fetchPostInteraction(post._id);
+  }, [visible, post?._id, currentUser]);
+
+  useEffect(() => {
+    if (!visible || !post?.user?._id) return;
+    if (!currentUser) return;
+
+    PostAPI.checkRelation(post.user._id)
+      .then((res) => setContactStatus(res.data.status))
+      .catch((err) => console.error("Error checking relation:", err));
+  }, [visible, post?.user?._id, currentUser]);
 
   const user = post.user || {};
   const mediaItems = post.media || [];
@@ -131,70 +136,78 @@ const PostModal: React.FC<PostModalProps> = ({
   };
 
   const handleLike = async () => {
-    const previousIsLiked = isLiked;
-    const previousLikeCount = likeCount;
-    const newIsLiked = !previousIsLiked;
-    console.log(newIsLiked);
-    const newLikeCount = newIsLiked
-      ? previousLikeCount + 1
-      : previousLikeCount - 1;
-    setIsLiked(newIsLiked);
-    setLikeCount(newLikeCount);
-    onLikeUpdate(post._id, newIsLiked, newLikeCount);
-    try {
-      const res = await PostAPI.likePost(post._id);
-      const data = res?.data?.data;
-      if (data) {
-        setIsLiked(data.liked);
-        setLikeCount(data.likesCount);
-        onLikeUpdate(post._id, data.liked, data.likesCount);
+    requireAuth(async () => {
+      const previousIsLiked = isLiked;
+      const previousLikeCount = likeCount;
+      const newIsLiked = !previousIsLiked;
+      console.log(newIsLiked);
+      const newLikeCount = newIsLiked
+        ? previousLikeCount + 1
+        : previousLikeCount - 1;
+      setIsLiked(newIsLiked);
+      setLikeCount(newLikeCount);
+      onLikeUpdate(post._id, newIsLiked, newLikeCount);
+      try {
+        const res = await PostAPI.likePost(post._id);
+        const data = res?.data?.data;
+        if (data) {
+          setIsLiked(data.liked);
+          setLikeCount(data.likesCount);
+          onLikeUpdate(post._id, data.liked, data.likesCount);
+        }
+      } catch (err: any) {
+        setIsLiked(previousIsLiked);
+        setLikeCount(previousLikeCount);
+        onLikeUpdate(post._id, previousIsLiked, previousLikeCount);
       }
-    } catch (err: any) {
-      setIsLiked(previousIsLiked);
-      setLikeCount(previousLikeCount);
-      onLikeUpdate(post._id, previousIsLiked, previousLikeCount);
-    }
+    });
   };
 
   const handleSubmitComment = async () => {
-    if (!commentText.trim() || post.isCommentDisabled) return;
+    requireAuth(async () => {
+      if (!commentText.trim() || post.isCommentDisabled) return;
 
-    const payload = {
-      content: commentText,
-      parentCommentId: parentCommentId || null,
-    };
+      const payload = {
+        content: commentText,
+        parentCommentId: parentCommentId || null,
+      };
 
-    try {
-      await PostAPI.commentOnPost(post._id, payload);
-      setCommentText("");
-      setParentCommentId(null);
-      setLikeCount((prev: any) => prev);
-      post.interaction.commentCount = (post.interaction.commentCount || 0) + 1;
+      try {
+        await PostAPI.commentOnPost(post._id, payload);
+        setCommentText("");
+        setParentCommentId(null);
+        setLikeCount((prev: any) => prev);
+        post.interaction.commentCount =
+          (post.interaction.commentCount || 0) + 1;
 
-      fetchComments(post._id);
-    } catch (err) {
-      console.error("Error posting comment:", err);
-    }
+        fetchComments(post._id);
+      } catch (err) {
+        console.error("Error posting comment:", err);
+      }
+    });
   };
 
   const handleSubmitReply = async (parentId: string) => {
-    if (!commentText.trim() || post.isCommentDisabled) return;
+    requireAuth(async () => {
+      if (!commentText.trim() || post.isCommentDisabled) return;
 
-    const payload = {
-      content: commentText,
-      parentCommentId: parentId,
-    };
+      const payload = {
+        content: commentText,
+        parentCommentId: parentId,
+      };
 
-    try {
-      await PostAPI.commentOnPost(post._id, payload);
-      setCommentText("");
+      try {
+        await PostAPI.commentOnPost(post._id, payload);
+        setCommentText("");
 
-      post.interaction.commentCount = (post.interaction.commentCount || 0) + 1;
+        post.interaction.commentCount =
+          (post.interaction.commentCount || 0) + 1;
 
-      fetchComments(post._id);
-    } catch (err) {
-      console.error("Error posting reply:", err);
-    }
+        fetchComments(post._id);
+      } catch (err) {
+        console.error("Error posting reply:", err);
+      }
+    });
   };
 
   const handleReportPost = async (reasons: string[], description: string) => {
@@ -215,13 +228,15 @@ const PostModal: React.FC<PostModalProps> = ({
   };
 
   const handleAddToContact = async () => {
-    try {
-      const res = await PostAPI.addToContact({ grantedTo: post.user._id });
-      message.success(res.data.message || "Request sent!");
-      setContactStatus("added");
-    } catch (err: any) {
-      message.error(err.response?.data?.message || "Could not add contact");
-    }
+    requireAuth(async () => {
+      try {
+        const res = await PostAPI.addToContact({ grantedTo: post.user._id });
+        message.success(res.data.message || "Request sent!");
+        setContactStatus("added");
+      } catch (err: any) {
+        message.error(err.response?.data?.message || "Could not add contact");
+      }
+    });
   };
 
   const handleDelete = async () => {
@@ -566,7 +581,14 @@ const PostModal: React.FC<PostModalProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 pt-4 custom-scrollbar">
-              {loadingComments ? (
+              {!currentUser ? (
+                <p
+                  className="text-gray-600 text-sm text-center mt-6 cursor-pointer"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Login to view comments
+                </p>
+              ) : loadingComments ? (
                 <div className="flex justify-center py-4">
                   <Spin tip="Loading comments..." />
                 </div>
@@ -608,7 +630,7 @@ const PostModal: React.FC<PostModalProps> = ({
                   </span>
 
                   <span
-                    onClick={() => setIsShareOpen(true)}
+                    onClick={() => requireAuth(() => setIsShareOpen(true))}
                     className="flex items-center cursor-pointer"
                   >
                     <img
@@ -621,7 +643,7 @@ const PostModal: React.FC<PostModalProps> = ({
                 </div>
 
                 <span
-                  onClick={() => setIsReportOpen(true)}
+                  onClick={() => requireAuth(() => setIsReportOpen(true))}
                   className="flex items-center cursor-pointer"
                 >
                   <img
@@ -717,6 +739,7 @@ const PostModal: React.FC<PostModalProps> = ({
       <SharePostModal
         visible={isShareOpen}
         onClose={() => setIsShareOpen(false)}
+        post={post}
       />
       <ReportPostModal
         visible={isReportOpen}

@@ -198,9 +198,13 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
           placeholder="Enter group description"
           value={desc}
           rows={3}
+          maxLength={100}
           onChange={(e) => setDesc(e.target.value)}
           className="w-full border rounded-xl px-3 py-2 h-24 text-black text-xs font-normal outline-[#8869F3]"
         />
+        <p className="text-xs text-gray-500 mt-1 text-right">
+          {desc.length}/100
+        </p>
       </div>
 
       <button
@@ -213,8 +217,8 @@ const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
             ? "Saving..."
             : "Creating Group..."
           : isEdit
-          ? "Save Changes"
-          : "Create Group Chat"}
+            ? "Save Changes"
+            : "Create Group Chat"}
       </button>
     </Modal>
   );

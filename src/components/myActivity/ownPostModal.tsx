@@ -220,6 +220,7 @@ const OwnPostModal: React.FC<PostModalProps> = ({ visible, onClose, post }) => {
         <SharePostModal
           visible={isShareOpen}
           onClose={() => setIsShareOpen(false)}
+          post={" "}
         />
         {/* <ReportPostModal
           visible={isReportOpen}

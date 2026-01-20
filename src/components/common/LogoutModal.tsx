@@ -27,7 +27,11 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
       <div className="text-center py-4">
         <p className="text-lg font-semibold mb-6">Do you want to Logout?</p>
         <div className="flex justify-center gap-4">
-          <Button type="primary" onClick={onConfirm} className="!bg-[#8869F3]">
+          <Button
+            type="primary"
+            onClick={onConfirm}
+            className="!bg-[#8869F3] shadow-none"
+          >
             Yes
           </Button>
           <Button

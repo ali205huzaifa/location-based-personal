@@ -43,14 +43,14 @@ const Signup: React.FC = () => {
         },
         (error) => {
           reject(error.message || "Unable to fetch location.");
-        }
+        },
       );
     });
   };
 
   const getLocationString = async (
     lat: number,
-    lng: number
+    lng: number,
   ): Promise<string> => {
     try {
       const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -61,7 +61,7 @@ const Signup: React.FC = () => {
       }
 
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`,
       );
 
       const data = await response.json();
@@ -134,11 +134,11 @@ const Signup: React.FC = () => {
     }
   };
 
-  // const handleGoogleLogin = () => {
-  //   window.location.href = `${
-  //     import.meta.env.VITE_API_BASE_URL
-  //   }/auth/google/login`;
-  // };
+  const handleGoogleLogin = () => {
+    window.location.href = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/auth/google/login`;
+  };
 
   return (
     <>
@@ -301,7 +301,7 @@ const Signup: React.FC = () => {
                           return Promise.resolve();
                         }
                         return Promise.reject(
-                          new Error("Passwords do not match!")
+                          new Error("Passwords do not match!"),
                         );
                       },
                     }),
@@ -376,7 +376,7 @@ const Signup: React.FC = () => {
                 <Button
                   shape="circle"
                   size="large"
-                  // onClick={handleGoogleLogin}
+                  onClick={handleGoogleLogin}
                   icon={
                     <img
                       src="/icons/google-icon.svg"

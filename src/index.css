@@ -196,7 +196,7 @@
   border: 0.1rem solid #8869f3;
 } */
 
-/* .pac-container {
+.pac-container {
   background-color: #ffffff !important;
   border-radius: 10px !important;
   border: 1px solid #e5e7eb !important;
@@ -227,7 +227,7 @@
 
 .pac-item-query {
   font-weight: 600 !important;
-} */
+}
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

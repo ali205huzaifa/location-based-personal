@@ -54,6 +54,13 @@ class ChatAPI {
   static editGroupChatInfo(chatId: string, payload: any) {
     return axiosClient.patch(`/chat/group/${chatId}`, payload);
   }
+
+  static sharePostWithUser(data: {
+    participants: string[] | number[];
+    postLink: string;
+  }) {
+    return axiosClient.post("/chat/direct/share", data);
+  }
 }
 
 export default ChatAPI;

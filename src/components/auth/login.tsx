@@ -97,6 +97,12 @@ const LoginPage: React.FC = () => {
       const verifyRes = await AuthAPI.verifyToken(token);
       const user = verifyRes?.data;
 
+      if (user.role === "ADMIN") {
+        message.error("Admin access not allowed here.");
+        navigate("/login");
+        return;
+      }
+
       if (!user.username || !user.dob) {
         setUserToken(token);
         setGoogleModalVisible(true);

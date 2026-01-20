@@ -8,6 +8,7 @@ import {
   message,
   Spin,
   Radio,
+  Checkbox,
 } from "antd";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
@@ -50,11 +51,13 @@ const AddPostModal: React.FC<PostModalProps> = ({
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [location, setLocation] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const user = useSelector((state: RootState) => state.auth.currentUser);
@@ -66,7 +69,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
   });
 
   const onLoadAutocomplete = (
-    autocomplete: google.maps.places.Autocomplete
+    autocomplete: google.maps.places.Autocomplete,
   ) => {
     autocompleteRef.current = autocomplete;
   };
@@ -93,6 +96,29 @@ const AddPostModal: React.FC<PostModalProps> = ({
       } else {
         setLocation("");
       }
+    });
+  };
+
+  const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        message.error("Geolocation is not supported by your browser");
+        reject(null);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        () => {
+          message.error("Unable to fetch current location");
+          reject(null);
+        },
+      );
     });
   };
 
@@ -182,14 +208,6 @@ const AddPostModal: React.FC<PostModalProps> = ({
     setFiles((prev) => prev.filter((f) => f.uid !== uid));
   };
 
-  const handleNext = () => {
-    if (!text && files.length === 0) {
-      message.warning("Please add text or media before proceeding!");
-      return;
-    }
-    setStep(2);
-  };
-
   const handlePost = async () => {
     if (!coords) {
       message.warning("Please select a location.");
@@ -241,45 +259,31 @@ const AddPostModal: React.FC<PostModalProps> = ({
     setLoading(false);
   };
 
-  const detectLocationFromText = async (text: string) => {
-    if (!window.google || !text) return;
+  const handlePostWithCoords = async (coords: { lat: number; lng: number }) => {
+    setLoading(true);
 
-    const service = new google.maps.places.PlacesService(
-      document.createElement("div")
-    );
-
-    const request: google.maps.places.FindPlaceFromQueryRequest = {
-      query: text,
-      fields: ["name", "geometry", "formatted_address"],
+    const payload: any = {
+      content: text,
+      visibility,
+      location: {
+        type: "Point",
+        coordinates: [coords.lng, coords.lat],
+      },
+      media: files.map((f) => ({
+        url: f.url!,
+        type: f.type?.startsWith("video") ? "video" : "image",
+      })),
     };
 
-    return new Promise<void>((resolve) => {
-      service.findPlaceFromQuery(request, (results, status) => {
-        if (
-          status !== google.maps.places.PlacesServiceStatus.OK ||
-          !results ||
-          !results[0]
-        ) {
-          resolve();
-          return;
-        }
-
-        const place = results[0];
-
-        if (!place.geometry || !place.geometry.location) {
-          resolve();
-          return;
-        }
-
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-
-        setCoords({ lat, lng });
-        setLocation(place.formatted_address || place.name || "");
-
-        resolve();
-      });
-    });
+    try {
+      await AddPostAPI.createPost(payload);
+      message.success("Post created!");
+      window.location.reload();
+    } catch {
+      message.error("Failed to submit.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -321,11 +325,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
 
               <Input.TextArea
                 value={text}
-                onChange={async (e) => {
-                  const val = e.target.value;
-                  setText(val);
-                  await detectLocationFromText(val);
-                }}
+                onChange={(e) => setText(e.target.value)}
                 placeholder="What's on your mind?"
                 autoSize={{ minRows: 3, maxRows: 5 }}
                 className="border-none text-base mb-4"
@@ -399,6 +399,18 @@ const AddPostModal: React.FC<PostModalProps> = ({
                 </div>
               )}
 
+              <div className="flex items-center gap-2 my-2">
+                <Checkbox
+                  type="checkbox"
+                  checked={useCurrentLocation}
+                  onChange={(e: any) => setUseCurrentLocation(e.target.checked)}
+                  className="w-4 h-4 cursor-pointer "
+                />
+                <span className="text-sm text-gray-700">
+                  Use my current location
+                </span>
+              </div>
+
               <div className="flex gap-2 w-full mt-2">
                 <Button
                   block
@@ -411,9 +423,31 @@ const AddPostModal: React.FC<PostModalProps> = ({
                   type="primary"
                   block
                   className="!bg-[#8869F3] !border-[#8869F3] h-12 rounded-xl shadow-none"
-                  onClick={handleNext}
+                  onClick={async () => {
+                    if (!text && files.length === 0) {
+                      message.warning(
+                        "Please add text or media before proceeding!",
+                      );
+                      return;
+                    }
+
+                    if (useCurrentLocation) {
+                      const coords = await getCurrentLocation();
+                      if (!coords) return;
+
+                      setCoords(coords);
+                      await handlePostWithCoords(coords);
+                    } else {
+                      const coords = await getCurrentLocation();
+                      if (coords) {
+                        setCoords(coords);
+                        reverseGeocode(coords.lat, coords.lng);
+                      }
+                      setStep(2);
+                    }
+                  }}
                 >
-                  Next
+                  {useCurrentLocation ? "Post" : "Next"}
                 </Button>
               </div>
             </>
