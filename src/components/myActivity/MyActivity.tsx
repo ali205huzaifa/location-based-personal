@@ -77,8 +77,8 @@ const MyActivity: React.FC = () => {
       try {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            user.location
-          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+            user.location,
+          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`,
         );
         const data = await response.json();
         if (data.results && data.results.length > 0) {
@@ -137,7 +137,7 @@ const MyActivity: React.FC = () => {
         setLoadingMore(false);
       }
     },
-    [user]
+    [user],
   );
 
   const fetchInteractions = useCallback(async () => {
@@ -211,7 +211,7 @@ const MyActivity: React.FC = () => {
   const handleLikeUpdate = (
     postId: string,
     liked: boolean,
-    likeCount: number
+    likeCount: number,
   ) => {
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
@@ -224,8 +224,8 @@ const MyActivity: React.FC = () => {
               },
               isLikedByMe: liked,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     setInteractions((prevPosts) =>
@@ -239,8 +239,8 @@ const MyActivity: React.FC = () => {
               },
               isLikedByMe: liked,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     setSelectedPost((prev: any) =>
@@ -253,7 +253,7 @@ const MyActivity: React.FC = () => {
             },
             isLikedByMe: liked,
           }
-        : prev
+        : prev,
     );
   };
 
@@ -640,7 +640,7 @@ const MyActivity: React.FC = () => {
                               </div>
                             </OverlayView>
                           );
-                        }
+                        },
                       )}
                     </>
                   )}
@@ -683,7 +683,10 @@ const MyActivity: React.FC = () => {
                     location={item.address}
                     username={item.user?.username}
                     onClick={() => handlePostClick(item)}
-                    onShare={() => setIsShareOpen(true)}
+                    onShare={() => {
+                      setSelectedPost(item);
+                      setIsShareOpen(true);
+                    }}
                     onLike={() => handleLike(item)}
                   />
                 ))}

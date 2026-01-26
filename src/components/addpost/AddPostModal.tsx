@@ -103,7 +103,7 @@ const AddPostModal: React.FC<PostModalProps> = ({
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         message.error("Geolocation is not supported by your browser");
-        reject(null);
+        reject();
         return;
       }
 
@@ -114,9 +114,29 @@ const AddPostModal: React.FC<PostModalProps> = ({
             lng: pos.coords.longitude,
           });
         },
-        () => {
-          message.error("Unable to fetch current location");
-          reject(null);
+        (error) => {
+          console.error("Geolocation error:", error);
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              message.error("Location permission denied");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message.error("Location information unavailable");
+              break;
+            case error.TIMEOUT:
+              message.error("Location request timed out");
+              break;
+            default:
+              message.error("Unable to fetch current location");
+          }
+
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
         },
       );
     });
@@ -237,13 +257,18 @@ const AddPostModal: React.FC<PostModalProps> = ({
         await PostAPI.updatePostById(editPostData.data._id, payload);
         message.success("Post updated!");
       } else {
-        await AddPostAPI.createPost(payload);
-        message.success("Post created!");
+        const res = await AddPostAPI.createPost(payload);
+        message.success(res?.data?.message || "Post created");
         window.location.reload();
         return;
       }
-    } catch (err) {
-      message.error("Failed to submit.");
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        "Failed to submit.";
+
+      message.error(errorMessage);
       setLoading(false);
       return;
     }
@@ -276,11 +301,19 @@ const AddPostModal: React.FC<PostModalProps> = ({
     };
 
     try {
-      await AddPostAPI.createPost(payload);
-      message.success("Post created!");
+      const res = await AddPostAPI.createPost(payload);
+      message.success(res?.data?.message || "Post created");
       window.location.reload();
-    } catch {
-      message.error("Failed to submit.");
+      window.location.reload();
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        "Failed to submit.";
+
+      message.error(errorMessage);
+      setLoading(false);
+      return;
     } finally {
       setLoading(false);
     }
@@ -432,19 +465,14 @@ const AddPostModal: React.FC<PostModalProps> = ({
                     }
 
                     if (useCurrentLocation) {
-                      const coords = await getCurrentLocation();
-                      if (!coords) return;
-
-                      setCoords(coords);
-                      await handlePostWithCoords(coords);
-                    } else {
-                      const coords = await getCurrentLocation();
-                      if (coords) {
-                        setCoords(coords);
-                        reverseGeocode(coords.lat, coords.lng);
-                      }
-                      setStep(2);
+                      try {
+                        const currentCoords = await getCurrentLocation();
+                        setCoords(currentCoords);
+                        await handlePostWithCoords(currentCoords);
+                      } catch {}
+                      return;
                     }
+                    setStep(2);
                   }}
                 >
                   {useCurrentLocation ? "Post" : "Next"}

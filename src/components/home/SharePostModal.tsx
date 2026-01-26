@@ -89,12 +89,12 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
   const filteredUsers = users.filter(
     (u) =>
       u.name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.username?.toLowerCase().includes(search.toLowerCase())
+      u.username?.toLowerCase().includes(search.toLowerCase()),
   );
 
   const toggleSelect = (id: number) => {
     setSelectedUsers((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 

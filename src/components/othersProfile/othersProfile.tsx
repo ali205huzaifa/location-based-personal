@@ -84,8 +84,8 @@ const UserProfile: React.FC = () => {
       try {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            user.location
-          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+            user.location,
+          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`,
         );
         const data = await response.json();
         if (data.results && data.results.length > 0) {
@@ -154,7 +154,7 @@ const UserProfile: React.FC = () => {
         setLoadingMore(false);
       }
     },
-    [userId, profileUser, isOwnProfile, contactStatus]
+    [userId, profileUser, isOwnProfile, contactStatus],
   );
 
   const fetchInteractions = useCallback(async () => {
@@ -237,7 +237,7 @@ const UserProfile: React.FC = () => {
   const handleLikeUpdate = (
     postId: string,
     liked: boolean,
-    likeCount: number
+    likeCount: number,
   ) => {
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
@@ -250,8 +250,8 @@ const UserProfile: React.FC = () => {
               },
               isLikedByMe: liked,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     setInteractions((prevPosts) =>
@@ -265,8 +265,8 @@ const UserProfile: React.FC = () => {
               },
               isLikedByMe: liked,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     setSelectedPost((prev: any) =>
@@ -279,7 +279,7 @@ const UserProfile: React.FC = () => {
             },
             isLikedByMe: liked,
           }
-        : prev
+        : prev,
     );
   };
 
@@ -503,8 +503,8 @@ const UserProfile: React.FC = () => {
                   contactStatus === "none"
                     ? "Add to contact"
                     : contactStatus === "added"
-                    ? "Request sent"
-                    : "Friends"
+                      ? "Request sent"
+                      : "Friends"
                 }
                 className="w-5 h-5"
               />
@@ -512,8 +512,8 @@ const UserProfile: React.FC = () => {
               {contactStatus === "none"
                 ? "Add to Contact"
                 : contactStatus === "added"
-                ? "Request Sent"
-                : "Friends"}
+                  ? "Request Sent"
+                  : "Friends"}
             </Button>
             {!shouldHideContent && (
               <Segmented
@@ -693,7 +693,7 @@ const UserProfile: React.FC = () => {
                                   </div>
                                 </OverlayView>
                               );
-                            }
+                            },
                           )}
                         </>
                       )}
@@ -739,7 +739,10 @@ const UserProfile: React.FC = () => {
                       location={item.address}
                       username={item.user?.username}
                       onClick={() => handlePostClick(item)}
-                      onShare={() => setIsShareOpen(true)}
+                      onShare={() => {
+                        setSelectedPost(item);
+                        setIsShareOpen(true);
+                      }}
                       onLike={() => handleLike(item)}
                     />
                   ))}
