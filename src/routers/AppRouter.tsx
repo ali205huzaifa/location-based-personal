@@ -32,7 +32,7 @@ const AppRouter: React.FC = () => {
           path="/auth/google/complete-profile"
           element={<CompleteGoogleProfile />}
         />
-        <Route path="/post/:postId" element={<SinglePostView />} />
+        <Route path="/post" element={<SinglePostView />} />
 
         <Route
           path="/"

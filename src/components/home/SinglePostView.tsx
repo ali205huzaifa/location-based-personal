@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+// import { useParams } from "react-router-dom";
 import { Spin, message } from "antd";
 import { useAuthActionGuard } from "../../hooks/useAuthActionGuard";
 import PostAPI from "../../api/postApi/PostAPI";
 import PostModal from "./PostModal";
 
 const SinglePostView = () => {
-  const { postId } = useParams<{ postId: string }>();
+  // const { postId } = useParams<{ postId: string }>();
+  const queryParams = new URLSearchParams(window.location.search);
+  const postId = queryParams.get("postId")
   const [post, setPost] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
