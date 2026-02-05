@@ -37,7 +37,7 @@ interface PostModalProps {
   postsRefetch: any;
 }
 
-const defaultCenter = { lat: 33.6844, lng: 73.0479 };
+const defaultCenter = { lat: 33.6244, lng: 73.0279 };
 
 const AddPostModal: React.FC<PostModalProps> = ({
   visible,
@@ -46,21 +46,21 @@ const AddPostModal: React.FC<PostModalProps> = ({
   onCloseAll,
   postsRefetch,
 }) => {
-  const [step, setStep] = useState(1);
-  const [text, setText] = useState("");
-  const [files, setFiles] = useState<UploadFile[]>([]);
-  const [location, setLocation] = useState("");
+  const user = useSelector((state: RootState) => state.auth.currentUser);
+
+  const [useCurrentLocation, setUseCurrentLocation] = useState(true);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  const [location, setLocation] = useState("");
+
+  const [text, setText] = useState("");
+  const [files, setFiles] = useState<UploadFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
 
-  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
-
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const user = useSelector((state: RootState) => state.auth.currentUser);
   const isEditMode = Boolean(editPostData);
 
   const { isLoaded } = useJsApiLoader({
@@ -73,6 +73,8 @@ const AddPostModal: React.FC<PostModalProps> = ({
   ) => {
     autocompleteRef.current = autocomplete;
   };
+
+
 
   const onPlaceChanged = () => {
     const autocomplete = autocompleteRef.current;
@@ -197,12 +199,12 @@ const AddPostModal: React.FC<PostModalProps> = ({
 
       const formattedFiles = Array.isArray(post.media)
         ? post.data.media.map((m: any) => ({
-            uid: m._id,
-            name: m.type === "video" ? "video.mp4" : "image.jpg",
-            status: "done",
-            url: m.url,
-            type: m.type === "video" ? "video/mp4" : "image/jpeg",
-          }))
+          uid: m._id,
+          name: m.type === "video" ? "video.mp4" : "image.jpg",
+          status: "done",
+          url: m.url,
+          type: m.type === "video" ? "video/mp4" : "image/jpeg",
+        }))
         : [];
 
       setFiles(formattedFiles);
@@ -213,35 +215,79 @@ const AddPostModal: React.FC<PostModalProps> = ({
         });
       }
       setLocation(post.data.address || "");
-      setStep(1);
     } else {
       setText("");
       setVisibility("public");
+
       setFiles([]);
-      setLocation("");
-      setCoords(null);
-      setStep(1);
+
+      const userLocation = user?.location;
+      if (userLocation) {
+        if (typeof userLocation === "string") {
+          setLocation(userLocation);
+          if (isLoaded) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: userLocation }, (results, status) => {
+              if (status === "OK" && results && results[0]) {
+                const lat = results[0].geometry.location.lat();
+                const lng = results[0].geometry.location.lng();
+                setCoords({ lat, lng });
+              }
+            });
+          }
+        } else if (userLocation?.coordinates?.length === 2) {
+          setCoords({
+            lat: userLocation.coordinates[1],
+            lng: userLocation.coordinates[0],
+          });
+          setLocation(userLocation.formattedAddress || "");
+        } else {
+          setLocation("");
+          setCoords(null);
+        }
+      } else {
+        setLocation("");
+        setCoords(null);
+      }
     }
-  }, [editPostData, visible]);
+  }, [editPostData, visible, user, isLoaded]);
 
   const removeFile = (uid: string) => {
     setFiles((prev) => prev.filter((f) => f.uid !== uid));
   };
 
   const handlePost = async () => {
-    if (!coords) {
-      message.warning("Please select a location.");
+    if (!text && files.length === 0) {
+      message.warning("Please add text or media before proceeding!");
       return;
     }
 
     setLoading(true);
+
+    let finalCoords = coords;
+
+    if (useCurrentLocation) {
+      try {
+        finalCoords = await getCurrentLocation();
+        setCoords(finalCoords);
+      } catch (error) {
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (!finalCoords) {
+        message.warning("Please select a location.");
+        setLoading(false);
+        return;
+      }
+    }
 
     const payload: any = {
       content: text,
       visibility,
       location: {
         type: "Point",
-        coordinates: [coords.lng, coords.lat],
+        coordinates: [finalCoords!.lng, finalCoords!.lat],
       },
     };
 
@@ -284,41 +330,6 @@ const AddPostModal: React.FC<PostModalProps> = ({
     setLoading(false);
   };
 
-  const handlePostWithCoords = async (coords: { lat: number; lng: number }) => {
-    setLoading(true);
-
-    const payload: any = {
-      content: text,
-      visibility,
-      location: {
-        type: "Point",
-        coordinates: [coords.lng, coords.lat],
-      },
-      media: files.map((f) => ({
-        url: f.url!,
-        type: f.type?.startsWith("video") ? "video" : "image",
-      })),
-    };
-
-    try {
-      const res = await AddPostAPI.createPost(payload);
-      message.success(res?.data?.message || "Post created");
-      window.location.reload();
-      window.location.reload();
-    } catch (err: any) {
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.data?.message ||
-        "Failed to submit.";
-
-      message.error(errorMessage);
-      setLoading(false);
-      return;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <>
       <Modal
@@ -331,220 +342,164 @@ const AddPostModal: React.FC<PostModalProps> = ({
         maskClosable={false}
       >
         <Spin spinning={loading}>
-          {step === 1 ? (
-            <>
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-black text-base font-medium">
-                  {isEditMode ? "Edit Post" : "Create Post"}
-                </h2>
-              </div>
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-black text-base font-medium">
+              {isEditMode ? "Edit Post" : "Create Post"}
+            </h2>
+          </div>
 
-              <div className="flex items-center mb-3">
-                <Avatar src={user?.image} size={45} />
-                <div className="ml-3">
-                  <h3 className="font-medium text-gray-800">
-                    {user?.fullName}
-                  </h3>
-                  <Button
-                    size="small"
-                    className="rounded text-xs !bg-[#8869F326] !text-[#8869F3] border-none"
-                    onClick={() => setPrivacyModalVisible(true)}
-                  >
-                    {visibility === "public" ? "Public" : "Contacts Only"}
-                    <img src="/icons/postPrivacy-icon.svg" alt="Icon" />
-                  </Button>
-                </div>
-              </div>
+          <div className="flex items-center mb-3">
+            <Avatar src={user?.image} size={45} />
+            <div className="ml-3">
+              <h3 className="font-medium text-gray-800">{user?.fullName}</h3>
+              <Button
+                size="small"
+                className="rounded text-xs !bg-[#8869F326] !text-[#8869F3] border-none"
+                onClick={() => setPrivacyModalVisible(true)}
+              >
+                {visibility === "public" ? "Public" : "Contacts Only"}
+                <img src="/icons/postPrivacy-icon.svg" alt="Icon" />
+              </Button>
+            </div>
+          </div>
 
-              <Input.TextArea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="What's on your mind?"
-                autoSize={{ minRows: 3, maxRows: 5 }}
-                className="border-none text-base mb-4"
-              />
+          <Input.TextArea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="What's on your mind?"
+            autoSize={{ minRows: 3, maxRows: 5 }}
+            className="border-none text-base mb-4"
+          />
 
-              {files.length > 0 && (
-                <div className="relative">
-                  <div className="relative">
-                    <Swiper
-                      modules={[Navigation, Pagination]}
-                      navigation
-                      pagination={{ clickable: true }}
-                      spaceBetween={10}
-                      className="w-full rounded-xl overflow-hidden custom-swiper"
-                      style={{ zIndex: 1 }}
+          {files.length > 0 && (
+            <div className="relative">
+              <div className="relative">
+                <Swiper
+                  modules={[Navigation, Pagination]}
+                  navigation
+                  pagination={{ clickable: true }}
+                  spaceBetween={10}
+                  className="w-full rounded-xl overflow-hidden custom-swiper"
+                  style={{ zIndex: 1 }}
+                >
+                  {files.map((file) => (
+                    <SwiperSlide
+                      key={file.uid}
+                      className="flex justify-center items-center relative"
+                      style={{
+                        height: "400px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
                     >
-                      {files.map((file) => (
-                        <SwiperSlide
+                      {file.type?.startsWith("video") ? (
+                        <video
                           key={file.uid}
-                          className="flex justify-center items-center relative"
-                          style={{
-                            height: "400px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {file.type?.startsWith("video") ? (
-                            <video
-                              key={file.uid}
-                              src={file.url}
-                              controls
-                              preload="metadata"
-                              className="max-h-[400px] w-auto object-contain rounded-lg"
-                            />
-                          ) : (
-                            <img
-                              src={file.url}
-                              alt={file.name}
-                              className="max-h-[400px] w-auto object-contain rounded-lg"
-                            />
-                          )}
-
-                          {!isEditMode && (
-                            <CloseCircleOutlined
-                              onClick={() => removeFile(file.uid)}
-                              className="absolute top-3 right-3 z-20 bg-gray-100 rounded-full text-2xl cursor-pointer"
-                            />
-                          )}
-                        </SwiperSlide>
-                      ))}
-                    </Swiper>
-                  </div>
-                </div>
-              )}
-
-              {!isEditMode && (
-                <div className="w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer">
-                  <Upload
-                    beforeUpload={handleUpload}
-                    showUploadList={false}
-                    accept="image/*,video/*"
-                    className="flex items-center justify-center"
-                  >
-                    <img
-                      src="/icons/attachment-icon.svg"
-                      alt="Show"
-                      width={20}
-                    />
-                  </Upload>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 my-2">
-                <Checkbox
-                  type="checkbox"
-                  checked={useCurrentLocation}
-                  onChange={(e: any) => setUseCurrentLocation(e.target.checked)}
-                  className="w-4 h-4 cursor-pointer "
-                />
-                <span className="text-sm text-gray-700">
-                  Use my current location
-                </span>
-              </div>
-
-              <div className="flex gap-2 w-full mt-2">
-                <Button
-                  block
-                  onClick={onClose}
-                  className="h-12 rounded-xl !text-[#666666] !border-[#666666]"
-                >
-                  Close
-                </Button>
-                <Button
-                  type="primary"
-                  block
-                  className="!bg-[#8869F3] !border-[#8869F3] h-12 rounded-xl shadow-none"
-                  onClick={async () => {
-                    if (!text && files.length === 0) {
-                      message.warning(
-                        "Please add text or media before proceeding!",
-                      );
-                      return;
-                    }
-
-                    if (useCurrentLocation) {
-                      try {
-                        const currentCoords = await getCurrentLocation();
-                        setCoords(currentCoords);
-                        await handlePostWithCoords(currentCoords);
-                      } catch {}
-                      return;
-                    }
-                    setStep(2);
-                  }}
-                >
-                  {useCurrentLocation ? "Post" : "Next"}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-black text-base font-medium">
-                  Choose Location
-                </h2>
-              </div>
-              {isLoaded ? (
-                <div className="w-full flex flex-col gap-3">
-                  <Autocomplete
-                    onLoad={onLoadAutocomplete}
-                    onPlaceChanged={onPlaceChanged}
-                  >
-                    <Input
-                      placeholder="Search for a place"
-                      value={location}
-                      prefix={
-                        <img
-                          src="/icons/search-icon.svg"
-                          alt="Icon"
-                          className="w-6 h-6"
+                          src={file.url}
+                          controls
+                          preload="metadata"
+                          className="max-h-[400px] w-auto object-contain rounded-lg"
                         />
-                      }
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="rounded-xl mb-2 h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
-                    />
-                  </Autocomplete>
+                      ) : (
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="max-h-[400px] w-auto object-contain rounded-lg"
+                        />
+                      )}
 
-                  <GoogleMap
-                    mapContainerStyle={{ width: "100%", height: "400px" }}
-                    center={coords || defaultCenter}
-                    zoom={14}
-                    onClick={(e) => {
-                      const lat = e.latLng?.lat();
-                      const lng = e.latLng?.lng();
-                      if (!lat || !lng) return;
-
-                      setCoords({ lat, lng });
-                      reverseGeocode(lat, lng);
-                    }}
-                  >
-                    {coords && <Marker position={coords} />}
-                  </GoogleMap>
-                </div>
-              ) : (
-                <p>Loading map...</p>
-              )}
-              <div className="flex gap-3 mt-5">
-                <Button
-                  block
-                  onClick={() => setStep(1)}
-                  className="h-12 rounded-xl !text-[#666666] !border-[#666666]"
-                >
-                  Back
-                </Button>
-                <Button
-                  type="primary"
-                  block
-                  className="!bg-[#8869F3] !border-[#8869F3] h-12 rounded-xl shadow-none"
-                  onClick={handlePost}
-                >
-                  {isEditMode ? "Update Post" : "Post"}
-                </Button>
+                      {!isEditMode && (
+                        <CloseCircleOutlined
+                          onClick={() => removeFile(file.uid)}
+                          className="absolute top-3 right-3 z-20 bg-gray-100 rounded-full text-2xl cursor-pointer"
+                        />
+                      )}
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
               </div>
-            </>
+            </div>
           )}
+
+          {!isEditMode && (
+            <div className="w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer">
+              <Upload
+                beforeUpload={handleUpload}
+                showUploadList={false}
+                accept="image/*,video/*"
+                className="flex items-center justify-center"
+              >
+                <img
+                  src="/icons/attachment-icon.svg"
+                  alt="Show"
+                  width={20}
+                />
+              </Upload>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 my-2">
+            <Checkbox
+              type="checkbox"
+              checked={useCurrentLocation}
+              onChange={(e: any) => setUseCurrentLocation(e.target.checked)}
+              className="w-4 h-4 cursor-pointer "
+            />
+            <span className="text-sm text-gray-700">
+              Use my current location
+            </span>
+          </div>
+
+          {!useCurrentLocation && isLoaded && (
+            <div className="w-full flex flex-col gap-3 mt-3">
+              <Autocomplete
+                onLoad={onLoadAutocomplete}
+                onPlaceChanged={onPlaceChanged}
+              >
+                <Input
+                  placeholder="Search for a place"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="rounded-xl h-12"
+                />
+              </Autocomplete>
+
+              <GoogleMap
+                mapContainerStyle={{ width: "100%", height: "300px" }}
+                center={coords || defaultCenter}
+                zoom={13}
+                onClick={(e) => {
+                  const lat = e.latLng?.lat();
+                  const lng = e.latLng?.lng();
+                  if (!lat || !lng) return;
+
+                  setCoords({ lat, lng });
+                  reverseGeocode(lat, lng);
+                }}
+              >
+                {coords && <Marker position={coords} />}
+              </GoogleMap>
+            </div>
+          )}
+
+          <div className="flex gap-2 w-full mt-2">
+            <Button
+              block
+              onClick={onClose}
+              className="h-12 rounded-xl !text-[#666666] !border-[#666666]"
+            >
+              Close
+            </Button>
+            <Button
+              type="primary"
+              block
+              className="!bg-[#8869F3] !border-[#8869F3] h-12 rounded-xl shadow-none"
+              onClick={handlePost}
+            >
+              {isEditMode ? "Update Post" : "Post"}
+            </Button>
+          </div>
         </Spin>
       </Modal>
 

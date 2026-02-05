@@ -226,7 +226,11 @@ const EditProfile: React.FC = () => {
         <Form.Item
           name="fullName"
           label="Full Name"
-          rules={[{ required: true, message: "Please enter your full name" }]}
+          rules={[
+            { required: true, message: "Please enter your full name" },
+            { max: 30, message: "Username cannot exceed 30 characters" },
+          ]}
+
         >
           <Input
             className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3]"
@@ -237,7 +241,10 @@ const EditProfile: React.FC = () => {
         <Form.Item
           name="username"
           label="Username"
-          rules={[{ required: true, message: "Please choose a username" }]}
+          rules={[
+            { required: true, message: "Please choose a username" },
+            { max: 30, message: "Username cannot exceed 30 characters" },
+          ]}
         >
           <Input
             className="h-12 rounded-xl border-gray-300 text-[#000000] text-sm font-normal bg-[#FFFFFF] focus:!border-[#8869F3] hover:!border-[#8869F3]"
@@ -289,9 +296,11 @@ const EditProfile: React.FC = () => {
         onCancel={() => setDeleteModalOpen(false)}
       >
         <div className="text-center py-4">
-          <p className="text-lg font-medium mb-6">
+          <p className="text-lg font-medium mb-2">
             Are you sure you want to delete your account permanently?
           </p>
+
+          <p className="text-[#666666] text-sm font-normal mb-6">This action can’t be undone. All your data, posts, and chats will be deleted permanently.</p>
 
           <div className="flex justify-center gap-4">
             <Button
@@ -308,7 +317,7 @@ const EditProfile: React.FC = () => {
               onClick={() => setDeleteModalOpen(false)}
               className="!border-[#666666] !text-[#666666]"
             >
-              No
+              Cancel
             </Button>
           </div>
         </div>

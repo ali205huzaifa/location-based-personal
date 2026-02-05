@@ -531,15 +531,15 @@ const PostModal: React.FC<PostModalProps> = ({
                           contactStatus === "none"
                             ? "/icons/AddUser-icon.svg"
                             : contactStatus === "added"
-                            ? "/icons/contactAdded-icon.svg"
-                            : "/icons/contactAdded-icon.svg"
+                              ? "/icons/contactAdded-icon.svg"
+                              : "/icons/contactAdded-icon.svg"
                         }
                         alt={
                           contactStatus === "none"
                             ? "Add to contact"
                             : contactStatus === "added"
-                            ? "Request sent"
-                            : "Friends"
+                              ? "Request sent"
+                              : "Friends"
                         }
                         className="w-5 h-5"
                       />{" "}
@@ -547,8 +547,8 @@ const PostModal: React.FC<PostModalProps> = ({
                         {contactStatus === "none"
                           ? "Add to contact"
                           : contactStatus === "added"
-                          ? "Request Sent"
-                          : "Friends"}{" "}
+                            ? "Request Sent"
+                            : "Friends"}{" "}
                       </span>{" "}
                     </div>
                   )}
@@ -654,27 +654,35 @@ const PostModal: React.FC<PostModalProps> = ({
                 </span>
               </div>
 
-              <Input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder={
-                  post.isCommentDisabled
-                    ? "Comments are disabled"
-                    : "Add a comment..."
-                }
-                suffix={
-                  !post.isCommentDisabled && (
-                    <span
-                      className="!text-[#8869F3] font-medium cursor-pointer"
-                      onClick={handleSubmitComment}
-                    >
-                      Submit
-                    </span>
-                  )
-                }
-                className="rounded-xl py-1 px-3 h-12 focus:!border-[#8869F3] hover:!border-[#8869F3] focus-within:!border-[#8869F3]"
-                disabled={post.isCommentDisabled}
-              />
+              <div className="relative">
+                <Input.TextArea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={
+                    post.isCommentDisabled
+                      ? "Comments are disabled"
+                      : "Add a comment..."
+                  }
+                  autoSize={{ minRows: 1, maxRows: 4 }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                      e.preventDefault();
+                      handleSubmitComment();
+                    }
+                  }}
+                  className="rounded-xl py-2 px-3 focus:!border-[#8869F3] no-scrollbar"
+                  disabled={post.isCommentDisabled}
+                />
+
+                {!post.isCommentDisabled && (
+                  <span
+                    className="absolute right-3 bottom-2 text-[#8869F3] font-medium cursor-pointer"
+                    onClick={handleSubmitComment}
+                  >
+                    Submit
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@ const LanguageSettings: React.FC = () => {
 
   const languages = [
     { name: "English", flag: "/icons/us-flag-icon.svg" },
-    { name: "French", flag: "/icons/french-flag-icon.svg" },
+    { name: "Arabic", flag: "/icons/saudi-arabia-flag-icon.png" },
   ];
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const LanguageSettings: React.FC = () => {
       console.error("Language update error:", error);
       message.error(
         error?.response?.data?.message ||
-          "Failed to update language. Please try again."
+        "Failed to update language. Please try again."
       );
       setSelectedLanguage(currentUser?.language || "English");
     } finally {
@@ -74,9 +74,8 @@ const LanguageSettings: React.FC = () => {
           <div
             key={lang.name}
             onClick={() => handleLanguageChange(lang.name)}
-            className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all border-gray-200 bg-white ${
-              loading ? "opacity-50 pointer-events-none" : ""
-            }`}
+            className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all border-gray-200 bg-white ${loading ? "opacity-50 pointer-events-none" : ""
+              }`}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">

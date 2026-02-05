@@ -511,7 +511,7 @@ const MyActivity: React.FC = () => {
                 onLoad={onLoad}
                 onUnmount={onUnmount}
                 options={{
-                  minZoom: 6,
+                  minZoom: 3,
                   maxZoom: 18,
                   zoomControl: false,
                   mapTypeControl: false,

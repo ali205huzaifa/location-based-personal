@@ -67,8 +67,8 @@ const Home: React.FC = () => {
       try {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            currentUser.location
-          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+            currentUser.location,
+          )}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`,
         );
         const data = await response.json();
         if (data.results && data.results.length > 0) {
@@ -85,7 +85,7 @@ const Home: React.FC = () => {
 
   const getBoundsKey = (params: any) => {
     return `${params.zoom}-${params.north.toFixed(4)}-${params.south.toFixed(
-      4
+      4,
     )}-${params.east.toFixed(4)}-${params.west.toFixed(4)}`;
   };
 
@@ -105,7 +105,7 @@ const Home: React.FC = () => {
 
     if (
       [north, south, east, west].some(
-        (v) => typeof v !== "number" || Number.isNaN(v)
+        (v) => typeof v !== "number" || Number.isNaN(v),
       )
     ) {
       return null;
@@ -143,9 +143,24 @@ const Home: React.FC = () => {
         setLoading(true);
 
         const res = await PostAPI.getPostsByMapArea(params);
-        const newPosts = res.data?.data?.posts || [];
+        const apiPosts = res.data?.data?.posts || [];
 
-        setPosts(newPosts);
+        const normalizedPosts = apiPosts.map((item: any) => {
+          if (item.isCluster) {
+            return item;
+          }
+
+          if (!item.isCluster && !item.post) {
+            return {
+              isCluster: false,
+              post: item,
+            };
+          }
+
+          return item;
+        });
+
+        setPosts(normalizedPosts);
       } catch (err) {
         console.error("Map fetch error:", err);
       } finally {
@@ -162,34 +177,38 @@ const Home: React.FC = () => {
   const handleLikeUpdate = (
     postId: string,
     liked: boolean,
-    likeCount: number
+    likeCount: number,
   ) => {
     setPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p._id === postId
-          ? {
-              ...p,
+      prevPosts.map((item) => {
+        if (!item.isCluster && item.post && item.post._id === postId) {
+          return {
+            ...item,
+            post: {
+              ...item.post,
               interaction: {
-                ...p.interaction,
+                ...item.post.interaction,
                 likesCount: likeCount,
               },
               isLikedByMe: liked,
-            }
-          : p
-      )
+            },
+          };
+        }
+        return item;
+      }),
     );
 
     setSelectedPost((prev: any) =>
       prev && prev._id === postId
         ? {
-            ...prev,
-            interaction: {
-              ...prev.interaction,
-              likesCount: likeCount,
-            },
-            isLikedByMe: liked,
-          }
-        : prev
+          ...prev,
+          interaction: {
+            ...prev.interaction,
+            likesCount: likeCount,
+          },
+          isLikedByMe: liked,
+        }
+        : prev,
     );
   };
 
@@ -252,9 +271,8 @@ const Home: React.FC = () => {
             {trimmedCaption}
           </p>
           <div
-            className={`flex items-start justify-start text-gray-600 text-sm gap-3 ${
-              hasImage ? "mb-2" : "mt-1"
-            }`}
+            className={`flex items-start justify-start text-gray-600 text-sm gap-3 ${hasImage ? "mb-2" : "mt-1"
+              }`}
           >
             <span
               className="flex items-center"
@@ -433,7 +451,7 @@ const Home: React.FC = () => {
             onIdle={fetchPostsByBounds}
             onUnmount={onUnmount}
             options={{
-              minZoom: 6,
+              minZoom: 3,
               maxZoom: 18,
               zoomControl: false,
               mapTypeControl: false,
@@ -454,7 +472,32 @@ const Home: React.FC = () => {
             <MarkerClusterer averageCenter enableRetinaIcons gridSize={60}>
               {() => (
                 <>
-                  {posts.map((post) => {
+                  {posts.map((item: any, index) => {
+                    if (item.isCluster) {
+                      const lat = item.coordinates[1];
+                      const lng = item.coordinates[0];
+
+                      return (
+                        <OverlayView
+                          key={`cluster-${index}`}
+                          position={{ lat, lng }}
+                          mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                        >
+                          <div
+                            className="flex items-center justify-center w-14 h-14 rounded-full bg-[#8869F3] text-white font-semibold shadow-lg cursor-pointer"
+                            style={{ transform: "translate(-50%, -50%)" }}
+                            onClick={() => {
+                              map?.panTo({ lat, lng });
+                              map?.setZoom((map.getZoom() || 10) + 2);
+                            }}
+                          >
+                            {item.count}
+                          </div>
+                        </OverlayView>
+                      );
+                    }
+
+                    const post = item.post;
                     const lat = post.location!.coordinates[1];
                     const lng = post.location!.coordinates[0];
 
@@ -580,25 +623,30 @@ const Home: React.FC = () => {
           </p>
         )}
 
-        {posts.map((post) => (
-          <MapCard
-            key={post._id}
-            image={post.media?.length ? post.media[0].url : null}
-            caption={post.content || "No content"}
-            likes={post.interaction?.likesCount || 0}
-            comments={post.interaction?.commentCount || 0}
-            shares={post.interaction?.shareCount || 0}
-            isLiked={post.isLikedByMe}
-            location={post.address}
-            username={post.user?.username}
-            onClick={() => handlePostClick(post)}
-            onLike={() => handleLike(post)}
-            onShare={() => {
-              setSelectedPost(post);
-              setIsShareOpen(true);
-            }}
-          />
-        ))}
+        {posts
+          .filter((item: any) => !item.isCluster)
+          .map((item: any) => {
+            const post = item.post;
+            return (
+              <MapCard
+                key={post._id}
+                image={post.media?.length ? post.media[0].url : null}
+                caption={post.content || "No content"}
+                likes={post.interaction?.likesCount || 0}
+                comments={post.interaction?.commentCount || 0}
+                shares={post.interaction?.shareCount || 0}
+                isLiked={post.isLikedByMe}
+                location={post.address}
+                username={post.user?.username}
+                onClick={() => handlePostClick(post)}
+                onLike={() => handleLike(post)}
+                onShare={() => {
+                  setSelectedPost(post);
+                  setIsShareOpen(true);
+                }}
+              />
+            );
+          })}
 
         {posts.length >= 10 && (
           <p className="text-center text-xs text-gray-400 py-4">

@@ -1,156 +1,54 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Drawer, Avatar, Spin, Tooltip, Button, message } from "antd";
-import PostAPI from "../../api/postApi/PostAPI";
+import React, { useCallback } from "react";
+import { Drawer, Avatar, Spin, Tooltip, Button } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import type { ApiNotification } from "../../types/notification";
 
 dayjs.extend(relativeTime);
-
-interface ApiNotification {
-  _id: string;
-  userId: string;
-  senderId: {
-    _id: string;
-    fullName: string;
-    username: string;
-    image?: string;
-  };
-  type: "like" | "contact" | "reply" | "comment";
-  entityId: string;
-  entityType: "Post" | string;
-  content: string;
-  status: "read" | "unread";
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface NotificationDrawerProps {
   visible: boolean;
   onClose: () => void;
+  notifications: ApiNotification[];
+  loading: boolean;
+  loadingMore: boolean;
+  markingAll: boolean;
+  processingIds: string[];
+  unreadCount: number;
+  onLoadMore: () => void;
+  onMarkRead: (notif: ApiNotification) => void;
+  onMarkAllAsRead: () => void;
+  onAccept: (notif: ApiNotification) => void;
+  onDecline: (notif: ApiNotification) => void;
 }
-
-const LIMIT = 10;
 
 const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   visible,
   onClose,
+  notifications,
+  loading,
+  loadingMore,
+  markingAll,
+  processingIds,
+  unreadCount,
+  onLoadMore,
+  onMarkRead,
+  onMarkAllAsRead,
+  onAccept,
+  onDecline,
 }) => {
-  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [markingAll, setMarkingAll] = useState(false);
-  const [processingIds, setProcessingIds] = useState<string[]>([]);
-
-  const [page, setPage] = useState(1);
-  const [hasNext, setHasNext] = useState(true);
-
-  useEffect(() => {
-    if (visible) {
-      setNotifications([]);
-      setPage(1);
-      setHasNext(true);
-      fetchNotifications(1, true);
-    }
-  }, [visible]);
-
-  const fetchNotifications = async (pageNumber: number, initial = false) => {
-    try {
-      initial ? setLoading(true) : setLoadingMore(true);
-
-      const res = await PostAPI.getNotifications({
-        page: pageNumber,
-        limit: LIMIT,
-      });
-
-      const resData = res.data;
-
-      setNotifications((prev) =>
-        initial ? resData.data : [...prev, ...resData.data]
-      );
-
-      setHasNext(resData.hasNext);
-      setPage(resData.page);
-    } catch (error) {
-      console.error("Failed to fetch notifications", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => n.status === "unread").length,
-    [notifications]
-  );
-
-  const handleMarkRead = async (notif: ApiNotification) => {
-    if (notif.status === "read") return;
-
-    try {
-      await PostAPI.markRead(notif._id);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === notif._id ? { ...n, status: "read" } : n))
-      );
-    } catch (error) {
-      console.error("Failed to mark notification as read", error);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    if (!unreadCount) return;
-
-    try {
-      setMarkingAll(true);
-      await PostAPI.markAllasRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, status: "read" })));
-    } catch (error) {
-      console.error("Failed to mark all as read", error);
-    } finally {
-      setMarkingAll(false);
-    }
-  };
-
-  const handleAccept = async (notif: ApiNotification) => {
-    try {
-      setProcessingIds((prev) => [...prev, notif._id]);
-      await PostAPI.addToContact({ grantedTo: notif.senderId._id });
-      message.success(`Added ${notif.senderId.username} to contacts`);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === notif._id ? { ...n, status: "read" } : n))
-      );
-    } catch (error) {
-      message.error("Failed to add contact");
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== notif._id));
-    }
-  };
-
-  const handleDecline = async (notif: ApiNotification) => {
-    try {
-      setProcessingIds((prev) => [...prev, notif._id]);
-      await PostAPI.RemoveContact(notif.senderId._id);
-      message.success(`Declined contact from ${notif.senderId.username}`);
-      setNotifications((prev) => prev.filter((n) => n._id !== notif._id));
-    } catch (error) {
-      message.error("Failed to decline contact");
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== notif._id));
-    }
-  };
-
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       const el = e.currentTarget;
 
       if (
         el.scrollTop + el.clientHeight >= el.scrollHeight - 80 &&
-        hasNext &&
         !loadingMore
       ) {
-        fetchNotifications(page + 1);
+        onLoadMore();
       }
     },
-    [page, hasNext, loadingMore]
+    [loadingMore, onLoadMore]
   );
 
   return (
@@ -163,13 +61,12 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
           <Tooltip title="Mark all as read">
             <button
-              onClick={handleMarkAllAsRead}
+              onClick={onMarkAllAsRead}
               disabled={!unreadCount || markingAll}
-              className={`p-2 rounded-lg transition ${
-                unreadCount
-                  ? "hover:bg-gray-100 text-[#8869F3]"
-                  : "text-gray-300 cursor-not-allowed"
-              }`}
+              className={`p-2 rounded-lg transition ${unreadCount
+                ? "hover:bg-gray-100 text-[#8869F3]"
+                : "text-gray-300 cursor-not-allowed"
+                }`}
             >
               {markingAll ? (
                 <Spin size="small" />
@@ -208,10 +105,10 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               {notifications.map((notif) => (
                 <div
                   key={notif._id}
-                  onClick={() => handleMarkRead(notif)}
+                  onClick={() => onMarkRead(notif)}
                   className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer
                     hover:bg-gray-50
-                    ${notif.status === "unread" ? "bg-gray-50" : ""}`}
+                    ${notif.status === "unread" ? "bg-[#8869F3]/20" : ""}`}
                 >
                   <Avatar
                     src={
@@ -240,7 +137,10 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                           size="large"
                           className="!bg-[#8869F3] w-28"
                           loading={processingIds.includes(notif._id)}
-                          onClick={() => handleAccept(notif)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAccept(notif);
+                          }}
                         >
                           Accept
                         </Button>
@@ -249,7 +149,10 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                           size="large"
                           className="w-28"
                           loading={processingIds.includes(notif._id)}
-                          onClick={() => handleDecline(notif)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDecline(notif);
+                          }}
                         >
                           Decline
                         </Button>
